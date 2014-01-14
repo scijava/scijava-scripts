@@ -123,7 +123,11 @@ $DRY_RUN mvn $BATCH_MODE release:prepare -DpushChanges=false -Dresume=false $TAG
         $PROFILE $DEV_VERSION -DreleaseVersion="$VERSION" \
 	"-Darguments=${EXTRA_ARGS# }" &&
 
-# Squash the two commits on the current branch into one
+# Squash the two commits on the current branch produced by the
+# maven-release-plugin into one
+test "[maven-release-plugin] prepare for next development iteration" = \
+	"$(git show -s --format=%s HEAD)" ||
+die "maven-release-plugin's commits are unexpectedly missing!"
 $DRY_RUN git reset --soft HEAD^^ &&
 if ! git diff-index --cached --quiet --ignore-submodules HEAD --
 then
