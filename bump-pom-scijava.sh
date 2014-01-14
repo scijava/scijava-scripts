@@ -128,7 +128,7 @@ sed_quote () {
         echo "$1" | sed "s/[]\/\"\'\\\\(){}[\!\$  ;]/\\\\&/g"
 }
 
-gav="$(sh bin/maven-helper.sh gav-from-pom $pom)"
+gav="$(sh "$maven_helper" gav-from-pom $pom)"
 old_version=${gav##*:}
 new_version=${old_version%.*}.$((1 + ${old_version##*.}))
 
