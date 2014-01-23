@@ -7,14 +7,7 @@
 set -e
 
 root_url () {
-	case "$1,$2" in
-	nar-maven-plugin,*)
-		echo http://repo1.maven.org/maven2/
-		;;
-	*)
-		echo http://maven.imagej.net/content/repositories/$2
-		;;
-	esac
+	echo http://maven.imagej.net/content/groups/public/
 }
 
 die () {
