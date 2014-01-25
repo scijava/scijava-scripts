@@ -53,7 +53,7 @@ get_remote_branches () {
 	name="$1"
 
 	git for-each-ref refs/remotes/$name/\* |
-	sed "s|\trefs/remotes/$name/|\t|"
+	sed "s|	refs/remotes/$name/|	|"
 }
 
 fetch_from () {
@@ -148,7 +148,7 @@ do
 	has_spaces $url && continue
 	name=$(url2remotename $url)
 	git for-each-ref refs/remotes/$name/\* |
-	sed "s|^\(.*\)\trefs/remotes/\($name\)/|\2 \1 |"
+	sed "s|^\(.*\)	refs/remotes/\($name\)/|\2 \1 |"
 done)"
 
 for ref in $(echo "$remote_branches" |
@@ -210,14 +210,23 @@ do
 		uniq)"
 done
 
-disagreeing="$(echo "$todo" |
-	sort -k 3 |
-	uniq -D -f 2)"
+disagreeing=$(echo "$todo" |
+	cut -f 2 |
+	sort |
+	uniq -d)
 
 if test -n "$disagreeing"
 then
-	add_error "$(printf "Incompatible updates:\n%s\n\n" "$disagreeing")"
+	message="$(for name in $disagreeing
+		do
+			echo "$todo" | grep "	$name$"
+		done)"
+	add_error "$(printf "Incompatible updates:\n%s\n\n" "$message")"
 fi
+
+# make it easier to test whether a name is in $disagreeing via:
+# test "$disagreeing" != "${disagreeing#* $name }"
+disagreeing=" $disagreeing "
 
 # Push
 
@@ -231,10 +240,7 @@ do
 		while read sha1 type ref
 		do
 			test -z "$sha1" && continue
-			if echo "$disagreeing" | grep "	$ref$" > /dev/null 2>&1
-			then
-				continue
-			fi
+			test "$disagreeing" = "${disagreeing#* $name }" || continue
 			remoteref=refs/remotes/$name/$ref
 			if test $sha1 = $nullsha1
 			then
