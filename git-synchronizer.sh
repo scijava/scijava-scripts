@@ -257,6 +257,7 @@ do
 			fi
 		done)
 	test -z "$pushopts" && continue
+	deletefirst=
 	case "$(git config "remote.$name.pushurl"; git config "remote.$name.url")" in
 	git://*)
 		case "$pushopts" in
@@ -266,7 +267,16 @@ do
 		esac
 		continue
 		;;
+	*.sf.net*|*.sourceforge.net*)
+		for opt in $pushopts
+		do
+			test "$opt" = "${opt#+*:}" ||
+			deletefirst="$deletefirst :${opt#+*:}"
+		done
 	esac
+	test -z "$deletefirst" ||
+	git push $name $deletefirst ||
+	add_error "Could not push $deletefirst to $url"
 	git push $name $pushopts ||
 	add_error "Could not push to $url"
 done
