@@ -224,4 +224,4 @@ commit_and_push "Increase pom-scijava version to $new_version" \
 	-m "$message" $pom
 
 test -n "$skip_commit" ||
-mvn -DupdateReleaseInfo=true deploy
+mvn -DupdateReleaseInfo=true -Dsonatype-oss-release deploy nexus-staging:release
