@@ -9,7 +9,7 @@
 version="$1"
 diff="$2"
 
-repo="http://maven.imagej.net/content/repositories/releases"
+repo="http://maven.imagej.net/content/groups/public"
 
 props() {
 	url="$repo/org/scijava/pom-scijava/$1/pom-scijava-$1.pom"
