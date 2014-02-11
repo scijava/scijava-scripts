@@ -224,6 +224,8 @@ then
 	add_error "$(printf "Incompatible updates:\n%s\n\n" "$message")"
 fi
 
+test -z "$todo" || git gc --auto
+
 # make it easier to test whether a name is in $disagreeing via:
 # test "$disagreeing" != "${disagreeing#* $name }"
 disagreeing=" $disagreeing "

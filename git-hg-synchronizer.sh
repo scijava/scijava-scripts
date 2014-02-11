@@ -33,6 +33,7 @@ git remote add --mirror=fetch origin hg::"$HG_URL"
 
 git fetch origin
 
+git gc --auto
 for url
 do
 	git push --all "$url"

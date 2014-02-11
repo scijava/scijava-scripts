@@ -94,6 +94,7 @@ args="$(git for-each-ref --shell --format '%(refname)' refs/remotes/ |
 	sed -e "s/^'\(refs\/remotes\/\(.*\)\)'$/'\1:refs\/heads\/svn\/\2'/" \
 		-e 's/:refs\/heads\/svn\/tags\//:refs\/tags\//')"
 
+git gc --auto
 for remote
 do
 	eval git push $force \"$remote\" $args

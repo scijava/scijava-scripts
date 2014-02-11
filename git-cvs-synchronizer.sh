@@ -108,6 +108,7 @@ fi
 
 refs="$(git for-each-ref --shell --format '%(refname)')"
 
+git gc --auto
 for remote
 do
 	eval git push \"$remote\" $refs
