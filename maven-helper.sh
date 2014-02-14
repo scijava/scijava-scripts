@@ -190,6 +190,26 @@ latest_version () {
 	echo "$latest"
 }
 
+# Given a GA parameter, invalidate the cache in ImageJ's Nexus' group/public
+
+SONATYPE_DATA_CACHE_URL=http://maven.imagej.net/service/local/data_cache/repositories/sonatype/content
+invalidate_cache () {
+	ga="$1"
+	artifactId="$(artifactId "$ga")"
+	infix="$(groupId "$ga" | tr . /)/$artifactId/"
+	curl --netrc -i -X DELETE \
+		$SONATYPE_DATA_CACHE_URL/$infix/maven-metadata.xml &&
+	version="$(latest_version "$ga")" &&
+	infix="$infix/$version" &&
+	curl --netrc -i -X DELETE \
+		$SONATYPE_DATA_CACHE_URL/$infix/$artifactId-$version.pom &&
+	if test "$artifactId" = "${artifactId#pom-}"
+	then
+		curl --netrc -i -X DELETE \
+			$SONATYPE_DATA_CACHE_URL/$infix/$artifactId-$version.jar
+	fi
+}
+
 # Generate a temporary file; not thread-safe
 
 tmpfile () {
@@ -416,6 +436,9 @@ all-deps|all-dependencies)
 latest-version)
 	latest_version "$2"
 	;;
+invalidate-cache)
+	invalidate_cache "$2"
+	;;
 gav-from-pom)
 	gav_from_pom "$2"
 	;;
@@ -459,6 +482,11 @@ latest-version <groupId>:<artifactId>[:<version>]
 	Prints the current version of the given artifact (if "SNAPSHOT" is
 	passed as version, it prints the current snapshot version rather
 	than the release one).
+
+invalidate-cache <groupId>:<artifactId>
+	Invalidates the version cached in the ImageJ Nexus from OSS Sonatype,
+	e.g. after releasing a new version to Sonatype. Requires appropriate
+	credentials in $HOME/.netrc for http://maven.imagej.net/.
 
 gav-from-pom <pom.xml>
 	Prints the GAV parameter described in the given pom.xml file.

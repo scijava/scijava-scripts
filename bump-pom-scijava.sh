@@ -223,10 +223,7 @@ die "Failed to remove intermediate $pom.new"
 commit_and_push "Increase pom-scijava version to $new_version" \
 	-m "$message" $pom
 
-NEXUS_URL=http://maven.imagej.net/
-SONATYPE_PROXY=$NEXUS_URL/service/local/data_cache/repositories/sonatype/content
 test -n "$skip_commit" || {
 	mvn -DupdateReleaseInfo=true -Psonatype-oss-release deploy &&
-	curl --netrc -i -X DELETE \
-		$SONATYPE_PROXY/org/scijava/pom-scijava/maven-metadata.xml
+	sh maven-helper.sh invalidate-cache org.scijava:pom-scijava
 }
