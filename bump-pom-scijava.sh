@@ -228,5 +228,5 @@ fi
 
 test -n "$skip_commit" || {
 	mvn -DupdateReleaseInfo=true -Psonatype-oss-release deploy &&
-	sh maven-helper.sh invalidate-cache org.scijava:pom-scijava
+	sh "$maven_helper" invalidate-cache org.scijava:pom-scijava
 }
