@@ -24,6 +24,7 @@ DEV_VERSION=
 EXTRA_ARGS=
 ALT_REPOSITORY=
 PROFILE=
+INVALIDATE_NEXUS=
 DRY_RUN=
 while test $# -gt 0
 do
@@ -96,6 +97,7 @@ net.sf.antcontrib:cpptasks-parallel:*|*:maven-nar-plugin:*)
 	;;
 *:nar-maven-plugin:*)
 	PROFILE=-Psonatype-oss-release
+	INVALIDATE_NEXUS=t
 	;;
 *:pom-*:*)
 	ARTIFACT_ID=${BASE_GAV#*:pom-}
@@ -155,4 +157,8 @@ then
 	$DRY_RUN mvn $PROFILE -DperformRelease clean verify &&
 	$DRY_RUN mvn $PROFILE $ALT_REPOSITORY -DperformRelease -DupdateReleaseInfo=true deploy &&
 	$DRY_RUN git checkout @{-1}
+	if test -n "$INVALIDATE_NEXUS"
+	then
+		$DRY_RUN maven_helper invalidate-cache "${BASE_GAV%:*}"
+	fi
 fi
