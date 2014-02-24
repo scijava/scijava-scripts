@@ -99,6 +99,12 @@ net.sf.antcontrib:cpptasks-parallel:*|*:maven-nar-plugin:*)
 	PROFILE=-Psonatype-oss-release
 	INVALIDATE_NEXUS=t
 	;;
+*:scijava-common:*)
+	test -n "$GPG_KEYNAME" || die "Need to set GPG_KEYNAME"
+	test -n "$GPG_PASSPHRASE" || die "Need to set GPG_PASSPHRASE"
+	PROFILE=-Psonatype-oss-release
+	INVALIDATE_NEXUS=t
+	;;
 *:pom-*:*)
 	ARTIFACT_ID=${BASE_GAV#*:pom-}
 	ARTIFACT_ID=${ARTIFACT_ID%:*}
@@ -123,7 +129,7 @@ die "'master' is not up-to-date"
 # Prepare new release without pushing (requires the release plugin >= 2.1)
 $DRY_RUN mvn $BATCH_MODE release:prepare -DpushChanges=false -Dresume=false $TAG \
         $PROFILE $DEV_VERSION -DreleaseVersion="$VERSION" \
-	"-Darguments=${EXTRA_ARGS# }" &&
+	"-Darguments=-Dgpg.skip=true ${EXTRA_ARGS# }" &&
 
 # Squash the two commits on the current branch produced by the
 # maven-release-plugin into one
@@ -154,8 +160,17 @@ exit
 if test -z "$SKIP_DEPLOY"
 then
 	$DRY_RUN git checkout $tag &&
-	$DRY_RUN mvn $PROFILE -DperformRelease clean verify &&
-	$DRY_RUN mvn $PROFILE $ALT_REPOSITORY -DperformRelease -DupdateReleaseInfo=true deploy &&
+	$DRY_RUN mvn $PROFILE \
+		-Dgpg.keyname="$GPG_KEYNAME" \
+		-Dgpg.passphrase="$GPG_PASSPHRASE" \
+		-DperformRelease \
+		clean verify &&
+	$DRY_RUN mvn $PROFILE \
+		-Dgpg.keyname="$GPG_KEYNAME" \
+		-Dgpg.passphrase="$GPG_PASSPHRASE" \
+		$ALT_REPOSITORY \
+		-DperformRelease -DupdateReleaseInfo=true \
+		deploy &&
 	$DRY_RUN git checkout @{-1}
 	if test -n "$INVALIDATE_NEXUS"
 	then
