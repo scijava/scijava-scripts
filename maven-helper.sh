@@ -196,7 +196,7 @@ SONATYPE_DATA_CACHE_URL=http://maven.imagej.net/service/local/data_cache/reposit
 invalidate_cache () {
 	ga="$1"
 	artifactId="$(artifactId "$ga")"
-	infix="$(groupId "$ga" | tr . /)/$artifactId/"
+	infix="$(groupId "$ga" | tr . /)/$artifactId"
 	curl --netrc -i -X DELETE \
 		$SONATYPE_DATA_CACHE_URL/$infix/maven-metadata.xml &&
 	version="$(latest_version "$ga")" &&
