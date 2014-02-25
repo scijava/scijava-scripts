@@ -132,6 +132,8 @@ then
 
 	gav="$(sh "$maven_helper" gav-from-pom $pom)"
 	old_version=${gav##*:}
+	new_version="${old_version%-SNAPSHOT}"
+	test "$old_version" != "$new_version" ||
 	new_version=${old_version%.*}.$((1 + ${old_version##*.}))
 
 	message="$(printf "%s\n" "The following changes were made:")"
