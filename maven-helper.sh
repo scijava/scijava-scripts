@@ -84,6 +84,17 @@ skip_tag () {
 	echo "$result"
 }
 
+# Given the xml of a POM, find the parent GAV
+
+parent_gav_from_pom_xml () {
+	pom="$1"
+	parent="$(extract_tag parent "$pom")"
+	groupId="$(extract_tag groupId "$parent")"
+	artifactId="$(extract_tag artifactId "$parent")"
+	version="$(extract_tag version "$parent")"
+	echo "$groupId:$artifactId:$version"
+}
+
 # Given a GAV parameter, determine the base URL of the project
 
 project_url () {
@@ -161,11 +172,7 @@ gav_from_pom () {
 
 parent_gav_from_pom () {
 	pom="$(cat "$1")"
-	parent="$(extract_tag parent "$pom")"
-	groupId="$(extract_tag groupId "$parent")"
-	artifactId="$(extract_tag artifactId "$parent")"
-	version="$(extract_tag version "$parent")"
-	echo "$groupId:$artifactId:$version"
+	parent_gav_from_pom_xml "$pom"
 }
 
 # Given a POM file, extract its packaging
@@ -263,11 +270,7 @@ get_property () {
 			echo "$property"
 			return
 		fi
-		parent="$(extract_tag parent "$pom")"
-		groupId="$(extract_tag groupId "$parent")"
-		artifactId="$(extract_tag artifactId "$parent")"
-		version="$(extract_tag version "$parent")"
-		gav="$groupId:$artifactId:$version"
+		gav="$(parent_gav_from_pom_xml "$pom")"
 	done
 	die "Could not resolve \${$2} in $1"
 }
