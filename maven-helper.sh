@@ -168,6 +168,18 @@ gav_from_pom () {
 	echo "$groupId:$artifactId:$version"
 }
 
+# Given a GAV parameter, find its parent's GAV
+
+parent_gav () {
+	gav="$1"
+	groupId="$(groupId "$gav")"
+	artifactId="$(artifactId "$gav")"
+	version="$(version "$gav")"
+	test -n "$version" || version="$(latest_version "$gav")"
+	pom="$(read_pom "$groupId:$artifactId:$version")"
+	parent_gav_from_pom_xml "$pom"
+}
+
 # Given a POM file, find its parent's GAV
 
 parent_gav_from_pom () {
@@ -457,6 +469,9 @@ invalidate-cache)
 gav-from-pom)
 	gav_from_pom "$2"
 	;;
+parent-gav)
+	parent_gav "$2"
+	;;
 parent-gav-from-pom)
 	parent_gav_from_pom "$2"
 	;;
@@ -505,6 +520,9 @@ invalidate-cache <groupId>:<artifactId>
 	Invalidates the version cached in the ImageJ Nexus from OSS Sonatype,
 	e.g. after releasing a new version to Sonatype. Requires appropriate
 	credentials in $HOME/.netrc for http://maven.imagej.net/.
+
+parent-gav <groupId>:<artifactId>[:<version>]
+	Prints the GAV parameter of the parent project of the given artifact.
 
 gav-from-pom <pom.xml>
 	Prints the GAV parameter described in the given pom.xml file.
