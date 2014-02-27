@@ -7,7 +7,7 @@
 set -e
 
 root_url () {
-	echo http://maven.imagej.net/content/groups/public/
+	echo http://maven.imagej.net/content/groups/public
 }
 
 die () {
@@ -372,7 +372,7 @@ get_jar () {
 # Given a groupId, get the list of artifacts
 
 list_artifacts () {
-	url="$(root_url)$(echo "$1" | tr . /)/"
+	url="$(root_url)/$(echo "$1" | tr . /)/"
 	links="$(curl -s "$url" | grep "<a href=\"$url.*/</a>")"
 	artifacts="$(echo "$links" | sed 's/ *<[^>]*>\(.*\)\/<\/a>/\1/')"
 	echo "$artifacts"
