@@ -472,6 +472,9 @@ gav-from-pom)
 parent-gav)
 	parent_gav "$2"
 	;;
+pom-url)
+	pom_url "$2"
+	;;
 parent-gav-from-pom)
 	parent_gav_from_pom "$2"
 	;;
@@ -523,6 +526,9 @@ invalidate-cache <groupId>:<artifactId>
 
 parent-gav <groupId>:<artifactId>[:<version>]
 	Prints the GAV parameter of the parent project of the given artifact.
+
+pom-url <groupId>:<artifactId>:<version>
+	Gets the URL of the POM describing the given artifact.
 
 gav-from-pom <pom.xml>
 	Prints the GAV parameter described in the given pom.xml file.
