@@ -39,6 +39,7 @@ my %pomTree;
 	my $doList;
 	my $doTree;
 	my $doStats;
+	my $doSCM;
 
 	for my $cmd (@ARGV) {
 		if ($cmd =~ /^-\w+$/) {
@@ -46,11 +47,13 @@ my %pomTree;
 				if ($c eq 'l') { $doList = 1; }
 				elsif ($c eq 't') { $doTree = 1; }
 				elsif ($c eq 's') { $doStats = 1; }
+				elsif ($c eq 'g') { $doSCM = 1; }
 			}
 		}
 		elsif ($cmd eq '--list') { $doList = 1; }
 		elsif ($cmd eq '--tree') { $doTree = 1; }
 		elsif ($cmd eq '--stats') { $doStats = 1; }
+		elsif ($cmd eq '--scm') { $doSCM = 1; }
 	}
 
 	parse_blacklist();
@@ -59,6 +62,9 @@ my %pomTree;
 	if ($doTree) {
 		build_tree();
 		dump_tree("org.scijava:pom-scijava", 0);
+	}
+	if ($doSCM) {
+		list_scms();
 	}
 	if ($doStats) {
 		report_statistics();
@@ -134,6 +140,29 @@ sub build_tree() {
 		}
 		my $children = $pomTree{$parent};
 		push @{$children}, $ga;
+	}
+}
+
+# Makes a list of SCMs associated with the artifacts.
+sub list_scms() {
+	my %scms;
+	for my $ga (keys %versions) {
+		my $version = version($ga);
+		$version || next;
+		my $scm = scm($ga);
+		if (!$scm) {
+			print STDERR "==> [WARNING] $ga:$version has no SCM\n";
+			next;
+		}
+		if ($scm !~ /^scm:git:/) {
+			print STDERR "==> [WARNING] $ga:$version SCM is not git\n";
+			next;
+		}
+		$scm =~ s/^scm:git://;
+		$scms{$scm} = 1;
+	}
+	for my $scm (sort keys %scms) {
+		print "$scm\n";
 	}
 }
 
