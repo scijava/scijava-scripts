@@ -27,6 +27,7 @@ my $home = $ENV{"HOME"};
 my $dir = `dirname "$0"`;
 chop $dir;
 
+my %blacklist;
 my %versions;
 my %pomXML;
 my %parents;
@@ -35,12 +36,25 @@ my %pomTree;
 # -- Main --
 
 {
+	parse_blacklist();
 	resolve_artifacts();
 	build_tree();
 	dump_tree("org.scijava:pom-scijava", 0);
 }
 
 # -- Subroutines --
+
+sub parse_blacklist() {
+	open(BLACKLIST, "$dir/sj-blacklist.txt");
+	my @list = <BLACKLIST>;
+	close(BLACKLIST);
+	for my $ga (@list) {
+		chop $ga;
+		if ($ga && $ga !~ /^#/) {
+			$blacklist{$ga} = 1;
+		}
+	}
+}
 
 sub resolve_artifacts() {
 	my $cacheFile = "$dir/sj-hierarchy.cache";
@@ -53,6 +67,7 @@ sub resolve_artifacts() {
 			chop $gav;
 			my ($groupId, $artifactId, $version) = split(':', $gav);
 			my $ga = "$groupId:$artifactId";
+			if ($blacklist{$ga}) { next; }
 			$versions{$ga} = $version;
 			print "$gav\n";
 		}
@@ -65,6 +80,7 @@ sub resolve_artifacts() {
 			my @artifactIds = artifacts($groupId);
 			for my $artifactId (@artifactIds) {
 				my $ga = "$groupId:$artifactId";
+				if ($blacklist{$ga}) { next; }
 
 				# determine the latest version
 				my $version = version($ga);
