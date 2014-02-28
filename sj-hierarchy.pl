@@ -36,6 +36,7 @@ my %pomTree;
 # -- Main --
 
 {
+	my $doHelp;
 	my $doList;
 	my $doSCM;
 	my $doStats;
@@ -50,10 +51,24 @@ my %pomTree;
 				elsif ($c eq 't') { $doTree = 1; }
 			}
 		}
+		elsif ($cmd eq '--help') { $doHelp = 1; }
 		elsif ($cmd eq '--list') { $doList = 1; }
 		elsif ($cmd eq '--scm') { $doSCM = 1; }
 		elsif ($cmd eq '--stats') { $doStats = 1; }
 		elsif ($cmd eq '--tree') { $doTree = 1; }
+		else { print STDERR "Invalid argument: $cmd\n"; }
+	}
+
+	$doList || $doSCM || $doStats || $doTree || ($doHelp = 1);
+
+	if ($doHelp) {
+		print STDERR "Usage: sj-hierachy.pl [-glst]\n";
+		print STDERR "\n";
+		print STDERR "  -g, --scm   : list involved SCM URLs\n";
+		print STDERR "  -l, --list  : list SciJava artifacts\n";
+		print STDERR "  -s, --stats : show some statistics about the artifacts\n";
+		print STDERR "  -t, --tree  : display artifacts in a tree structure\n";
+		exit 1;
 	}
 
 	parse_blacklist();
