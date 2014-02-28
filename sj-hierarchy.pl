@@ -31,7 +31,6 @@ chop $dir;
 my %blacklist;
 my %versions;
 my %pomXML;
-my %parents;
 my %pomTree;
 
 # -- Main --
@@ -188,13 +187,10 @@ sub pom_xml($) {
 # Computes the parent of a GA, caching the result.
 sub parent($) {
 	my ($ga) = @_;
-	if (!$parents{$ga}) {
-		my $xml = pom_xml($ga);
-		my $groupId = $xml->{parent}->{groupId};
-		my $artifactId = $xml->{parent}->{artifactId};
-		$parents{$ga} = "$groupId:$artifactId";
-	}
-	return $parents{$ga};
+	my $xml = pom_xml($ga);
+	my $groupId = $xml->{parent}->{groupId};
+	my $artifactId = $xml->{parent}->{artifactId};
+	return "$groupId:$artifactId";
 }
 
 # Obtains a list of artifacts in the given group.
