@@ -36,11 +36,33 @@ my %pomTree;
 # -- Main --
 
 {
+	my $doList;
+	my $doTree;
+	my $doStats;
+
+	for my $cmd (@ARGV) {
+		if ($cmd =~ /^-\w+$/) {
+			for my $c (split(//, $cmd)) {
+				if ($c eq 'l') { $doList = 1; }
+				elsif ($c eq 't') { $doTree = 1; }
+				elsif ($c eq 's') { $doStats = 1; }
+			}
+		}
+		elsif ($cmd eq '--list') { $doList = 1; }
+		elsif ($cmd eq '--tree') { $doTree = 1; }
+		elsif ($cmd eq '--stats') { $doStats = 1; }
+	}
+
 	parse_blacklist();
-	resolve_artifacts();
-	build_tree();
-	dump_tree("org.scijava:pom-scijava", 0);
-	report_statistics();
+	resolve_artifacts($doList);
+
+	if ($doTree) {
+		build_tree();
+		dump_tree("org.scijava:pom-scijava", 0);
+	}
+	if ($doStats) {
+		report_statistics();
+	}
 }
 
 # -- Subroutines --
@@ -57,10 +79,14 @@ sub parse_blacklist() {
 	}
 }
 
-sub resolve_artifacts() {
+sub resolve_artifacts($) {
+	my ($printList) = @_;
+
 	my $cacheFile = "$dir/sj-hierarchy.cache";
 	if (-e $cacheFile) {
 		# build versions table from cache
+		print STDERR "==> Reading artifact list from cache...\n";
+
 		open(CACHE, "$cacheFile");
 		my @gavs = <CACHE>;
 		close(CACHE);
@@ -70,13 +96,14 @@ sub resolve_artifacts() {
 			my $ga = "$groupId:$artifactId";
 			if ($blacklist{$ga}) { next; }
 			$versions{$ga} = $version;
-			print "$gav\n";
+			if ($printList) { print "$gav\n"; }
 		}
 	}
 	else {
 		# build versions table from remote repository
-		open(CACHE, ">$cacheFile");
 		print STDERR "==> Scanning for artifacts...\n";
+
+		open(CACHE, ">$cacheFile");
 		for my $groupId (@groupIds) {
 			my @artifactIds = artifacts($groupId);
 			for my $artifactId (@artifactIds) {
@@ -86,7 +113,7 @@ sub resolve_artifacts() {
 				# determine the latest version
 				my $version = version($ga);
 				if ($version) {
-					print "$ga:$version\n";
+					if ($printList) { print "$ga:$version\n"; }
 					print CACHE "$ga:$version\n";
 				}
 			}
@@ -129,7 +156,7 @@ sub report_statistics() {
 
 		my $releaseCount = $totalCount - $snapshotCount;
 		my $pomReleaseCount = $pomCount - $pomSnapshotCount;
-		print STDERR "==> $groupId: $totalCount total ($releaseCount releases, " .
+		print "$groupId: $totalCount total ($releaseCount releases, " .
 			"$snapshotCount snapshots); $pomCount poms " .
 			"($pomReleaseCount releases, $pomSnapshotCount snapshots)\n";
 	}
