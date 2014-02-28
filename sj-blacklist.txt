@@ -5,6 +5,8 @@ io.scif:pom-scifio-lifesci
 io.scif:scifio-bio-formats
 loci:bf-autogen
 loci:bio-formats
+loci:bio-formats-base
+loci:deep-zoom-plugin
 loci:jai_imageio
 loci:jimi
 loci:loci-base
@@ -27,6 +29,7 @@ loci:pom-scifio
 loci:scifio
 loci:scifio-devel
 loci:scifio-tools
+loci:slim-plugin
 loci:specification
 loci:test-suite
 loci:turbojpeg
