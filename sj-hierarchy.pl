@@ -220,6 +220,18 @@ sub parent($) {
 	return "$groupId:$artifactId";
 }
 
+# Computes the SCM of a GA.
+sub scm($) {
+	my ($ga) = @_;
+	my $xml = pom_xml($ga);
+	my $scm = $xml->{scm}->{connection};
+	if (!$scm) {
+		my $parent = parent($ga);
+		return $parent && $parent ne ':' ? scm($parent) : undef;
+	}
+	return $scm;
+}
+
 # Obtains a list of artifacts in the given group.
 sub artifacts($) {
 	my ($groupId) = @_;
