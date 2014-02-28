@@ -37,23 +37,23 @@ my %pomTree;
 
 {
 	my $doList;
-	my $doTree;
-	my $doStats;
 	my $doSCM;
+	my $doStats;
+	my $doTree;
 
 	for my $cmd (@ARGV) {
 		if ($cmd =~ /^-\w+$/) {
 			for my $c (split(//, $cmd)) {
-				if ($c eq 'l') { $doList = 1; }
-				elsif ($c eq 't') { $doTree = 1; }
+				if ($c eq 'g') { $doSCM = 1; }
+				elsif ($c eq 'l') { $doList = 1; }
 				elsif ($c eq 's') { $doStats = 1; }
-				elsif ($c eq 'g') { $doSCM = 1; }
+				elsif ($c eq 't') { $doTree = 1; }
 			}
 		}
 		elsif ($cmd eq '--list') { $doList = 1; }
-		elsif ($cmd eq '--tree') { $doTree = 1; }
-		elsif ($cmd eq '--stats') { $doStats = 1; }
 		elsif ($cmd eq '--scm') { $doSCM = 1; }
+		elsif ($cmd eq '--stats') { $doStats = 1; }
+		elsif ($cmd eq '--tree') { $doTree = 1; }
 	}
 
 	parse_blacklist();
