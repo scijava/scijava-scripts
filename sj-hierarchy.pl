@@ -102,7 +102,7 @@ sub build_tree() {
 		my $version = version($ga);
 		$version || next;
 		my $parent = parent($ga);
-		if (not defined $pomTree{$parent}) {
+		if (!$pomTree{$parent}) {
 			my @children = ();
 			$pomTree{$parent} = \@children;
 		}
@@ -151,7 +151,7 @@ sub dump_tree($$) {
 # Computes the latest version of a GA, caching the result.
 sub version($) {
 	my ($ga) = @_;
-	if (not defined $versions{$ga}) {
+	if (!$versions{$ga}) {
 		$versions{$ga} = execute("$dir/maven-helper.sh latest-version \"$ga\"");
 	}
 	return $versions{$ga};
@@ -178,7 +178,7 @@ sub pom_path($) {
 # Obtains the POM XML for the given GA, caching the result.
 sub pom_xml($) {
 	my ($ga) = @_;
-	if (not defined $pomXML{$ga}) {
+	if (!$pomXML{$ga}) {
 		my $version = version($ga);
 		$pomXML{$ga} = XMLin(pom_path("$ga:$version"));
 	}
@@ -188,7 +188,7 @@ sub pom_xml($) {
 # Computes the parent of a GA, caching the result.
 sub parent($) {
 	my ($ga) = @_;
-	if (not defined $parents{$ga}) {
+	if (!$parents{$ga}) {
 		my $xml = pom_xml($ga);
 		my $groupId = $xml->{parent}->{groupId};
 		my $artifactId = $xml->{parent}->{artifactId};
