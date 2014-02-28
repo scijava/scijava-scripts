@@ -84,7 +84,7 @@ sub resolve_artifacts() {
 
 				# determine the latest version
 				my $version = version($ga);
-				if ($version && $version !~ /-SNAPSHOT$/) {
+				if ($version) {
 					print "$ga:$version\n";
 					print CACHE "$ga:$version\n";
 				}
@@ -98,7 +98,7 @@ sub resolve_artifacts() {
 sub build_tree() {
 	for my $ga (keys %versions) {
 		my $version = version($ga);
-		$version && $version !~ /-SNAPSHOT$/ || next;
+		$version || next;
 		my $parent = parent($ga);
 		if (not defined $pomTree{$parent}) {
 			my @children = ();
