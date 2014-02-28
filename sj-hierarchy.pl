@@ -21,6 +21,7 @@ my @groupIds = (
 	'net.imglib2',
 	'ome',
 	'org.scijava',
+	'sc.fiji',
 );
 
 my $home = $ENV{"HOME"};
