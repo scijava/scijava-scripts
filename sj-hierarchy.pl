@@ -41,6 +41,7 @@ my %pomTree;
 	resolve_artifacts();
 	build_tree();
 	dump_tree("org.scijava:pom-scijava", 0);
+	report_statistics();
 }
 
 # -- Subroutines --
@@ -107,6 +108,31 @@ sub build_tree() {
 		}
 		my $children = $pomTree{$parent};
 		push @{$children}, $ga;
+	}
+}
+
+# Reports some statistics.
+sub report_statistics() {
+	my @gavs;
+	for my $ga (keys %versions) {
+		push @gavs, "$ga:$versions{$ga}";
+	}
+	for my $groupId (@groupIds) {
+		my @total = grep(/^$groupId/, @gavs);
+		my @poms = grep(/:pom-/, @total);
+		my @snapshots = grep(/-SNAPSHOT$/, @total);
+		my @pomSnapshots = grep(/:pom-/, @snapshots);
+
+		my $totalCount = scalar @total;
+		my $pomCount = scalar @poms;
+		my $snapshotCount = scalar @snapshots;
+		my $pomSnapshotCount = scalar @pomSnapshots;
+
+		my $releaseCount = $totalCount - $snapshotCount;
+		my $pomReleaseCount = $pomCount - $pomSnapshotCount;
+		print STDERR "==> $groupId: $totalCount total ($releaseCount releases, " .
+			"$snapshotCount snapshots); $pomCount poms " .
+			"($pomReleaseCount releases, $pomSnapshotCount snapshots)\n";
 	}
 }
 
