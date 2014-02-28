@@ -211,7 +211,7 @@ sub pom_xml($) {
 	return $pomXML{$ga};
 }
 
-# Computes the parent of a GA, caching the result.
+# Computes the parent of a GA.
 sub parent($) {
 	my ($ga) = @_;
 	my $xml = pom_xml($ga);
