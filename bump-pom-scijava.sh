@@ -103,6 +103,7 @@ test -z "$bump_parent" || {
 test "a--default-properties" != "a$*" ||
 set imagej1.version --latest \
 	imagej.version --latest \
+	ij1-patcher.version --latest \
 	imagej-launcher.version --latest \
 	imagej-maven-plugin.version --latest \
 	imglib2.version --latest \
@@ -155,6 +156,9 @@ then
 				;;
 			imagej.version)
 				ga=net.imagej:ij-core
+				;;
+			ij1-patcher.version)
+				ga=net.imagej:ij1-patcher
 				;;
 			imagej-launcher.version)
 				ga=net.imagej:ij-launcher
