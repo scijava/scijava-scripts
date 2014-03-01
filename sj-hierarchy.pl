@@ -237,10 +237,9 @@ sub pom_path($) {
 	unless (-e $pomPath) {
 		# download POM to local repository cache
 		print STDERR "==> Resolving $gav from remote repository\n";
-		execute("mvn dependency:get -Dartifact=$gav:pom " .
-			"-DremoteRepositories=imagej.public::default::" .
-			"http://maven.imagej.net/content/groups/public " .
-			"-Dtransitive=false");
+		execute("mvn org.apache.maven.plugins:maven-dependency-plugin:2.8:get " .
+			"-Dartifact=$gav:pom -DremoteRepositories=imagej.public::default::" .
+			"http://maven.imagej.net/content/groups/public -Dtransitive=false");
 	}
 	return $pomPath;
 }
