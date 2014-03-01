@@ -238,6 +238,6 @@ else
 fi
 
 test -n "$skip_commit" || {
-	mvn -DupdateReleaseInfo=true -Psonatype-oss-release deploy &&
+	mvn -DupdateReleaseInfo=true -Psonatype-oss-release clean deploy &&
 	sh "$maven_helper" invalidate-cache org.scijava:pom-scijava
 }
