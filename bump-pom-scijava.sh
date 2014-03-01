@@ -114,8 +114,13 @@ set imagej1.version --latest \
 	scifio-lifesci.version --latest \
 	scijava-common.version --latest
 
-if test "--deploy-only" != "$*"
+if test "--deploy-only" = "$*"
 then
+	pom=pom.xml
+	cd "$(dirname "$0")/../pom-scijava" &&
+	test -f $pom ||
+	die "Could not switch to pom-scijava's root directory"
+else
 	test $# -ge 2 &&
 	test 0 = $(($#%2)) ||
 	die "Usage: $0 [--skip-commit] (--bump-parent | --default-properties | --deploy-only | <key> <value>...)"
