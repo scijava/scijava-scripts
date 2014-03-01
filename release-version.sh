@@ -99,7 +99,7 @@ net.sf.antcontrib:cpptasks-parallel:*|*:maven-nar-plugin:*)
 	PROFILE=-Psonatype-oss-release
 	INVALIDATE_NEXUS=t
 	;;
-*:scijava-common:*)
+*:scijava-common:*|*:ij1-patcher:*)
 	test -n "$GPG_KEYNAME" || die "Need to set GPG_KEYNAME"
 	test -n "$GPG_PASSPHRASE" || die "Need to set GPG_PASSPHRASE"
 	PROFILE=-Psonatype-oss-release
