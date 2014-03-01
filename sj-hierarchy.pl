@@ -33,6 +33,9 @@ my %versions;
 my %pomXML;
 my %pomTree;
 
+my $quiet;
+my $verbose;
+
 # -- Main --
 
 {
@@ -49,6 +52,8 @@ my %pomTree;
 				elsif ($c eq 'l') { $doList = 1; }
 				elsif ($c eq 's') { $doStats = 1; }
 				elsif ($c eq 't') { $doTree = 1; }
+				elsif ($c eq 'q') { $quiet = 1; }
+				elsif ($c eq 'v') { $verbose = 1; }
 			}
 		}
 		elsif ($cmd eq '--help') { $doHelp = 1; }
@@ -56,27 +61,33 @@ my %pomTree;
 		elsif ($cmd eq '--scm') { $doSCM = 1; }
 		elsif ($cmd eq '--stats') { $doStats = 1; }
 		elsif ($cmd eq '--tree') { $doTree = 1; }
-		else { print STDERR "Invalid argument: $cmd\n"; }
+		elsif ($cmd eq '--quiet') { $quiet = 1; }
+		elsif ($cmd eq '--verbose') { $verbose = 1; }
+		else { warn("Invalid argument: $cmd"); }
 	}
 
 	$doList || $doSCM || $doStats || $doTree || ($doHelp = 1);
 
 	if ($doHelp) {
-		print STDERR "Usage: sj-hierachy.pl [-glst]\n";
+		print STDERR "Usage: sj-hierachy.pl [-glstqv]\n";
 		print STDERR "\n";
-		print STDERR "  -g, --scm   : list involved SCM URLs\n";
-		print STDERR "  -l, --list  : list SciJava artifacts\n";
-		print STDERR "  -s, --stats : show some statistics about the artifacts\n";
-		print STDERR "  -t, --tree  : display artifacts in a tree structure\n";
+		print STDERR "  -g, --scm     : list involved SCM URLs\n";
+		print STDERR "  -l, --list    : list SciJava artifacts\n";
+		print STDERR "  -s, --stats   : show some statistics about the artifacts\n";
+		print STDERR "  -t, --tree    : display artifacts in a tree structure\n";
+		print STDERR "  -q, --quiet   : emit fewer details to stderr\n";
+		print STDERR "  -v, --verbose : emit more details to stderr\n";
 		exit 1;
 	}
 
 	parse_blacklist();
-	resolve_artifacts($doList);
+	resolve_artifacts();
 
+	if ($doList) {
+		show_list();
+	}
 	if ($doTree) {
-		build_tree();
-		dump_tree("org.scijava:pom-scijava", 0);
+		show_tree();
 	}
 	if ($doSCM) {
 		list_scms();
@@ -106,7 +117,7 @@ sub resolve_artifacts($) {
 	my $cacheFile = "$dir/sj-hierarchy.cache";
 	if (-e $cacheFile) {
 		# build versions table from cache
-		print STDERR "==> Reading artifact list from cache...\n";
+		info("Reading artifact list from cache...");
 
 		open(CACHE, "$cacheFile");
 		my @gavs = <CACHE>;
@@ -115,26 +126,32 @@ sub resolve_artifacts($) {
 			chop $gav;
 			my ($groupId, $artifactId, $version) = split(':', $gav);
 			my $ga = "$groupId:$artifactId";
-			if ($blacklist{$ga}) { next; }
+			if ($blacklist{$ga}) {
+				detail("Ignoring blacklisted artifact: $ga");
+				next;
+			}
 			$versions{$ga} = $version;
-			if ($printList) { print "$gav\n"; }
+			detail($gav);
 		}
 	}
 	else {
 		# build versions table from remote repository
-		print STDERR "==> Scanning for artifacts...\n";
+		info("Scanning for artifacts...");
 
 		open(CACHE, ">$cacheFile");
 		for my $groupId (@groupIds) {
 			my @artifactIds = artifacts($groupId);
 			for my $artifactId (@artifactIds) {
 				my $ga = "$groupId:$artifactId";
-				if ($blacklist{$ga}) { next; }
+				if ($blacklist{$ga}) {
+					detail("Ignoring blacklisted artifact: $ga");
+					next;
+				}
 
 				# determine the latest version
 				my $version = version($ga);
 				if ($version) {
-					if ($printList) { print "$ga:$version\n"; }
+					info("$ga:$version");
 					print CACHE "$ga:$version\n";
 				}
 			}
@@ -143,8 +160,17 @@ sub resolve_artifacts($) {
 	}
 }
 
-# Builds a parent-child tree of POMs
-sub build_tree() {
+# Displays a list of artifacts
+sub show_list() {
+	for my $ga (sort keys %versions) {
+		output("$ga:$versions{$ga}");
+	}
+}
+
+
+# Displays a parent-child tree of POMs
+sub show_tree() {
+	# build the tree
 	for my $ga (keys %versions) {
 		my $version = version($ga);
 		$version || next;
@@ -156,6 +182,9 @@ sub build_tree() {
 		my $children = $pomTree{$parent};
 		push @{$children}, $ga;
 	}
+
+	# display the tree
+	dump_tree("org.scijava:pom-scijava", 0);
 }
 
 # Makes a list of SCMs associated with the artifacts.
@@ -166,18 +195,18 @@ sub list_scms() {
 		$version || next;
 		my $scm = scm($ga);
 		if (!$scm) {
-			print STDERR "==> [WARNING] $ga:$version has no SCM\n";
+			warn("No SCM for artifact: $ga:$version");
 			next;
 		}
 		if ($scm !~ /^scm:git:/) {
-			print STDERR "==> [WARNING] $ga:$version SCM is not git\n";
+			warn("Unsupported SCM for artifact: $ga:$version");
 			next;
 		}
 		$scm =~ s/^scm:git://;
 		$scms{$scm} = 1;
 	}
 	for my $scm (sort keys %scms) {
-		print "$scm\n";
+		output($scm);
 	}
 }
 
@@ -200,17 +229,16 @@ sub report_statistics() {
 
 		my $releaseCount = $totalCount - $snapshotCount;
 		my $pomReleaseCount = $pomCount - $pomSnapshotCount;
-		print "$groupId: $totalCount total ($releaseCount releases, " .
+		output("$groupId: $totalCount total ($releaseCount releases, " .
 			"$snapshotCount snapshots); $pomCount poms " .
-			"($pomReleaseCount releases, $pomSnapshotCount snapshots)\n";
+			"($pomReleaseCount releases, $pomSnapshotCount snapshots)");
 	}
 }
 
 # Recursively prints out the POM tree
 sub dump_tree($$) {
 	my ($ga, $indent) = @_;
-	for (my $i = 0; $i < $indent; $i++) { print ' '; }
-	print "* $ga\n";
+	output(lead($indent) . "* $ga");
 	my $children = $pomTree{$ga};
 	if (!$children) { return; }
 	for my $child (@{$children}) {
@@ -236,7 +264,7 @@ sub pom_path($) {
 		"$artifactId/$version/$artifactId-$version.pom";
 	unless (-e $pomPath) {
 		# download POM to local repository cache
-		print STDERR "==> Resolving $gav from remote repository\n";
+		info("Resolving $gav from remote repository");
 		execute("mvn org.apache.maven.plugins:maven-dependency-plugin:2.8:get " .
 			"-Dartifact=$gav:pom -DremoteRepositories=imagej.public::default::" .
 			"http://maven.imagej.net/content/groups/public -Dtransitive=false");
@@ -284,7 +312,44 @@ sub artifacts($) {
 # Executes the given shell command.
 sub execute($) {
 	my ($command) = @_;
+	detail($command);
 	my $result = `$command`;
 	chop $result;
 	return $result;
+}
+
+sub lead($) {
+	my ($indent) = @_;
+	my $lead = '';
+	for (my $i = 0; $i < $indent; $i++) { $lead .= ' '; }
+	return $lead;
+}
+
+sub output($) {
+	my ($message) = @_;
+	print "$message\n";
+}
+
+sub info($) {
+	my ($message) = @_;
+	unless ($quiet) {
+		print STDERR "==> $message\n";
+	}
+}
+
+sub detail($) {
+	my ($message) = @_;
+	if ($verbose) {
+		print STDERR "==> $message\n";
+	}
+}
+
+sub warn($) {
+	my ($message) = @_;
+	print STDERR "[WARNING] $message\n";
+}
+
+sub error($) {
+	my ($message) = @_;
+	print STDERR "[ERROR] $message\n";
 }
