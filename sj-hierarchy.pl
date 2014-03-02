@@ -63,7 +63,7 @@ my $verbose;
 		elsif ($cmd eq '--tree') { $doTree = 1; }
 		elsif ($cmd eq '--quiet') { $quiet = 1; }
 		elsif ($cmd eq '--verbose') { $verbose = 1; }
-		else { warn("Invalid argument: $cmd"); }
+		else { warning("Invalid argument: $cmd"); }
 	}
 
 	$doList || $doSCM || $doStats || $doTree || ($doHelp = 1);
@@ -195,11 +195,11 @@ sub list_scms() {
 		$version || next;
 		my $scm = scm($ga);
 		if (!$scm) {
-			warn("No SCM for artifact: $ga:$version");
+			warning("No SCM for artifact: $ga:$version");
 			next;
 		}
 		if ($scm !~ /^scm:git:/) {
-			warn("Unsupported SCM for artifact: $ga:$version");
+			warning("Unsupported SCM for artifact: $ga:$version");
 			next;
 		}
 		$scm =~ s/^scm:git://;
@@ -344,7 +344,7 @@ sub detail($) {
 	}
 }
 
-sub warn($) {
+sub warning($) {
 	my ($message) = @_;
 	print STDERR "[WARNING] $message\n";
 }
