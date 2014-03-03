@@ -41,6 +41,7 @@ my $verbose;
 {
 	my $doHelp;
 	my $doList;
+	my $doParents;
 	my $doSCM;
 	my $doStats;
 	my $doTree;
@@ -50,6 +51,7 @@ my $verbose;
 			for my $c (split(//, $cmd)) {
 				if ($c eq 'g') { $doSCM = 1; }
 				elsif ($c eq 'l') { $doList = 1; }
+				elsif ($c eq 'p') { $doParents = 1; }
 				elsif ($c eq 's') { $doStats = 1; }
 				elsif ($c eq 't') { $doTree = 1; }
 				elsif ($c eq 'q') { $quiet = 1; }
@@ -58,6 +60,7 @@ my $verbose;
 		}
 		elsif ($cmd eq '--help') { $doHelp = 1; }
 		elsif ($cmd eq '--list') { $doList = 1; }
+		elsif ($cmd eq '--parents') { $doParents = 1; }
 		elsif ($cmd eq '--scm') { $doSCM = 1; }
 		elsif ($cmd eq '--stats') { $doStats = 1; }
 		elsif ($cmd eq '--tree') { $doTree = 1; }
@@ -66,13 +69,14 @@ my $verbose;
 		else { warning("Invalid argument: $cmd"); }
 	}
 
-	$doList || $doSCM || $doStats || $doTree || ($doHelp = 1);
+	$doList || $doParents || $doSCM || $doStats || $doTree || ($doHelp = 1);
 
 	if ($doHelp) {
 		print STDERR "Usage: sj-hierachy.pl [-glstqv]\n";
 		print STDERR "\n";
 		print STDERR "  -g, --scm     : list involved SCM URLs\n";
 		print STDERR "  -l, --list    : list SciJava artifacts\n";
+		print STDERR "  -p, --parents : show table of artifact parents\n";
 		print STDERR "  -s, --stats   : show some statistics about the artifacts\n";
 		print STDERR "  -t, --tree    : display artifacts in a tree structure\n";
 		print STDERR "  -q, --quiet   : emit fewer details to stderr\n";
@@ -85,6 +89,9 @@ my $verbose;
 
 	if ($doList) {
 		show_list();
+	}
+	if ($doParents) {
+		show_parents();
 	}
 	if ($doTree) {
 		show_tree();
@@ -167,6 +174,23 @@ sub show_list() {
 	}
 }
 
+# Displays a list of artifacts
+sub show_parents() {
+	my $width = 0;
+	for my $ga (keys %versions) {
+		my $gav = "$ga:" . version($ga);
+		my $w = length($gav);
+		if ($w > $width) { $width = $w; }
+	}
+	$width++;
+
+	for my $ga (sort keys %versions) {
+		my $gav = "$ga:" . version($ga);
+		my $parent = parent($ga);
+		my $pGAV = $parent eq ':' ? '(none)' : "$parent:" . version($parent);
+		printf("%${width}s : %s\n", $gav, $pGAV);
+	}
+}
 
 # Displays a parent-child tree of POMs
 sub show_tree() {
