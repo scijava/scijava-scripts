@@ -107,6 +107,7 @@ set imagej1.version --latest \
 	imagej-launcher.version --latest \
 	imagej-maven-plugin.version --latest \
 	imglib2.version --latest \
+	minimaven.version --latest \
 	nar.version --latest \
 	ome-formats.version --latest \
 	scifio.version --latest \
@@ -173,6 +174,9 @@ else
 				;;
 			imglib2.version)
 				ga=net.imglib2:imglib2
+				;;
+			minimaven.version)
+				ga=net.imagej:minimaven
 				;;
 			nar.version)
 				ga=com.github.maven-nar:nar-maven-plugin
