@@ -109,7 +109,7 @@ set imagej1.version --latest \
 	imglib2.version --latest \
 	minimaven.version --latest \
 	nar.version --latest \
-	ome-formats.version --latest \
+	scifio-ome-xml.version --latest \
 	scifio.version --latest \
 	scifio-bf-compat.version --latest \
 	scifio-lifesci.version --latest \
@@ -181,8 +181,8 @@ else
 			nar.version)
 				ga=com.github.maven-nar:nar-maven-plugin
 				;;
-			ome-formats.version)
-				ga=io.scif:ome-formats
+			scifio-ome-xml.version)
+				ga=io.scif:scifio-ome-xml
 				;;
 			scifio.version)
 				ga=io.scif:scifio
