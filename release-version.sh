@@ -34,6 +34,8 @@ do
 	--skip-push) SKIP_PUSH=t;;
 	--skip-deploy) SKIP_DEPLOY=t;;
 	--tag=*)
+		! git rev-parse --quiet --verify refs/tags/"${1#--*=}" ||
+		die "Tag ${1#--*=} exists already!"
 		TAG="-Dtag=${1#--*=}";;
 	--dev-version=*|--development-version=*)
 		DEV_VERSION="-DdevelopmentVersion=${1#--*=}";;
