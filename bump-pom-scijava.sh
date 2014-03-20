@@ -107,6 +107,7 @@ set imagej1.version --latest \
 	imagej-launcher.version --latest \
 	imagej-maven-plugin.version --latest \
 	imglib2.version --latest \
+	junit-benchmarks.version --latest \
 	minimaven.version --latest \
 	nar.version --latest \
 	scifio-ome-xml.version --latest \
@@ -174,6 +175,9 @@ else
 				;;
 			imglib2.version)
 				ga=net.imglib2:imglib2
+				;;
+			junit-benchmarks.version)
+				ga=org.scijava:junit-benchmarks
 				;;
 			minimaven.version)
 				ga=net.imagej:minimaven
