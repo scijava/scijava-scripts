@@ -8,7 +8,7 @@ die () {
 }
 
 test $# = 2 ||
-die "Usage: $0 <job-name> (<config.xml> | --deploy-to-imagej <github-URL>)"
+die "Usage: $0 <job-name> (<config.xml> | --deploy-to-imagej=<github-URL>)"
 
 name="$1"
 jenkinsurl="http://jenkins.imagej.net:8080"
