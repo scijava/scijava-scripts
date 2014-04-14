@@ -39,6 +39,7 @@ my $verbose;
 # -- Main --
 
 {
+	my $doCI;
 	my $doHelp;
 	my $doList;
 	my $doParents;
@@ -49,7 +50,8 @@ my $verbose;
 	for my $cmd (@ARGV) {
 		if ($cmd =~ /^-\w+$/) {
 			for my $c (split(//, $cmd)) {
-				if ($c eq 'g') { $doSCM = 1; }
+				if ($c eq 'c') { $doCI = 1; }
+				elsif ($c eq 'g') { $doSCM = 1; }
 				elsif ($c eq 'l') { $doList = 1; }
 				elsif ($c eq 'p') { $doParents = 1; }
 				elsif ($c eq 's') { $doStats = 1; }
@@ -58,6 +60,7 @@ my $verbose;
 				elsif ($c eq 'v') { $verbose = 1; }
 			}
 		}
+		elsif ($cmd eq '--ci') { $doCI = 1; }
 		elsif ($cmd eq '--help') { $doHelp = 1; }
 		elsif ($cmd eq '--list') { $doList = 1; }
 		elsif ($cmd eq '--parents') { $doParents = 1; }
@@ -69,11 +72,13 @@ my $verbose;
 		else { warning("Invalid argument: $cmd"); }
 	}
 
-	$doList || $doParents || $doSCM || $doStats || $doTree || ($doHelp = 1);
+	$doCI || $doList || $doParents || $doSCM || $doStats || $doTree ||
+		($doHelp = 1);
 
 	if ($doHelp) {
 		print STDERR "Usage: sj-hierachy.pl [-glstqv]\n";
 		print STDERR "\n";
+		print STDERR "  -c, --ci      : list involved CI URLs\n";
 		print STDERR "  -g, --scm     : list involved SCM URLs\n";
 		print STDERR "  -l, --list    : list SciJava artifacts\n";
 		print STDERR "  -p, --parents : show table of artifact parents\n";
@@ -87,6 +92,9 @@ my $verbose;
 	parse_blacklist();
 	resolve_artifacts();
 
+	if ($doCI) {
+		list_cis();
+	}
 	if ($doList) {
 		show_list();
 	}
@@ -211,6 +219,20 @@ sub show_tree() {
 	dump_tree("org.scijava:pom-scijava", 0);
 }
 
+# Makes a list of CIs associated with the artifacts.
+sub list_cis() {
+	for my $ga (keys %versions) {
+		my $version = version($ga);
+		$version || next;
+		my $ci = ci($ga);
+		if (!$ci) {
+			warning("No CI for artifact: $ga:$version");
+			next;
+		}
+		output("$ga: $ci");
+	}
+}
+
 # Makes a list of SCMs associated with the artifacts.
 sub list_scms() {
 	my %scms;
@@ -313,6 +335,18 @@ sub parent($) {
 	my $groupId = $xml->{parent}->{groupId};
 	my $artifactId = $xml->{parent}->{artifactId};
 	return "$groupId:$artifactId";
+}
+
+# Computes the CI of a GA.
+sub ci($) {
+	my ($ga) = @_;
+	my $xml = pom_xml($ga);
+	my $ci = $xml->{ciManagement}->{url};
+	if (!$ci) {
+		my $parent = parent($ga);
+		return $parent && $parent ne ':' ? ci($parent) : undef;
+	}
+	return $ci;
 }
 
 # Computes the SCM of a GA.
