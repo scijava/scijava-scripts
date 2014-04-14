@@ -1,7 +1,8 @@
 #!/bin/sh
 
 # Use this script to add the IRC and Jenkins webhooks to the GitHub repositories.
-# You will need to add credentials to your $HOME/.netrc for this to work.
+# You will need to add credentials to your $HOME/.netrc for this to work. And if
+# you use two-factor authentication, you'll also need to pass GITHUB_TWO_FACTOR.
 
 die () {
 	echo "$*" >&2
@@ -13,8 +14,9 @@ die "Usage: $0 <org>/<repository>"
 
 repository="$1"
 
+TWO_FACTOR_HEADER="${GITHUB_TWO_FACTOR:+X-GitHub-OTP: }$GITHUB_TWO_FACTOR"
 mycurl () {
-	curl --netrc "$@" "$url"
+	curl --netrc --header "$TWO_FACTOR_HEADER" "$@" "$url"
 }
 
 url="https://api.github.com/repos/$repository/hooks"
