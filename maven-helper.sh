@@ -7,6 +7,10 @@
 set -e
 
 root_url () {
+	test snapshots != "$2" || {
+		echo http://maven.imagej.net/content/repositories/snapshots
+		return
+	}
 	echo http://maven.imagej.net/content/groups/public
 }
 
