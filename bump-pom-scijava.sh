@@ -208,7 +208,7 @@ else
 		p="$(sed_quote "$property")"
 		v="$(sed_quote "$value")"
 		sed \
-		 -e "/<properties>/,/<\/properties>/s/\(<$p>\)[^<]*\(<\/$p>\)/\1$v\2/" \
+		 -e "/^	<properties>/,/^	<\/properties>/s/\(<$p>\)[^<]*\(<\/$p>\)/\1$v\2/" \
 		  $pom > $pom.new &&
 		if ! cmp $pom $pom.new
 		then
