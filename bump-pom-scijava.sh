@@ -207,6 +207,7 @@ else
 
 		p="$(sed_quote "$property")"
 		v="$(sed_quote "$value")"
+		# Set the primary property version
 		sed \
 		 -e "/<\!-- LIVE PROPERTIES START -->/,/<\!-- LIVE PROPERTIES END -->/s/\(<$p>\)[^<]*\(<\/$p>\)/\1$v\2/" \
 		  $pom > $pom.new &&
@@ -220,6 +221,25 @@ else
 		fi &&
 		mv $pom.new $pom ||
 		die "Failed to set property $property = $value"
+
+		# Set the profile snapshot version
+		if test "$ga"
+			value = "$(sh "$maven_helper" latest-version "$ga:SNAPSHOT")"
+			v="$(sed_quote "$value")"
+			sed \
+			 -e "/<profile>/,/<\/profile>/s/\(<$p>\)[^<]*\(<\/$p>\)/\1$v\2/" \
+			  $pom > $pom.new &&
+			if ! cmp $pom $pom.new
+			then
+				message="$(printf '%s\n\t%s = %s%s' \
+					"$message" "$property" "$value" "$latest_message")"
+			elif test -n "$must_change"
+			then
+				die "Profile property $property not found in $pom"
+			fi &&
+			mv $pom.new $pom ||
+			die "Failed to set profile property $property = $value"
+		fi
 
 		shift
 		shift
