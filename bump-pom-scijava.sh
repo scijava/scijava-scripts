@@ -114,7 +114,8 @@ set imagej1.version --latest \
 	scifio.version --latest \
 	scifio-bf-compat.version --latest \
 	scifio-lifesci.version --latest \
-	scijava-common.version --latest
+	scijava-common.version --latest \
+	scijava-maven-plugin.version --latest
 
 if test "--deploy-only" = "$*"
 then
