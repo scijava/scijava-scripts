@@ -159,9 +159,6 @@ else
 			imagej1.version)
 				ga=net.imagej:ij
 				;;
-			scijava-common.version)
-				ga=org.scijava:scijava-common
-				;;
 			imagej.version)
 				ga=net.imagej:ij-core
 				;;
@@ -197,6 +194,9 @@ else
 				;;
 			scifio-lifesci.version)
 				ga=io.scif:scifio-lifesci
+				;;
+			scijava-common.version|scijava-maven-plugin.version)
+				ga=org.scijava:${property%.version}
 				;;
 			*)
 				die "Unknown GAV for $1"
