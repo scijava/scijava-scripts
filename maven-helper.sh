@@ -8,11 +8,11 @@ set -e
 
 root_url () {
 	test snapshots != "$2" || {
-		if curl -fs http://maven.imagej.net/content/repositories/snapshots/"$1"/ > /dev/null 2>&1
+		if curl -fs http://maven.imagej.net/content/repositories/sonatype-snapshots/"$1"/ > /dev/null 2>&1
 		then
-			echo http://maven.imagej.net/content/repositories/snapshots
-		else
 			echo http://maven.imagej.net/content/repositories/sonatype-snapshots
+		else
+			echo http://maven.imagej.net/content/repositories/snapshots
 		fi
 		return
 	}
