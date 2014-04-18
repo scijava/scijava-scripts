@@ -107,6 +107,7 @@ set imagej1.version --latest \
 	imagej-launcher.version --latest \
 	imagej-maven-plugin.version --latest \
 	imglib2.version --latest \
+	imglib2-ij.version --latest \
 	junit-benchmarks.version --latest \
 	minimaven.version --latest \
 	nar.version --latest \
@@ -173,8 +174,8 @@ else
 			imagej-maven-plugin.version)
 				ga=net.imagej:imagej-maven-plugin
 				;;
-			imglib2.version)
-				ga=net.imglib2:imglib2
+			imglib2.version|imglib2-ij.version)
+				ga=net.imglib2:${property%.version}
 				;;
 			junit-benchmarks.version)
 				ga=org.scijava:junit-benchmarks
