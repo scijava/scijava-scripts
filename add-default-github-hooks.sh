@@ -13,19 +13,23 @@ die "Usage: $0 <org>/<repository>"
 
 repository="$1"
 
+mycurl () {
+	curl --netrc "$@" "$url"
+}
+
 url="https://api.github.com/repos/$repository/hooks"
-hooks="$(curl --netrc "$url")"
+hooks="$(mycurl)"
 
 # IRC
 if ! echo "$hooks" | grep '^    "name": "irc",$'
 then
 	echo "Adding IRC hook"
-	curl --netrc -XPOST -d '{"name":"irc","active":true,"events":["push","pull_request"],"config":{"server":"irc.freenode.net","port":"6667","room":"#imagejdev","message_without_join":"1","notice":"1"}}' "$url"
+	mycurl -XPOST -d '{"name":"irc","active":true,"events":["push","pull_request"],"config":{"server":"irc.freenode.net","port":"6667","room":"#imagejdev","message_without_join":"1","notice":"1"}}'
 fi
 
 # Jenkins
 if ! echo "$hooks" | grep '^    "name": "jenkinsgit",$'
 then
 	echo "Adding Jenkins hook"
-	curl --netrc -XPOST -d '{"name":"jenkinsgit","active":true,"events":["push"],"config":{"jenkins_url":"http://jenkins.imagej.net/"}}' "$url"
+	mycurl -XPOST -d '{"name":"jenkinsgit","active":true,"events":["push"],"config":{"jenkins_url":"http://jenkins.imagej.net/"}}'
 fi
