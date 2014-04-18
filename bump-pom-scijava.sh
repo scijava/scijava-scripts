@@ -107,6 +107,7 @@ set imagej1.version --latest \
 	imagej-launcher.version --latest \
 	imagej-maven-plugin.version --latest \
 	imglib2.version --latest \
+	imglib2-ij.version --latest \
 	junit-benchmarks.version --latest \
 	minimaven.version --latest \
 	nar.version --latest \
@@ -171,8 +172,8 @@ else
 			imagej-maven-plugin.version)
 				ga=net.imagej:imagej-maven-plugin
 				;;
-			imglib2.version)
-				ga=net.imglib2:imglib2
+			imglib2.version|imglib2-ij.version)
+				ga=net.imglib2:${property%.version}
 				;;
 			junit-benchmarks.version)
 				ga=org.scijava:junit-benchmarks
@@ -208,8 +209,9 @@ else
 
 		p="$(sed_quote "$property")"
 		v="$(sed_quote "$value")"
+		# Set the primary property version
 		sed \
-		 -e "/<properties>/,/<\/properties>/s/\(<$p>\)[^<]*\(<\/$p>\)/\1$v\2/" \
+		 -e "/^	<properties>/,/^	<\/properties>/s/\(<$p>\)[^<]*\(<\/$p>\)/\1$v\2/" \
 		  $pom > $pom.new &&
 		if ! cmp $pom $pom.new
 		then
@@ -221,6 +223,22 @@ else
 		fi &&
 		mv $pom.new $pom ||
 		die "Failed to set property $property = $value"
+
+		# Set the profile snapshot version
+		value="$(sh "$maven_helper" latest-version "$ga:SNAPSHOT")"
+		v="$(sed_quote "$value")"
+		sed -e "/<profiles>/,/<\/profiles>/s/\(<$p>\)[^<]*\(<\/$p>\)/\1$v\2/" \
+		  $pom > $pom.new &&
+		if ! cmp $pom $pom.new
+		then
+			message="$(printf '%s\n\t%s = %s%s' \
+				"$message" "$property" "$value" "$latest_message")"
+		elif test -n "$must_change"
+		then
+			die "Profile property $property not found in $pom"
+		fi &&
+		mv $pom.new $pom ||
+		die "Failed to set profile property $property = $value"
 
 		shift
 		shift
