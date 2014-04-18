@@ -8,7 +8,12 @@ set -e
 
 root_url () {
 	test snapshots != "$2" || {
-		echo http://maven.imagej.net/content/repositories/snapshots
+		if curl -fs http://maven.imagej.net/content/repositories/snapshots/"$1"/ > /dev/null 2>&1
+		then
+			echo http://maven.imagej.net/content/repositories/snapshots
+		else
+			echo http://maven.imagej.net/content/repositories/sonatype-snapshots
+		fi
 		return
 	}
 	echo http://maven.imagej.net/content/groups/public
@@ -108,17 +113,17 @@ project_url () {
 	version="$(version "$gav")"
 	case "$version" in
 	*SNAPSHOT)
-		echo "$(root_url $artifactId snapshots)/$infix"
+		echo "$(root_url $infix snapshots)/$infix"
 		;;
 	*)
 		# Release could be in either releases or thirdparty; try releases first
-		project_url="$(root_url $artifactId releases)/$infix"
+		project_url="$(root_url $infix releases)/$infix"
 		header=$(curl -Is "$project_url/")
 		case "$header" in
 		HTTP/1.?" 200 OK"*)
 			;;
 		*)
-			project_url="$(root_url $artifactId thirdparty)/$infix"
+			project_url="$(root_url $infix thirdparty)/$infix"
 			;;
 		esac
 		echo "$project_url"
@@ -135,15 +140,15 @@ jar_url () {
 	infix="$(groupId "$gav" | tr . /)/$artifactId/$version"
 	case "$version" in
 	*-SNAPSHOT)
-		url="$(root_url $artifactId snapshots)/$infix/maven-metadata.xml"
+		url="$(root_url $infix snapshots)/$infix/maven-metadata.xml"
 		metadata="$(curl -s "$url")"
 		timestamp="$(extract_tag timestamp "$metadata")"
 		buildNumber="$(extract_tag buildNumber "$metadata")"
 		version=${version%-SNAPSHOT}-$timestamp-$buildNumber
-		echo "$(root_url $artifactId snapshots)/$infix/$artifactId-$version.jar"
+		echo "$(root_url $infix snapshots)/$infix/$artifactId-$version.jar"
 		;;
 	*)
-		echo "$(root_url $artifactId releases)/$infix/$artifactId-$version.jar"
+		echo "$(root_url $infix releases)/$infix/$artifactId-$version.jar"
 		;;
 	esac
 }
