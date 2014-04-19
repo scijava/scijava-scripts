@@ -178,9 +178,6 @@ else
 			junit-benchmarks.version)
 				ga=org.scijava:junit-benchmarks
 				;;
-			minimaven.version)
-				ga=net.imagej:minimaven
-				;;
 			nar.version)
 				ga=com.github.maven-nar:nar-maven-plugin
 				;;
@@ -196,7 +193,7 @@ else
 			scifio-lifesci.version)
 				ga=io.scif:scifio-lifesci
 				;;
-			scijava-common.version|scijava-maven-plugin.version)
+			scijava-common.version|scijava-maven-plugin.version|minimaven.version)
 				ga=org.scijava:${property%.version}
 				;;
 			*)
