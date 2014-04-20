@@ -21,7 +21,7 @@ type git-remote-hg > /dev/null 2>&1 || {
 HG_URL="$1"
 shift
 
-test -d .git || git init
+test -d .git || git init --bare
 test a"hg::$HG_URL" = a"$(git config remote.origin.url)" ||
 git remote add --mirror=fetch origin hg::"$HG_URL"
 
