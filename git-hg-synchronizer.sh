@@ -5,24 +5,18 @@
 
 set -e
 
-GIT_HG="$(cd ../../ && pwd)"/git-hg
-test -d "$GIT_HG"/src || {
-	mkdir -p "$GIT_HG"
-	git clone git://github.com/msysgit/git "$GIT_HG"/src
-}
-test -x "$GIT_HG"/bin/git || (
-	if ! dpkg -l libcurl4-openssl-dev libexpat1-dev gettext mercurial \
-		> /dev/null
+type git-remote-hg > /dev/null 2>&1 || {
+	mkdir -p "$HOME"/bin &&
+	if test ! -x "$HOME"/bin/git-remote-hg
 	then
-		echo "Missing packages" >&2
-		exit 1
-	fi
-	cd "$GIT_HG"/src &&
-	git checkout devel &&
-	make install prefix="$GIT_HG"
-)
-
-export PATH="$GIT_HG"/bin:$PATH
+		curl -Lfs https://github.com/msysgit/git/raw/master/contrib/remote-helpers/git-remote-hg > "$HOME"/bin/git-remote-hg &&
+		chmod a+x "$HOME"/bin/git-remote-hg
+	fi &&
+	export PATH="$HOME"/bin:$PATH
+} || {
+	echo "Could not install git-remote-hg" >&2
+	exit 1
+}
 
 HG_URL="$1"
 shift
