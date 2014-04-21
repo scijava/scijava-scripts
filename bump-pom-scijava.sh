@@ -116,7 +116,8 @@ set imagej1.version --latest \
 	scifio-bf-compat.version --latest \
 	scifio-lifesci.version --latest \
 	scijava-common.version --latest \
-	scijava-maven-plugin.version --latest
+	scijava-maven-plugin.version --latest \
+	swing-checkbox-tree.version --latest
 
 if test "--deploy-only" = "$*"
 then
@@ -195,6 +196,9 @@ else
 				;;
 			scijava-common.version|scijava-maven-plugin.version|minimaven.version)
 				ga=org.scijava:${property%.version}
+				;;
+			swing-checkbox-tree.version)
+				ga=org.scijava:swing-checkbox-tree
 				;;
 			*)
 				die "Unknown GAV for $1"
