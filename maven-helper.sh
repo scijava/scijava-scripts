@@ -8,15 +8,15 @@ set -e
 
 root_url () {
 	test snapshots != "$2" || {
-		if curl -fs http://maven.imagej.net/content/repositories/sonatype-snapshots/"$1"/ > /dev/null 2>&1
+		if curl -fs http://maven.imagej.net/service/local/repositories/sonatype-snapshots/content/"$1"/maven-metadata.xml > /dev/null 2>&1
 		then
-			echo http://maven.imagej.net/content/repositories/sonatype-snapshots
+			echo http://maven.imagej.net/service/local/repositories/sonatype-snapshots/content
 		else
 			echo http://maven.imagej.net/content/repositories/snapshots
 		fi
 		return
 	}
-	echo http://maven.imagej.net/content/groups/public
+	echo http://maven.imagej.net/service/local/repo_groups/public/content
 }
 
 die () {
