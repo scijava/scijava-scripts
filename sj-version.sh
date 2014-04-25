@@ -12,8 +12,16 @@ diff="$2"
 repo="http://maven.imagej.net/content/groups/public"
 
 props() {
-	url="$repo/org/scijava/pom-scijava/$1/pom-scijava-$1.pom"
-	curl -s $url | \
+	if [ -e "$1" ]
+	then
+		# extract version properties from the given file path
+		versions=$(cat "$1")
+	else
+		url="$repo/org/scijava/pom-scijava/$1/pom-scijava-$1.pom"
+		versions=$(curl -s "$url")
+		# assume argument is a version number of pom-scijava
+	fi
+	echo "$versions" | \
 		grep '\.version>' | \
 		sed 's/<\/.*//' | \
 		sed 's/^	*<\(.*\)>/\1: /' | \
