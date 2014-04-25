@@ -75,6 +75,19 @@ extract_tag () {
 	esac
 }
 
+# Given an xml, extract the last <tag>
+
+extract_last_tag () {
+	result="${2##*<$1>}"
+	case "$result" in
+	"$2")
+		;;
+	*)
+		echo "${result%%</$1>*}"
+		;;
+	esac
+}
+
 # Given an xml, skip all <tag> sections
 
 skip_tag () {
@@ -214,7 +227,7 @@ latest_version () {
 	metadata="$(curl -s "$(project_url "$1")"/maven-metadata.xml)"
 	latest="$(extract_tag release "$metadata")"
 	test -n "$latest" || latest="$(extract_tag latest "$metadata")"
-	test -n "$latest" || latest="$(extract_tag version "$metadata")"
+	test -n "$latest" || latest="$(extract_last_tag version "$metadata")"
 	echo "$latest"
 }
 
