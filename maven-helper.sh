@@ -234,12 +234,15 @@ latest_version () {
 # Given a GA parameter, invalidate the cache in ImageJ's Nexus' group/public
 
 SONATYPE_DATA_CACHE_URL=http://maven.imagej.net/service/local/data_cache/repositories/sonatype/content
+SONATYPE_SNAPSHOTS_DATA_CACHE_URL=http://maven.imagej.net/service/local/data_cache/repositories/sonatype-snapshots/content
 invalidate_cache () {
 	ga="$1"
 	artifactId="$(artifactId "$ga")"
 	infix="$(groupId "$ga" | tr . /)/$artifactId"
 	curl --netrc -i -X DELETE \
 		$SONATYPE_DATA_CACHE_URL/$infix/maven-metadata.xml &&
+	curl --netrc -i -X DELETE \
+		$SONATYPE_SNAPSHOTS_DATA_CACHE_URL/$infix/maven-metadata.xml &&
 	version="$(latest_version "$ga")" &&
 	infix="$infix/$version" &&
 	curl --netrc -i -X DELETE \
