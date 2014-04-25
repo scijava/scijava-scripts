@@ -23,8 +23,8 @@ props() {
 	fi
 	echo "$versions" | \
 		grep '\.version>' | \
-		sed 's/<\/.*//' | \
-		sed 's/^	*<\(.*\)>/\1: /' | \
+		sed -E -e 's/^				(.*)/\1 [DEV]/' | \
+		sed -E -e 's/^	*<(.*)\.version>(.*)<\/.*\.version>/\1 = \2/' | \
 		sort
 }
 
