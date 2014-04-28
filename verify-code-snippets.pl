@@ -40,7 +40,7 @@ sub processURL($) {
 	my ($pageURL) = @_;
 
 	debug("Downloading $pageURL\n");
-	my @page = `curl -s "$pageURL"`;
+	my @page = `curl -Ls "$pageURL"`;
 
 	# decode encoded HTML characters (e.g., '&amp;' -> '&')
 	for (my $pageIndex = 0; $pageIndex < @page; $pageIndex++) {
@@ -58,7 +58,7 @@ sub processURL($) {
 		if ($pageLine =~ /$codeLink/) {
 			my $codeURL = makeRaw($&);
 			debug("Downloading $codeURL");
-			my @code = `curl -s $codeURL`;
+			my @code = `curl -Ls $codeURL`;
 
 			# HACK: strip off leading copyright header comment
 			while ($code[0] =~ /^[\/ ]\*/ || $code[0] =~ /^$/) { shift @code; }
