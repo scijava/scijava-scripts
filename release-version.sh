@@ -103,7 +103,7 @@ net.sf.antcontrib:cpptasks-parallel:*|*:maven-nar-plugin:*)
 	;;
 *:scijava-common:*|*:ij1-patcher:*|*:minimaven:*|org.scijava:junit-benchmarks:*\
 |org.scijava:swing-checkbox-tree:*|org.scijava:jep:*|*:scijava-maven-plugin:*\
-|*:imagej-maven-plugin:*)
+|*:imagej-maven-plugin:*|org.scijava:pom-scijava:*|net.imagej:pom-imagej:*)
 	test -n "$GPG_KEYNAME" || die "Need to set GPG_KEYNAME"
 	test -n "$GPG_PASSPHRASE" || die "Need to set GPG_PASSPHRASE"
 	PROFILE=-Psonatype-oss-release
