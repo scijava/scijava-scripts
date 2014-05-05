@@ -89,7 +89,7 @@ net.imglib2:pom-imglib2:2.0.0-*SNAPSHOT)
 	test -n "$DEV_VERSION" ||
 	DEV_VERSION=-DdevelopmentVersion=2.0.0-SNAPSHOT
 	;;
-net.imagej:ij-launcher:*)
+net.imagej:imagej-launcher:*)
 	SKIP_DEPLOY=t
 	;;
 net.sf.antcontrib:cpptasks-parallel:*|*:maven-nar-plugin:*)
