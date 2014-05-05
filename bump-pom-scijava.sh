@@ -168,7 +168,7 @@ else
 				ga=net.imagej:ij1-patcher
 				;;
 			imagej-launcher.version)
-				ga=net.imagej:ij-launcher
+				ga=net.imagej:imagej-launcher
 				;;
 			imagej-maven-plugin.version)
 				ga=net.imagej:imagej-maven-plugin
