@@ -364,7 +364,22 @@ sub scm($) {
 # Obtains a list of artifacts in the given group.
 sub artifacts($) {
 	my ($groupId) = @_;
-	return split("\n", execute("$dir/maven-helper.sh artifacts \"$groupId\""));
+
+	my $url = $groupId;
+	$url =~ s/\./\//g;
+	$url = "http://maven.imagej.net/content/groups/public/$url/";
+
+	my @links = `curl -fs "$url"`;
+	my @artifacts = ();
+	for my $link (@links) {
+		if ($link =~ /<a href=\"$url.*\/<\/a>/) {
+			chop $link;
+			$link =~ s/ *<[^>]*>(.*)\/<\/a>/$1/;
+			push @artifacts, $link;
+		}
+	}
+
+	return @artifacts;
 }
 
 # Executes the given shell command.
