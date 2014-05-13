@@ -76,7 +76,7 @@ my $verbose;
 		($doHelp = 1);
 
 	if ($doHelp) {
-		print STDERR "Usage: sj-hierachy.pl [-glstqv]\n";
+		print STDERR "Usage: sj-hierachy.pl [-cglpstqv]\n";
 		print STDERR "\n";
 		print STDERR "  -c, --ci      : list involved CI URLs\n";
 		print STDERR "  -g, --scm     : list involved SCM URLs\n";
