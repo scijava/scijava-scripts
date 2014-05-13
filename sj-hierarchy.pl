@@ -165,7 +165,10 @@ sub resolve_artifacts($) {
 
 				# determine the latest version
 				my $version = version($ga);
-				if ($version) {
+				if ($version =~ /-SNAPSHOT$/) {
+					detail("Ignoring SNAPSHOT-only artifact: $ga");
+				}
+				elsif ($version) {
 					info("$ga:$version");
 					print CACHE "$ga:$version\n";
 				}
