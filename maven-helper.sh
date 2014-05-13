@@ -394,15 +394,6 @@ get_jar () {
 	echo "$tmpfile"
 }
 
-# Given a groupId, get the list of artifacts
-
-list_artifacts () {
-	url="$(root_url)/$(echo "$1" | tr . /)/"
-	links="$(curl -s "$url" | grep "<a href=\"$url.*/</a>")"
-	artifacts="$(echo "$links" | sed 's/ *<[^>]*>\(.*\)\/<\/a>/\1/')"
-	echo "$artifacts"
-}
-
 # Given a GAV parameter, get the commit from the manifest of the deployed .jar
 
 commit_from_gav () {
@@ -471,9 +462,6 @@ is_deployed () {
 # The main part
 
 case "$1" in
-artifacts)
-	list_artifacts "$2"
-	;;
 commit)
 	commit_from_gav "$2"
 	;;
@@ -525,9 +513,6 @@ is-deployed)
 	die "Usage: $0 [command] [argument...]"'
 
 Commands:
-
-artifacts <groupId>
-	Gets the list of artifacts of the given group.
 
 commit <groupId>:<artifactId>:<version>
 	Gets the commit from which the given artifact was built.
