@@ -36,7 +36,7 @@ if (!`git tag -l | grep $tag`) {
   exit 3;
 }
 
-my @commits = `git cherry -v $tag master`;
+my @commits = `git cherry -v $tag origin/master`;
 my $commitCount = @commits;
 if ($commitCount > 1 ||
   $commitCount == 1 && $commits[0] !~ /Bump to next development cycle$/)
