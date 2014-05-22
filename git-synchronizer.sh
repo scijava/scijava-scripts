@@ -252,9 +252,16 @@ do
 					echo ":refs/heads/$ref"
 				fi
 			else
-				if test ${sha1#+} != "$(git rev-parse $remoteref 2> /dev/null)"
+				sha1=${sha1#+}
+				if test $sha1 != "$(git rev-parse $remoteref 2> /dev/null)"
 				then
-					echo "$sha1:refs/heads/$ref"
+					if test -n "$(git rev-list "$sha1..$remoteref")"
+					then
+						# really need to force
+						echo "+$sha1:refs/heads/$ref"
+					else
+						echo "$sha1:refs/heads/$ref"
+					fi
 				fi
 			fi
 		done)
