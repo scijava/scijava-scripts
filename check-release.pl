@@ -35,6 +35,9 @@ if (!$latest || $latest =~ /\-SNAPSHOT$/) {
 
 # compare the release tag with the master branch
 my $tag = "$artifactId-$latest";
+if ($tag =~ /^pom-(.*)$/) {
+  $tag = $1;
+}
 
 if (!`git tag -l | grep $tag`) {
   print STDERR "[ERROR] $ga: No release tag: $tag\n";
