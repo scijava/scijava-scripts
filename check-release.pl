@@ -9,8 +9,7 @@ use File::Basename qw(dirname);
 # add SciJava scripts to the search path
 $ENV{PATH} .= ':' . dirname($0);
 
-# make sure the latest commits and tags are available
-`git fetch origin master 2> /dev/null`;
+# make sure the latest tags are available
 `git fetch --tags 2> /dev/null`;
 
 if (! -e "pom.xml") {
