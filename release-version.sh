@@ -79,11 +79,6 @@ BASE_GAV="$(maven_helper gav-from-pom pom.xml)" ||
 die "Could not obtain GAV coordinates for base project"
 
 case "$BASE_GAV" in
-net.imagej:pom-imagej:2.0.0-*SNAPSHOT)
-	test -n "$TAG" || TAG=-Dtag=imagej-$VERSION
-	test -n "$DEV_VERSION" ||
-	DEV_VERSION=-DdevelopmentVersion=2.0.0-SNAPSHOT
-	;;
 net.imglib2:pom-imglib2:2.0.0-*SNAPSHOT)
 	test -n "$TAG" || TAG=-Dtag=imglib2-$VERSION
 	test -n "$DEV_VERSION" ||
@@ -91,11 +86,6 @@ net.imglib2:pom-imglib2:2.0.0-*SNAPSHOT)
 	;;
 net.imagej:imagej-launcher:*)
 	SKIP_DEPLOY=t
-	;;
-net.sf.antcontrib:cpptasks-parallel:*|*:maven-nar-plugin:*)
-	BATCH_MODE=
-	SKIP_PUSH=t
-	ALT_REPOSITORY=$IMAGEJ_THIRDPARTY_REPOSITORY
 	;;
 *:nar-maven-plugin:*)
 	PROFILE=-Psonatype-oss-release
