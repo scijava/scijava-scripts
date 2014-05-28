@@ -29,7 +29,7 @@ if (! -e "pom.xml") {
 }
 
 # determine the project's GAV
-my $gav = `sh maven-helper.sh gav-from-pom pom.xml`;
+my $gav = `maven-helper.sh gav-from-pom pom.xml`;
 chomp $gav;
 my ($groupId, $artifactId, $version) = split(':', $gav);
 my $ga = "$groupId:$artifactId";
@@ -37,7 +37,7 @@ my $ga = "$groupId:$artifactId";
 my ($latest, $tag);
 if ($ask_nexus_for_latest_version) {
   # determine the latest release
-  $latest = `sh maven-helper.sh latest-version \"$ga\"`;
+  $latest = `maven-helper.sh latest-version \"$ga\"`;
   chomp $latest;
 
   if (!$latest || $latest =~ /\-SNAPSHOT$/) {
