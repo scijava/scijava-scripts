@@ -5,6 +5,12 @@
 
 use strict;
 use File::Basename qw(dirname);
+use Getopt::Long;
+
+my $ask_nexus_for_latest_version;
+
+GetOptions ('ask-nexus-for-latest-version' => \$ask_nexus_for_latest_version)
+or die ('Usage: ' . $0 . ' [--ask-nexus-for-latest-version]');
 
 # add SciJava scripts to the search path
 $ENV{PATH} .= ':' . dirname($0);
@@ -23,24 +29,37 @@ chomp $gav;
 my ($groupId, $artifactId, $version) = split(':', $gav);
 my $ga = "$groupId:$artifactId";
 
-# determine the latest release
-my $latest = `maven-helper.sh latest-version \"$ga\"`;
-chomp $latest;
+my ($latest, $tag);
+if ($ask_nexus_for_latest_version) {
+  # determine the latest release
+  $latest = `maven-helper.sh latest-version \"$ga\"`;
+  chomp $latest;
 
-if (!$latest || $latest =~ /\-SNAPSHOT$/) {
-  print STDERR "[ERROR] $ga: No release version\n";
-  exit 2;
-}
+  if (!$latest || $latest =~ /\-SNAPSHOT$/) {
+    print STDERR "[ERROR] $ga: No release version\n";
+    exit 2;
+  }
 
-# compare the release tag with the master branch
-my $tag = "$artifactId-$latest";
-if ($tag =~ /^pom-(.*)$/) {
-  $tag = $1;
-}
+  # compare the release tag with the master branch
+  $tag = "$artifactId-$latest";
+  if ($tag =~ /^pom-(.*)$/) {
+    $tag = $1;
+  }
 
-if (!`git tag -l | grep $tag`) {
-  print STDERR "[ERROR] $ga: No release tag: $tag\n";
-  exit 3;
+  if (!`git tag -l | grep $tag`) {
+    print STDERR "[ERROR] $ga: No release tag: $tag\n";
+    exit 3;
+  }
+} else {
+  my $name = $artifactId;
+  $name =~ s/^pom-//;
+  my $prefix = "refs/tags/$name-";
+
+  # just use the available tags to determine the latest release
+  $tag = `git for-each-ref --count=1 --sort='-*authordate' --format='%(refname)' $prefix\*`;
+  chomp $tag;
+  $tag =~ s/refs\/tags\///;
+  $latest = substr($tag, length($name) + 1);
 }
 
 my @commits = `git cherry -v $tag origin/master`;
