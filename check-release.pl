@@ -8,15 +8,20 @@ use File::Basename qw(dirname);
 use Getopt::Long;
 
 my $ask_nexus_for_latest_version;
+my $git_fetch_first;
 
-GetOptions ('ask-nexus-for-latest-version' => \$ask_nexus_for_latest_version)
-or die ('Usage: ' . $0 . ' [--ask-nexus-for-latest-version]');
+GetOptions ('ask-nexus-for-latest-version' => \$ask_nexus_for_latest_version,
+  'git-fetch-first' => \$git_fetch_first)
+or die ('Usage: ' . $0
+  . ' [--ask-nexus-for-latest-version] [--git-fetch-first]');
 
 # add SciJava scripts to the search path
 $ENV{PATH} .= ':' . dirname($0);
 
-# make sure the latest tags are available
-`git fetch --tags 2> /dev/null`;
+if ($git_fetch_first) {
+  # make sure the latest tags are available
+  `git fetch --tags 2> /dev/null`;
+}
 
 if (! -e "pom.xml") {
   print STDERR "[ERROR] No pom.xml: " . `pwd`;
