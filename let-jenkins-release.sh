@@ -34,6 +34,7 @@ git@github.com:*|github.com:*|github:*)
 	;;
 esac
 repo=${repo%/}
+repo=${repo%.git}
 repository_url=${repo##*/}-github:$repo
 
 test refs/heads/master = "$(git rev-parse --symbolic-full-name HEAD)" ||
