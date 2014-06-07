@@ -87,10 +87,7 @@ net.imglib2:pom-imglib2:2.0.0-*SNAPSHOT)
 net.imagej:imagej-launcher:*)
 	SKIP_DEPLOY=t
 	;;
-*:nar-maven-plugin:*)
-	PROFILE=-Psonatype-oss-release
-	INVALIDATE_NEXUS=t
-	;;
+*:nar-maven-plugin:*|\
 *:scijava-common:*|*:ij1-patcher:*|*:minimaven:*|org.scijava:junit-benchmarks:*\
 |org.scijava:swing-checkbox-tree:*|org.scijava:jep:*|*:scijava-maven-plugin:*\
 |org.scijava:native-lib-loader:*|org.scijava:scijava-log-slf4j:*\
