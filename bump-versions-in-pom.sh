@@ -54,6 +54,29 @@ maven_helper="$(cd "$(dirname "$0")" && pwd)/maven-helper.sh" &&
 test -f "$maven_helper" ||
 die "Could not find maven-helper.sh"
 
+bump_parent_if_needed () {
+	gav="$(sh "$maven_helper" parent-gav-from-pom pom.xml)" &&
+	version="${gav#*:*:}" &&
+	test "$version" != "$gav" ||
+	die "Could not determine parent: $gav"
+
+	latest="$(sh "$maven_helper" latest-version ${gav%:$version})" &&
+	test -n "$latest" ||
+	die "Could not determine latest ${gav%:$version} version"
+
+	test $version != $latest || {
+		echo "Parent is already the newest version: $gav" >&2
+		return 0
+	}
+
+	sed "/<parent>/,/<\/parent>/s/\(<version>\)$version\(<\/version>\)/\1$latest\2/" \
+		pom.xml > pom.xml.new &&
+	mv -f pom.xml.new pom.xml ||
+	die "Could not edit pom.xml"
+
+	return 1
+}
+
 test -z "$bump_parent" || {
 	require_clean_worktree
 
@@ -71,25 +94,7 @@ test -z "$bump_parent" || {
 		;;
 	esac
 
-	gav="$(sh "$maven_helper" parent-gav-from-pom pom.xml)" &&
-	version="${gav#org.scijava:pom-scijava:}" &&
-	test "$version" != "$gav" ||
-	die "Parent is not pom-scijava: $gav"
-
-	latest="$(sh "$maven_helper" latest-version org.scijava:pom-scijava)" &&
-	test -n "$latest" ||
-	die "Could not determine latest pom-scijava version"
-
-	test $version != $latest || {
-		echo "Parent is already the newest pom-scijava version: $version" >&2
-		exit 0
-	}
-
-	sed "/<parent>/,/<\/parent>/s/\(<version>\)$version\(<\/version>\)/\1$latest\2/" \
-		pom.xml > pom.xml.new &&
-	mv -f pom.xml.new pom.xml ||
-	die "Could not edit pom.xml"
-
+	bump_parent_if_needed ||
 	commit "Bump parent to $latest" pom.xml
 
 	exit
