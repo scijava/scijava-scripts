@@ -129,48 +129,16 @@ do
 	if test "a--latest" = "a$value"
 	then
 		must_change=
-		case "$property" in
-		imagej1.version)
-			ga=net.imagej:ij
-			;;
-		imagej.version)
-			ga=net.imagej:ij-core
-			;;
-		ij1-patcher.version)
-			ga=net.imagej:ij1-patcher
-			;;
-		imagej-maven-plugin.version)
-			ga=net.imagej:imagej-maven-plugin
-			;;
-		imglib2.version|imglib2-ij.version)
-			ga=net.imglib2:${property%.version}
-			;;
-		junit-benchmarks.version)
-			ga=org.scijava:junit-benchmarks
-			;;
-		nar.version)
-			ga=com.github.maven-nar:nar-maven-plugin
-			;;
-		scifio-ome-xml.version)
-			ga=io.scif:scifio-ome-xml
-			;;
-		scifio.version)
-			ga=io.scif:scifio
-			;;
-		scifio-bf-compat.version)
-			ga=io.scif:scifio-bf-compat
-			;;
-		scifio-lifesci.version)
-			ga=io.scif:scifio-lifesci
-			;;
-		scijava-common.version|scijava-maven-plugin.version|minimaven.version)
-			ga=org.scijava:${property%.version}
-			;;
-		swing-checkbox-tree.version)
-			ga=org.scijava:swing-checkbox-tree
+		artifactId="${property%.version}"
+		case "$artifactId" in
+		scijava-maven-plugin)
+			ga=org.scijava:$artifactId
 			;;
 		*)
-			die "Unknown GAV for $1"
+			ga="$(sed -n '/<groupId>/{
+N;
+s/.*<groupId>\([^<]*\).*<artifactId>'"$artifactId"'<.*/\1/p
+}' pom.xml | head -n 1):$artifactId"
 			;;
 		esac
 		latest_message=" (latest $ga)"
