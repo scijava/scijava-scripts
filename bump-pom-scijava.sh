@@ -130,6 +130,8 @@ do
 	then
 		must_change=
 		artifactId="${property%.version}"
+		test ! -t 0 ||
+		printf '\rLooking at %s...\033[K\r' "$artifactId"
 		case "$artifactId" in
 		scijava-maven-plugin)
 			ga=org.scijava:$artifactId
