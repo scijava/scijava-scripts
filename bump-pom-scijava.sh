@@ -16,7 +16,7 @@ do
 	--bump-parent)
 		bump_parent=t
 		;;
-	--default-properties|--deploy-only)
+	--default-properties)
 		# handle later
 		break
 		;;
@@ -43,15 +43,10 @@ require_clean_worktree () {
 	die "There are uncommitted changes!"
 }
 
-commit_and_push () {
+commit () {
 	test -n "$skip_commit" || {
-		remote="(none)" &&
-		upstream="$(git rev-parse --symbolic-full-name HEAD@{u})" &&
-		remote="${upstream#refs/remotes/}" &&
-		remote="${remote%%/*}" &&
-		git commit -s -m "$@" &&
-		git push "$remote" HEAD ||
-		die "Could not commit and push to $remote"
+		git commit -s -m "$@" ||
+		die "Could not commit"
 	}
 }
 
@@ -95,7 +90,7 @@ test -z "$bump_parent" || {
 	mv -f pom.xml.new pom.xml ||
 	die "Could not edit pom.xml"
 
-	commit_and_push "Bump to pom-scijava $latest" pom.xml
+	commit "Bump parent to $latest" pom.xml
 
 	exit
 }
@@ -119,150 +114,137 @@ set imagej1.version --latest \
 	scijava-maven-plugin.version --latest \
 	swing-checkbox-tree.version --latest
 
-if test "--deploy-only" = "$*"
-then
-	pom=pom.xml
-	cd "$(dirname "$0")/../pom-scijava" &&
-	test -f $pom ||
-	die "Could not switch to pom-scijava's root directory"
-else
-	test $# -ge 2 &&
-	test 0 = $(($#%2)) ||
-	die "Usage: $0 [--skip-commit] (--bump-parent | --default-properties | --deploy-only | <key> <value>...)"
+test $# -ge 2 &&
+test 0 = $(($#%2)) ||
+die "Usage: $0 [--skip-commit] (--bump-parent | --default-properties | <key> <value>...)"
 
-	pom=pom.xml
-	cd "$(dirname "$0")/../pom-scijava" &&
-	test -f $pom ||
-	die "Could not switch to pom-scijava's root directory"
+pom=pom.xml
+cd "$(dirname "$0")/../pom-scijava" &&
+test -f $pom ||
+die "Could not switch to pom-scijava's root directory"
 
-	require_clean_worktree
+require_clean_worktree
 
-	sed_quote () {
-		echo "$1" | sed "s/[]\/\"\'\\\\(){}[\!\$  ;]/\\\\&/g"
-	}
-
-	gav="$(sh "$maven_helper" gav-from-pom $pom)"
-	old_version=${gav##*:}
-	new_version="${old_version%-SNAPSHOT}"
-	test "$old_version" != "$new_version" ||
-	new_version=${old_version%.*}.$((1 + ${old_version##*.}))
-
-	message="$(printf "%s\n" "The following changes were made:")"
-	while test $# -ge 2
-	do
-		must_change=t
-		latest_message=
-		property="$1"
-		value="$2"
-		if test "a--latest" = "a$value"
-		then
-			must_change=
-			case "$property" in
-			imagej1.version)
-				ga=net.imagej:ij
-				;;
-			imagej.version)
-				ga=net.imagej:ij-core
-				;;
-			ij1-patcher.version)
-				ga=net.imagej:ij1-patcher
-				;;
-			imagej-maven-plugin.version)
-				ga=net.imagej:imagej-maven-plugin
-				;;
-			imglib2.version|imglib2-ij.version)
-				ga=net.imglib2:${property%.version}
-				;;
-			junit-benchmarks.version)
-				ga=org.scijava:junit-benchmarks
-				;;
-			nar.version)
-				ga=com.github.maven-nar:nar-maven-plugin
-				;;
-			scifio-ome-xml.version)
-				ga=io.scif:scifio-ome-xml
-				;;
-			scifio.version)
-				ga=io.scif:scifio
-				;;
-			scifio-bf-compat.version)
-				ga=io.scif:scifio-bf-compat
-				;;
-			scifio-lifesci.version)
-				ga=io.scif:scifio-lifesci
-				;;
-			scijava-common.version|scijava-maven-plugin.version|minimaven.version)
-				ga=org.scijava:${property%.version}
-				;;
-			swing-checkbox-tree.version)
-				ga=org.scijava:swing-checkbox-tree
-				;;
-			*)
-				die "Unknown GAV for $1"
-				;;
-			esac
-			latest_message=" (latest $ga)"
-			value="$(sh "$maven_helper" latest-version "$ga")"
-		fi
-
-		p="$(sed_quote "$property")"
-		v="$(sed_quote "$value")"
-		# Set the primary property version
-		sed \
-		 -e "/^	<properties>/,/^	<\/properties>/s/\(<$p>\)[^<]*\(<\/$p>\)/\1$v\2/" \
-		  $pom > $pom.new &&
-		if ! cmp $pom $pom.new
-		then
-			message="$(printf '%s\n\t%s = %s%s' \
-				"$message" "$property" "$value" "$latest_message")"
-		elif test -n "$must_change"
-		then
-			die "Property $property not found in $pom"
-		fi &&
-		mv $pom.new $pom ||
-		die "Failed to set property $property = $value"
-
-		# Set the profile snapshot version
-		value="$(sh "$maven_helper" latest-version "$ga:SNAPSHOT")"
-		v="$(sed_quote "$value")"
-		sed -e "/<profiles>/,/<\/profiles>/s/\(<$p>\)[^<]*\(<\/$p>\)/\1$v\2/" \
-		  $pom > $pom.new &&
-		if ! cmp $pom $pom.new
-		then
-			message="$(printf '%s\n\t%s = %s%s' \
-				"$message" "$property" "$value" "$latest_message")"
-		elif test -n "$must_change"
-		then
-			die "Profile property $property not found in $pom"
-		fi &&
-		mv $pom.new $pom ||
-		die "Failed to set profile property $property = $value"
-
-		shift
-		shift
-	done
-
-	! git diff --quiet $pom || {
-		echo "No properties changed!" >&2
-		# help detect when no commit is required by --default-properties
-		exit 128
-	}
-
-	mv $pom $pom.new &&
-	sed \
-	  -e "s/^\(\\t<version>\)$old_version\(<\/version>\)/\1$new_version\2/" \
-	  $pom.new > $pom &&
-	! cmp $pom $pom.new ||
-	die "Failed to increase version of $pom"
-
-	rm $pom.new ||
-	die "Failed to remove intermediate $pom.new"
-
-	commit_and_push "Increase pom-scijava version to $new_version" \
-		-m "$message" $pom
-fi
-
-test -n "$skip_commit" || {
-	mvn -DupdateReleaseInfo=true -Psonatype-oss-release clean deploy &&
-	sh "$maven_helper" invalidate-cache org.scijava:pom-scijava
+sed_quote () {
+	echo "$1" | sed "s/[]\/\"\'\\\\(){}[\!\$  ;]/\\\\&/g"
 }
+
+gav="$(sh "$maven_helper" gav-from-pom $pom)"
+old_version=${gav##*:}
+new_version="${old_version%-SNAPSHOT}"
+test "$old_version" != "$new_version" ||
+new_version=${old_version%.*}.$((1 + ${old_version##*.}))
+
+message="$(printf "%s\n" "The following changes were made:")"
+while test $# -ge 2
+do
+	must_change=t
+	latest_message=
+	property="$1"
+	value="$2"
+	if test "a--latest" = "a$value"
+	then
+		must_change=
+		case "$property" in
+		imagej1.version)
+			ga=net.imagej:ij
+			;;
+		imagej.version)
+			ga=net.imagej:ij-core
+			;;
+		ij1-patcher.version)
+			ga=net.imagej:ij1-patcher
+			;;
+		imagej-maven-plugin.version)
+			ga=net.imagej:imagej-maven-plugin
+			;;
+		imglib2.version|imglib2-ij.version)
+			ga=net.imglib2:${property%.version}
+			;;
+		junit-benchmarks.version)
+			ga=org.scijava:junit-benchmarks
+			;;
+		nar.version)
+			ga=com.github.maven-nar:nar-maven-plugin
+			;;
+		scifio-ome-xml.version)
+			ga=io.scif:scifio-ome-xml
+			;;
+		scifio.version)
+			ga=io.scif:scifio
+			;;
+		scifio-bf-compat.version)
+			ga=io.scif:scifio-bf-compat
+			;;
+		scifio-lifesci.version)
+			ga=io.scif:scifio-lifesci
+			;;
+		scijava-common.version|scijava-maven-plugin.version|minimaven.version)
+			ga=org.scijava:${property%.version}
+			;;
+		swing-checkbox-tree.version)
+			ga=org.scijava:swing-checkbox-tree
+			;;
+		*)
+			die "Unknown GAV for $1"
+			;;
+		esac
+		latest_message=" (latest $ga)"
+		value="$(sh "$maven_helper" latest-version "$ga")"
+	fi
+
+	p="$(sed_quote "$property")"
+	v="$(sed_quote "$value")"
+	# Set the primary property version
+	sed \
+	 -e "/^	<properties>/,/^	<\/properties>/s/\(<$p>\)[^<]*\(<\/$p>\)/\1$v\2/" \
+	  $pom > $pom.new &&
+	if ! cmp $pom $pom.new
+	then
+		message="$(printf '%s\n\t%s = %s%s' \
+			"$message" "$property" "$value" "$latest_message")"
+	elif test -n "$must_change"
+	then
+		die "Property $property not found in $pom"
+	fi &&
+	mv $pom.new $pom ||
+	die "Failed to set property $property = $value"
+
+	# Set the profile snapshot version
+	value="$(sh "$maven_helper" latest-version "$ga:SNAPSHOT")"
+	v="$(sed_quote "$value")"
+	sed -e "/<profiles>/,/<\/profiles>/s/\(<$p>\)[^<]*\(<\/$p>\)/\1$v\2/" \
+	  $pom > $pom.new &&
+	if ! cmp $pom $pom.new
+	then
+		message="$(printf '%s\n\t%s = %s%s' \
+			"$message" "$property" "$value" "$latest_message")"
+	elif test -n "$must_change"
+	then
+		die "Profile property $property not found in $pom"
+	fi &&
+	mv $pom.new $pom ||
+	die "Failed to set profile property $property = $value"
+
+	shift
+	shift
+done
+
+! git diff --quiet $pom || {
+	echo "No properties changed!" >&2
+	# help detect when no commit is required by --default-properties
+	exit 128
+}
+
+mv $pom $pom.new &&
+sed \
+  -e "s/^\(\\t<version>\)$old_version\(<\/version>\)/\1$new_version\2/" \
+  $pom.new > $pom &&
+! cmp $pom $pom.new ||
+die "Failed to increase version of $pom"
+
+rm $pom.new ||
+die "Failed to remove intermediate $pom.new"
+
+commit_and_push "Increase pom-scijava version to $new_version" \
+	-m "$message" $pom
