@@ -163,15 +163,11 @@ s/.*<groupId>\([^<]*\).*<artifactId>'"$artifactId"'<.*/\1/p
 	die "Failed to set property $property = $value"
 
 	# Set the profile snapshot version
-	value="$(sh "$maven_helper" latest-version "$ga:SNAPSHOT")"
-	v="$(sed_quote "$value")"
+	micro_version=${value##*.}
+	v="$(sed_quote "${value%.*}.$(($micro_version+1))-SNAPSHOT")"
 	sed -e "/<profiles>/,/<\/profiles>/s/\(<$p>\)[^<]*\(<\/$p>\)/\1$v\2/" \
 	  $pom > $pom.new &&
-	if ! cmp $pom $pom.new
-	then
-		message="$(printf '%s\n\t%s = %s%s' \
-			"$message" "$property" "$value" "$latest_message")"
-	elif test -n "$must_change"
+	if test -n "$must_change" && cmp $pom $pom.new
 	then
 		die "Profile property $property not found in $pom"
 	fi &&
