@@ -174,7 +174,7 @@ s/.*<groupId>\([^<]*\).*<artifactId>'"$artifactId"'<.*/\1/p
 	shift
 	shift
 
-	case "$artifactId" in imglib2*|ij) continue;; esac
+	case "$artifactId" in imglib2*|ij|imagej) continue;; esac
 
 	# Set the profile snapshot version
 	micro_version=${value##*.}
