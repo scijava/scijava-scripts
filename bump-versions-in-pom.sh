@@ -103,9 +103,6 @@ test 0 = $(($#%2)) ||
 die "Usage: $0 [--skip-commit] (--bump-parent | --default-properties | <key> <value>...)"
 
 pom=pom.xml
-cd "$(dirname "$0")/../pom-scijava" &&
-test -f $pom ||
-die "Could not switch to pom-scijava's root directory"
 
 require_clean_worktree
 
