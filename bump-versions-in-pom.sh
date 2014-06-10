@@ -115,6 +115,9 @@ sed_quote () {
 	echo "$1" | sed "s/[]\/\"\'\\\\(){}[\!\$  ;]/\\\\&/g"
 }
 
+grep "<parent>" pom.xml > /dev/null 2>&1 &&
+bump_parent_if_needed
+
 gav="$(sh "$maven_helper" gav-from-pom $pom)"
 old_version=${gav##*:}
 new_version="${old_version%-SNAPSHOT}"
