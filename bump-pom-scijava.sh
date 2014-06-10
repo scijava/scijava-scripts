@@ -188,15 +188,20 @@ done
 	exit 128
 }
 
-mv $pom $pom.new &&
-sed \
-  -e "s/^\(\\t<version>\)$old_version\(<\/version>\)/\1$new_version\2/" \
-  $pom.new > $pom &&
-! cmp $pom $pom.new ||
-die "Failed to increase version of $pom"
+case "$old_version" in
+*-SNAPSHOT) ;;
+*)
+	mv $pom $pom.new &&
+	sed \
+	  -e "s/^\(\\t<version>\)$old_version\(<\/version>\)/\1$new_version\2/" \
+	  $pom.new > $pom &&
+	! cmp $pom $pom.new ||
+	die "Failed to increase version of $pom"
 
-rm $pom.new ||
-die "Failed to remove intermediate $pom.new"
+	rm $pom.new ||
+	die "Failed to remove intermediate $pom.new"
+	;;
+esac
 
-commit_and_push "Increase pom-scijava version to $new_version" \
+commit "Bump component versions" \
 	-m "$message" $pom
