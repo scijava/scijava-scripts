@@ -101,7 +101,7 @@ test -z "$bump_parent" || {
 }
 
 test "a--default-properties" != "a$*" ||
-set $(sed -n '/^	<properties>/,/<!-- Open Microscopy Environment/s/.*<\([^>\/]*\.version\)>.*/\1 --latest/p' pom.xml)
+set $(sed -n '/^	<properties>/,/<\(\/properties>\|!-- Open Microscopy Environment\)/s/.*<\([^>\/]*\.version\)>.*/\1 --latest/p' pom.xml)
 
 test $# -ge 2 &&
 test 0 = $(($#%2)) ||
