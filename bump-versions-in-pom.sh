@@ -135,6 +135,8 @@ do
 	then
 		must_change=
 		artifactId="${property%.version}"
+		test imagej1 != "$artifactId" ||
+		artifactId=ij
 		test ! -t 0 ||
 		printf '\rLooking at %s...\033[K\r' "$artifactId"
 		case "$artifactId" in
@@ -172,7 +174,7 @@ s/.*<groupId>\([^<]*\).*<artifactId>'"$artifactId"'<.*/\1/p
 	shift
 	shift
 
-	case "$artifactId" in imglib2*) continue;; esac
+	case "$artifactId" in imglib2*|ij) continue;; esac
 
 	# Set the profile snapshot version
 	micro_version=${value##*.}
