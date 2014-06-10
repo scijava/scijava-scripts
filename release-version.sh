@@ -59,6 +59,15 @@ do
 	shift
 done
 
+test $# -gt 1 || test ! -t 0 || {
+	version="$(sed -n 's/^	<version>\(.*\)-SNAPSHOT<\/version>$/\1/p' \
+		pom.xml)"
+	printf 'Version? [%s]: ' "$version"
+	read line
+	test -z "$line" || version="$line"
+	set "$version"
+}
+
 test $# = 1 && test "a$1" = "a${1#-}" ||
 die "Usage: $0 [--no-batch-mode] [--skip-push] [--alt-repository=<repository>] [--thirdparty=imagej] [--skip-gpg] [--extra-arg=<args>] <release-version>"
 
