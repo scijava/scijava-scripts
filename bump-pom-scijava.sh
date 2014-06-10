@@ -162,6 +162,11 @@ s/.*<groupId>\([^<]*\).*<artifactId>'"$artifactId"'<.*/\1/p
 	mv $pom.new $pom ||
 	die "Failed to set property $property = $value"
 
+	shift
+	shift
+
+	case "$artifactId" in imglib2*) continue;; esac
+
 	# Set the profile snapshot version
 	micro_version=${value##*.}
 	v="$(sed_quote "${value%.*}.$(($micro_version+1))-SNAPSHOT")"
@@ -173,9 +178,6 @@ s/.*<groupId>\([^<]*\).*<artifactId>'"$artifactId"'<.*/\1/p
 	fi &&
 	mv $pom.new $pom ||
 	die "Failed to set profile property $property = $value"
-
-	shift
-	shift
 done
 
 ! git diff --quiet $pom || {
