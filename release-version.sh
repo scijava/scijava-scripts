@@ -59,7 +59,7 @@ do
 	shift
 done
 
-test $# -gt 1 || test ! -t 0 || {
+test $# = 1 || test ! -t 0 || {
 	version="$(sed -n 's/^	<version>\(.*\)-SNAPSHOT<\/version>$/\1/p' \
 		pom.xml)"
 	printf 'Version? [%s]: ' "$version"
