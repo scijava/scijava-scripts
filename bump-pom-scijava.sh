@@ -96,23 +96,7 @@ test -z "$bump_parent" || {
 }
 
 test "a--default-properties" != "a$*" ||
-set imagej1.version --latest \
-	imagej.version --latest \
-	ij1-patcher.version --latest \
-	imagej-launcher.version --latest \
-	imagej-maven-plugin.version --latest \
-	imglib2.version --latest \
-	imglib2-ij.version --latest \
-	junit-benchmarks.version --latest \
-	minimaven.version --latest \
-	nar.version --latest \
-	scifio-ome-xml.version --latest \
-	scifio.version --latest \
-	scifio-bf-compat.version --latest \
-	scifio-lifesci.version --latest \
-	scijava-common.version --latest \
-	scijava-maven-plugin.version --latest \
-	swing-checkbox-tree.version --latest
+set $(sed -n '/^	<properties>/,/<!-- Open Microscopy Environment/s/.*<\([^>\/]*\.version\)>.*/\1 --latest/p' pom.xml)
 
 test $# -ge 2 &&
 test 0 = $(($#%2)) ||
