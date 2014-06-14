@@ -65,6 +65,12 @@ version=${snapshot%-SNAPSHOT}
 test "$version" != "$snapshot" ||
 die "Not a -SNAPSHOT version: $snapshot"
 
+test ! -t 0 || {
+	printf 'Version? [%s]: ' "$version"
+	read line
+	test -z "$line" || version="$line"
+}
+
 jenkins_url=http://jenkins.imagej.net/job/Release-Version/buildWithParameters
 params="REPOSITORY_URL=$repository_url&COMMIT=$commit&VERSION_STRING=$version"
 if test -z "$simulate"
