@@ -16,7 +16,7 @@ do
 	--bump-parent)
 		bump_parent=t
 		;;
-	--default-properties)
+	--default|--default-properties)
 		# handle later
 		break
 		;;
@@ -100,12 +100,13 @@ test -z "$bump_parent" || {
 	exit
 }
 
+test "a--default" != "a$*" &&
 test "a--default-properties" != "a$*" ||
 set $(sed -n '/^	<properties>/,/<\(\/properties>\|!-- Open Microscopy Environment\)/s/.*<\([^>\/]*\.version\)>.*/\1 --latest/p' pom.xml)
 
 test $# -ge 2 &&
 test 0 = $(($#%2)) ||
-die "Usage: $0 [--skip-commit] (--bump-parent | --default-properties | <key> <value>...)"
+die "Usage: $0 [--skip-commit] (--bump-parent | --default | <key> <value>...)"
 
 pom=pom.xml
 
@@ -191,7 +192,7 @@ done
 
 ! git diff --quiet $pom || {
 	echo "No properties changed!" >&2
-	# help detect when no commit is required by --default-properties
+	# help detect when no commit is required by --default
 	exit 128
 }
 
