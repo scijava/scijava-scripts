@@ -111,6 +111,7 @@ skip_tag () {
 parent_gav_from_pom_xml () {
 	pom="$1"
 	parent="$(extract_tag parent "$pom")"
+	test -n "$parent" || return
 	groupId="$(extract_tag groupId "$parent")"
 	artifactId="$(extract_tag artifactId "$parent")"
 	version="$(extract_tag version "$parent")"
