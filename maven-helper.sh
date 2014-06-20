@@ -65,12 +65,12 @@ version () {
 # Given an xml, extract the first <tag>
 
 extract_tag () {
-	result="${2#*<$1>}"
+	result="${2%%</$1>*}"
 	case "$result" in
 	"$2")
 		;;
 	*)
-		echo "${result%%</$1>*}"
+		echo "${result#*<$1>}"
 		;;
 	esac
 }
