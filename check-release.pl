@@ -67,11 +67,9 @@ if ($ask_nexus_for_latest_version) {
   $latest = substr($tag, length($name) + 1);
 }
 
-my @commits = `git cherry -v $tag origin/master`;
+my @commits = `git rev-list $tag..origin/master -- src/main`;
 my $commitCount = @commits;
-if ($commitCount > 1 ||
-  $commitCount == 1 && $commits[0] !~ /Bump to next development cycle$/)
-{
+if ($commitCount > 0) {
   # new commits on master; a release is potentially needed
   print "$ga: $commitCount commits on master since $latest\n";
 }
