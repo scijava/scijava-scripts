@@ -174,20 +174,6 @@ s/.*<groupId>\([^<]*\).*<artifactId>'"$artifactId"'<.*/\1/p
 
 	shift
 	shift
-
-	case "$artifactId" in imglib2*|ij|imagej) continue;; esac
-
-	# Set the profile snapshot version
-	micro_version=${value##*.}
-	v="$(sed_quote "${value%.*}.$(($micro_version+1))-SNAPSHOT")"
-	sed -e "/<profiles>/,/<\/profiles>/s/\(<$p>\)[^<]*\(<\/$p>\)/\1$v\2/" \
-	  $pom > $pom.new &&
-	if test -n "$must_change" && cmp $pom $pom.new
-	then
-		die "Profile property $property not found in $pom"
-	fi &&
-	mv $pom.new $pom ||
-	die "Failed to set profile property $property = $value"
 done
 
 ! git diff --quiet $pom || {
