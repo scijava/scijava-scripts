@@ -55,10 +55,18 @@ test -f "$maven_helper" ||
 die "Could not find maven-helper.sh"
 
 bump_parent_if_needed () {
-	gav="$(sh "$maven_helper" parent-gav-from-pom pom.xml)" &&
+	gav="$(sh "$maven_helper" parent-gav-from-pom pom.xml)" ||
+	test -z "$gav" ||
+	die "Could not determine parent: $gav"
+
+	test -n "$gav" || {
+		echo "No parent to bump" >&2
+		return 0
+	}
+
 	version="${gav#*:*:}" &&
 	test "$version" != "$gav" ||
-	die "Could not determine parent: $gav"
+	die "Could not determine version: $gav"
 
 	latest="$(sh "$maven_helper" latest-version ${gav%:$version})" &&
 	test -n "$latest" ||
