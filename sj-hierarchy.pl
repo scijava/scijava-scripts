@@ -19,7 +19,6 @@ my @groupIds = (
 	'loci',
 	'net.imagej',
 	'net.imglib2',
-	'ome',
 	'org.scijava',
 	'sc.fiji',
 );
