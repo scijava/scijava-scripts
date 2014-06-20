@@ -67,9 +67,12 @@ if ($ask_nexus_for_latest_version) {
   $latest = substr($tag, length($name) + 1);
 }
 
-my @commits = `git rev-list $tag..origin/master -- src/main`;
-my $commitCount = @commits;
-if ($commitCount > 0) {
-  # new commits on master; a release is potentially needed
-  print "$ga: $commitCount commits on master since $latest\n";
+my $mains = `git ls-files */src/main/ src/main/ | sed 's-/main/.*-/main-' | uniq | tr '\n' ' '`;
+if ($mains ne '') {
+  my @commits = `git rev-list $tag..origin/master -- $mains`;
+  my $commitCount = @commits;
+  if ($commitCount > 0) {
+    # new commits on master; a release is potentially needed
+    print "$ga: $commitCount commits on master since $latest\n";
+  }
 }
