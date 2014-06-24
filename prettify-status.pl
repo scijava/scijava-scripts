@@ -77,7 +77,7 @@ if (@warnings > 0) {
   my $rowCount = @warnings;
   for my $line (@warnings) {
     my $rowClass = rowClass($rowIndex++, $rowCount);
-    print "<li class=\"$rowClass\">\n$line</li>\n";
+    print "<li class=\"$rowClass\">\n$line\n</li>\n";
   }
   print "</ul>\n\n";
 }
