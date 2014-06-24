@@ -10,7 +10,7 @@ my %orgs = (
   'org.scijava' => 'scijava',
   'io.scif'     => 'scifio',
   'net.imagej'  => 'imagej',
-  'net.imglib2' => 'imglib2',
+  'net.imglib2' => 'imglib',
 );
 
 sub rowClass($$) {
