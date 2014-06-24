@@ -9,11 +9,13 @@ use Getopt::Long;
 
 my $ask_nexus_for_latest_version;
 my $git_fetch_first;
+my $verbose;
 
 GetOptions ('ask-nexus-for-latest-version' => \$ask_nexus_for_latest_version,
-  'git-fetch-first' => \$git_fetch_first)
+  'git-fetch-first' => \$git_fetch_first,
+  'verbose' => \$verbose)
 or die ('Usage: ' . $0
-  . ' [--ask-nexus-for-latest-version] [--git-fetch-first]');
+  . ' [--ask-nexus-for-latest-version] [--git-fetch-first] [--verbose]');
 
 # add SciJava scripts to the search path
 $ENV{PATH} .= ':' . dirname($0);
@@ -71,7 +73,7 @@ my $mains = `git ls-files */src/main/ src/main/ | sed 's-/main/.*-/main-' | uniq
 if ($mains ne '') {
   my @commits = `git rev-list $tag..origin/master -- $mains`;
   my $commitCount = @commits;
-  if ($commitCount > 0) {
+  if ($verbose || $commitCount > 0) {
     # new commits on master; a release is potentially needed
     print "$ga: $commitCount commits on master since $latest\n";
   }
