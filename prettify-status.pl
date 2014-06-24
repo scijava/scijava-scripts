@@ -61,7 +61,7 @@ print "<body>\n\n";
 
 if (@warnings > 0) {
   print "<h2>Warnings</h2>\n";
-  print "<ul>\n";
+  print "<ul class=\"warnings\">\n";
   my $rowIndex = 0;
   my $rowCount = @warnings;
   for my $line (@warnings) {
@@ -72,7 +72,7 @@ if (@warnings > 0) {
 }
 
 print "<h2>Ahead</h2>\n";
-print "<table>\n";
+print "<table class=\"ahead\">\n";
 print "<tr>\n";
 print "<th>Project</th>\n";
 print "<th>Commits</th>\n";
