@@ -59,6 +59,16 @@ print "<link type=\"text/css\" rel=\"stylesheet\" href=\"status.css\" />\n";
 print "</head>\n";
 print "<body>\n\n";
 
+print "<h2>Warnings</h2>\n";
+print "<ul>\n";
+my $rowIndex = 0;
+my $rowCount = @warnings;
+for my $line (@warnings) {
+  my $rowClass = rowClass($rowIndex++, $rowCount);
+  print "<li class=\"$rowClass\">\n$line</li>\n";
+}
+print "</ul>\n\n";
+
 print "<h2>Status</h2>\n";
 print "<table>\n";
 print "<tr>\n";
@@ -74,16 +84,6 @@ for my $row (@table) {
   print "<tr class=\"$rowClass\">\n$row</tr>\n";
 }
 print "</table>\n\n";
-
-print "<h2>Warnings</h2>\n";
-print "<ul>\n";
-$rowIndex = 0;
-$rowCount = @warnings;
-for my $line (@warnings) {
-  my $rowClass = rowClass($rowIndex++, $rowCount);
-  print "<li class=\"$rowClass\">\n$line</li>\n";
-}
-print "</ul>\n\n";
 
 print "</body>\n";
 print "</html>\n";
