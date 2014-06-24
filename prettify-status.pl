@@ -24,6 +24,7 @@ sub rowClass($$) {
 
 # parse status output
 my @ahead = ();
+my @released = ();
 my @warnings = ();
 while (<>) {
   my $line = $_;
@@ -40,11 +41,20 @@ while (<>) {
       push @warnings, "No known GitHub org for groupId '$groupId'\n";
     }
     my $link = "https://github.com/$orgs{$groupId}/$artifactId";
-    push @ahead, "<td class=\"first\"></td>\n" .
-      "<td><a href=\"$link\">$groupId:$artifactId</a></td>\n" .
-      "<td><a href=\"$link/compare/$tag...$branch\">$commitCount</a></td>\n" .
-      "<td><a href=\"$link/tree/$branch\">$branch</a></td>\n" .
-      "<td><a href=\"$link/tree/$tag\">$version</a></td>\n";
+    if ($commitCount > 0) {
+      # a release is needed
+      push @ahead, "<td class=\"first\"></td>\n" .
+        "<td><a href=\"$link\">$groupId:$artifactId</a></td>\n" .
+        "<td><a href=\"$link/compare/$tag...$branch\">$commitCount</a></td>\n" .
+        "<td><a href=\"$link/tree/$branch\">$branch</a></td>\n" .
+        "<td><a href=\"$link/tree/$tag\">$version</a></td>\n";
+    }
+    else {
+      # everything is up to date
+      push @released, "<td class=\"first\"></td>\n" .
+        "<td><a href=\"$link\">$groupId:$artifactId</a></td>\n" .
+        "<td><a href=\"$link/tree/$tag\">$version</a></td>\n";
+    }
   }
   else {
     push @warnings, $line;
@@ -84,6 +94,21 @@ print "</tr>\n";
 my $rowIndex = 0;
 my $rowCount = @ahead;
 for my $row (@ahead) {
+  my $rowClass = rowClass($rowIndex++, $rowCount);
+  print "<tr class=\"$rowClass\">\n$row</tr>\n";
+}
+print "</table>\n\n";
+
+print "<h2>Released</h2>\n";
+print "<table class=\"released\">\n";
+print "<tr>\n";
+print "<th>&nbsp;</th>\n";
+print "<th>Project</th>\n";
+print "<th>Latest version</th>\n";
+print "</tr>\n";
+my $rowIndex = 0;
+my $rowCount = @released;
+for my $row (@released) {
   my $rowClass = rowClass($rowIndex++, $rowCount);
   print "<tr class=\"$rowClass\">\n$row</tr>\n";
 }
