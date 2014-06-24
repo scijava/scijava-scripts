@@ -23,7 +23,7 @@ sub rowClass($$) {
 }
 
 # parse status output
-my @table = ();
+my @ahead = ();
 my @warnings = ();
 while (<>) {
   my $line = $_;
@@ -40,7 +40,7 @@ while (<>) {
       push @warnings, "No known GitHub org for groupId '$groupId'\n";
     }
     my $link = "https://github.com/$orgs{$groupId}/$artifactId";
-    push @table, "<td><a href=\"$link\">$groupId:$artifactId</a></td>\n" .
+    push @ahead, "<td><a href=\"$link\">$groupId:$artifactId</a></td>\n" .
       "<td><a href=\"$link/compare/$tag...$branch\">$commitCount</a></td>\n" .
       "<td><a href=\"$link/tree/$branch\">$branch</a></td>\n" .
       "<td><a href=\"$link/tree/$tag\">$version</a></td>\n";
@@ -71,7 +71,7 @@ if (@warnings > 0) {
   print "</ul>\n\n";
 }
 
-print "<h2>Status</h2>\n";
+print "<h2>Ahead</h2>\n";
 print "<table>\n";
 print "<tr>\n";
 print "<th>Project</th>\n";
@@ -80,8 +80,8 @@ print "<th>Branch</th>\n";
 print "<th>Latest version</th>\n";
 print "</tr>\n";
 my $rowIndex = 0;
-my $rowCount = @table;
-for my $row (@table) {
+my $rowCount = @ahead;
+for my $row (@ahead) {
   my $rowClass = rowClass($rowIndex++, $rowCount);
   print "<tr class=\"$rowClass\">\n$row</tr>\n";
 }
