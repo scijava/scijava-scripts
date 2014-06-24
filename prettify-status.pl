@@ -40,7 +40,8 @@ while (<>) {
       push @warnings, "No known GitHub org for groupId '$groupId'\n";
     }
     my $link = "https://github.com/$orgs{$groupId}/$artifactId";
-    push @ahead, "<td><a href=\"$link\">$groupId:$artifactId</a></td>\n" .
+    push @ahead, "<td class=\"first\"></td>\n" .
+      "<td><a href=\"$link\">$groupId:$artifactId</a></td>\n" .
       "<td><a href=\"$link/compare/$tag...$branch\">$commitCount</a></td>\n" .
       "<td><a href=\"$link/tree/$branch\">$branch</a></td>\n" .
       "<td><a href=\"$link/tree/$tag\">$version</a></td>\n";
@@ -74,6 +75,7 @@ if (@warnings > 0) {
 print "<h2>Ahead</h2>\n";
 print "<table class=\"ahead\">\n";
 print "<tr>\n";
+print "<th>&nbsp;</th>\n";
 print "<th>Project</th>\n";
 print "<th>Commits</th>\n";
 print "<th>Branch</th>\n";
