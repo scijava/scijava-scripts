@@ -59,15 +59,17 @@ print "<link type=\"text/css\" rel=\"stylesheet\" href=\"status.css\" />\n";
 print "</head>\n";
 print "<body>\n\n";
 
-print "<h2>Warnings</h2>\n";
-print "<ul>\n";
-my $rowIndex = 0;
-my $rowCount = @warnings;
-for my $line (@warnings) {
-  my $rowClass = rowClass($rowIndex++, $rowCount);
-  print "<li class=\"$rowClass\">\n$line</li>\n";
+if (@warnings > 0) {
+  print "<h2>Warnings</h2>\n";
+  print "<ul>\n";
+  my $rowIndex = 0;
+  my $rowCount = @warnings;
+  for my $line (@warnings) {
+    my $rowClass = rowClass($rowIndex++, $rowCount);
+    print "<li class=\"$rowClass\">\n$line</li>\n";
+  }
+  print "</ul>\n\n";
 }
-print "</ul>\n\n";
 
 print "<h2>Status</h2>\n";
 print "<table>\n";
