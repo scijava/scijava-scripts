@@ -26,8 +26,11 @@ sub rowClass($$) {
 my @ahead = ();
 my @released = ();
 my @warnings = ();
-while (<>) {
-  my $line = $_;
+
+my @lines = <>;
+sort(@lines);
+
+for my $line (@lines) {
   chomp $line;
   if ($line =~ /([^:]+):([^:]+): (\d+) commits on (\w+) since (.+)/) {
     my $groupId = $1;
