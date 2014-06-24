@@ -74,6 +74,7 @@ print "</head>\n";
 print "<body>\n\n";
 
 if (@warnings > 0) {
+  print "<div class=\"warnings\">\n";
   print "<h2>Warnings</h2>\n";
   print "<ul class=\"warnings\">\n";
   my $rowIndex = 0;
@@ -82,12 +83,14 @@ if (@warnings > 0) {
     my $rowClass = rowClass($rowIndex++, $rowCount);
     print "<li class=\"$rowClass\">\n$line\n</li>\n";
   }
-  print "</ul>\n\n";
+  print "</ul>\n";
+  print "</div>\n\n";
 }
 
 if (@ahead > 0) {
+  print "<div class=\"ahead\">\n";
   print "<h2>Ahead</h2>\n";
-  print "<table class=\"ahead\">\n";
+  print "<table>\n";
   print "<tr>\n";
   print "<th>&nbsp;</th>\n";
   print "<th>Project</th>\n";
@@ -101,12 +104,14 @@ if (@ahead > 0) {
     my $rowClass = rowClass($rowIndex++, $rowCount);
     print "<tr class=\"$rowClass\">\n$row</tr>\n";
   }
-  print "</table>\n\n";
+  print "</table>\n";
+  print "</div>\n\n";
 }
 
 if (@released > 0) {
+  print "<div class=\"released\">\n";
   print "<h2>Released</h2>\n";
-  print "<table class=\"released\">\n";
+  print "<table>\n";
   print "<tr>\n";
   print "<th>&nbsp;</th>\n";
   print "<th>Project</th>\n";
@@ -118,7 +123,8 @@ if (@released > 0) {
     my $rowClass = rowClass($rowIndex++, $rowCount);
     print "<tr class=\"$rowClass\">\n$row</tr>\n";
   }
-  print "</table>\n\n";
+  print "</table>\n";
+  print "</div>\n\n";
 }
 
 print "</body>\n";
