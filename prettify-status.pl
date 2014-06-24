@@ -82,37 +82,41 @@ if (@warnings > 0) {
   print "</ul>\n\n";
 }
 
-print "<h2>Ahead</h2>\n";
-print "<table class=\"ahead\">\n";
-print "<tr>\n";
-print "<th>&nbsp;</th>\n";
-print "<th>Project</th>\n";
-print "<th>Commits</th>\n";
-print "<th>Branch</th>\n";
-print "<th>Latest version</th>\n";
-print "</tr>\n";
-my $rowIndex = 0;
-my $rowCount = @ahead;
-for my $row (@ahead) {
-  my $rowClass = rowClass($rowIndex++, $rowCount);
-  print "<tr class=\"$rowClass\">\n$row</tr>\n";
+if (@ahead > 0) {
+  print "<h2>Ahead</h2>\n";
+  print "<table class=\"ahead\">\n";
+  print "<tr>\n";
+  print "<th>&nbsp;</th>\n";
+  print "<th>Project</th>\n";
+  print "<th>Commits</th>\n";
+  print "<th>Branch</th>\n";
+  print "<th>Latest version</th>\n";
+  print "</tr>\n";
+  my $rowIndex = 0;
+  my $rowCount = @ahead;
+  for my $row (@ahead) {
+    my $rowClass = rowClass($rowIndex++, $rowCount);
+    print "<tr class=\"$rowClass\">\n$row</tr>\n";
+  }
+  print "</table>\n\n";
 }
-print "</table>\n\n";
 
-print "<h2>Released</h2>\n";
-print "<table class=\"released\">\n";
-print "<tr>\n";
-print "<th>&nbsp;</th>\n";
-print "<th>Project</th>\n";
-print "<th>Latest version</th>\n";
-print "</tr>\n";
-my $rowIndex = 0;
-my $rowCount = @released;
-for my $row (@released) {
-  my $rowClass = rowClass($rowIndex++, $rowCount);
-  print "<tr class=\"$rowClass\">\n$row</tr>\n";
+if (@released > 0) {
+  print "<h2>Released</h2>\n";
+  print "<table class=\"released\">\n";
+  print "<tr>\n";
+  print "<th>&nbsp;</th>\n";
+  print "<th>Project</th>\n";
+  print "<th>Latest version</th>\n";
+  print "</tr>\n";
+  my $rowIndex = 0;
+  my $rowCount = @released;
+  for my $row (@released) {
+    my $rowClass = rowClass($rowIndex++, $rowCount);
+    print "<tr class=\"$rowClass\">\n$row</tr>\n";
+  }
+  print "</table>\n\n";
 }
-print "</table>\n\n";
 
 print "</body>\n";
 print "</html>\n";
