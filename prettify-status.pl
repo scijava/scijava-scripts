@@ -127,5 +127,7 @@ if (@released > 0) {
   print "</div>\n\n";
 }
 
+print "<div class=\"footer\">&nbsp;</div>\n\n";
+
 print "</body>\n";
 print "</html>\n";
