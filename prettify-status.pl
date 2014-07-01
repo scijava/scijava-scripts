@@ -49,7 +49,7 @@ for my $line (@lines) {
       push @ahead, "<td class=\"first\"></td>\n" .
         "<td><a href=\"$link\">$groupId:$artifactId</a></td>\n" .
         "<td><a href=\"$link/compare/$tag...$branch\">$commitCount</a></td>\n" .
-        "<td><a href=\"$link/tree/$branch\">$branch</a></td>\n" .
+#        "<td><a href=\"$link/tree/$branch\">$branch</a></td>\n" .
         "<td><a href=\"$link/tree/$tag\">$version</a></td>\n";
     }
     else {
@@ -96,7 +96,7 @@ if (@ahead > 0) {
   print "<th>&nbsp;</th>\n";
   print "<th>Project</th>\n";
   print "<th>Commits</th>\n";
-  print "<th>Branch</th>\n";
+#  print "<th>Branch</th>\n";
   print "<th>Latest version</th>\n";
   print "</tr>\n";
   my $rowIndex = 0;
