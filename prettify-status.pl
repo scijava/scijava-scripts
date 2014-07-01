@@ -128,6 +128,14 @@ if (@released > 0) {
   print "</div>\n\n";
 }
 
+print "<div class=\"links\">\n";
+print "<h2>See also</h2>\n";
+print "<ul>\n";
+print "<li><a href=\"https://github.com/imagej/imagej/blob/master/RELEASES.md\">ImageJ RELEASES.md</a></li>\n";
+print "<li><a href=\"http://jenkins.imagej.net/job/Release-Version/\">Release-Version Jenkins job</a></li>\n";
+print "</ul>\n";
+print "</div>\n\n";
+
 print "<div class=\"footer\">&nbsp;</div>\n\n";
 
 print "</body>\n";
