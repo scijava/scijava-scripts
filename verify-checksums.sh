@@ -40,7 +40,8 @@ do
 			echo "[FAIL] $file: file does not exist"
 			continue
 		fi
-		expected="$(cat "$md5" | cut -d ' ' -f 1)"
+		expected="$(cat "$md5")"
+		expected="${expected:0:32}"
 		actual="$(md5sum "$file" | cut -d ' ' -f 1)"
 		if [ "$expected" == "$actual" ]
 		then
@@ -59,7 +60,8 @@ do
 			echo "[FAIL] $file: file does not exist"
 			continue
 		fi
-		expected="$(cat "$sha1" | cut -d ' ' -f 1)"
+		expected="$(cat "$sha1")"
+		expected="${expected:0:40}"
 		actual="$(sha1sum "$file" | cut -d ' ' -f 1)"
 		if [ "$expected" == "$actual" ]
 		then
