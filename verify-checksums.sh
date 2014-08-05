@@ -32,7 +32,7 @@ do
 	fi
 
 	# verify MD5 checksums
-	for md5 in $(find "$dir" -name '*.md5')
+	find "$dir" -name '*.md5' -print0 | while read -d $'\0' -r md5
 	do
 		file="${md5%.md5}"
 		if [ ! -f "$file" ]
@@ -52,7 +52,7 @@ do
 	done
 
 	# verify SHA-1 checksums
-	for sha1 in $(find "$dir" -name '*.sha1')
+	find "$dir" -name '*.sha1' -print0 | while read -d $'\0' -r sha1
 	do
 		file="${sha1%.sha1}"
 		if [ ! -f "$file" ]
