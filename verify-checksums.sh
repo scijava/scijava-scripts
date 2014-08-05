@@ -23,7 +23,6 @@ do
 			dir="$arg"
 			;;
 	esac
-	echo "dir = $dir"
 	test -n "$dir" || continue
 
 	if [ ! -d "$dir" ]
