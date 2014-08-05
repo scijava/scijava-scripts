@@ -46,7 +46,7 @@ do
 		then
 			test "$verbose" && echo "[PASS] $file"
 		else
-			echo "[FAIL] $file: expected $expected but was $actual"
+			echo "[FAIL] $file: $expected != $actual"
 		fi
 	done
 
@@ -65,7 +65,7 @@ do
 		then
 			test "$verbose" && echo "[PASS] $file"
 		else
-			echo "[FAIL] $file: expected $expected but was $actual"
+			echo "[FAIL] $file: $expected != $actual"
 		fi
 	done
 done
