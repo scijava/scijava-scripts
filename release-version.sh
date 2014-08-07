@@ -100,7 +100,8 @@ net.imagej:imagej-launcher:*)
 *:scijava-common:*|*:ij1-patcher:*|*:minimaven:*|org.scijava:junit-benchmarks:*\
 |org.scijava:swing-checkbox-tree:*|org.scijava:jep:*|*:scijava-maven-plugin:*\
 |org.scijava:native-lib-loader:*|org.scijava:scijava-log-slf4j:*\
-|*:imagej-maven-plugin:*|org.scijava:pom-scijava:*|net.imagej:pom-imagej:*)
+|*:imagej-maven-plugin:*\
+|org.scijava:pom-scijava:*|io.scif:pom-scifio:*|net.imagej:pom-imagej:*)
 	test -n "$GPG_KEYNAME" || die "Need to set GPG_KEYNAME"
 	test -n "$GPG_PASSPHRASE" || die "Need to set GPG_PASSPHRASE"
 	PROFILE=-Psonatype-oss-release
