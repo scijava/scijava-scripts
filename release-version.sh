@@ -96,6 +96,15 @@ net.imglib2:pom-imglib2:2.0.0-*SNAPSHOT)
 net.imagej:imagej-launcher:*)
 	SKIP_DEPLOY=t
 	;;
+org.scijava:pom-jython-shaded:*)
+	ARTIFACT_ID=${BASE_GAV#*:pom-}
+	ARTIFACT_ID=${ARTIFACT_ID%:*}
+	test -n "$TAG" || TAG=-Dtag=$ARTIFACT_ID-$VERSION
+	test -n "$GPG_KEYNAME" || die "Need to set GPG_KEYNAME"
+	test -n "$GPG_PASSPHRASE" || die "Need to set GPG_PASSPHRASE"
+	PROFILE=-Psonatype-oss-release
+	INVALIDATE_NEXUS=t
+	;;
 *:nar-maven-plugin:*|\
 *:scijava-common:*|*:ij1-patcher:*|*:minimaven:*|org.scijava:junit-benchmarks:*\
 |org.scijava:swing-checkbox-tree:*|org.scijava:jep:*|*:scijava-maven-plugin:*\
