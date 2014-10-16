@@ -144,8 +144,11 @@ do
 	then
 		must_change=
 		artifactId="${property%.version}"
-		test imagej1 != "$artifactId" ||
-		artifactId=ij
+		case "$artifactId" in
+		imagej1) artifactId=ij;;
+		nar) artifactId=nar-maven-plugin;;
+		esac
+
 		test ! -t 0 ||
 		printf '\rLooking at %s...\033[K\r' "$artifactId"
 		ga="$(sed -n '/<groupId>/{
