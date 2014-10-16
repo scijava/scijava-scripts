@@ -13,7 +13,7 @@ do
 	--skip-commit)
 		skip_commit=t
 		;;
-	--bump-parent)
+	--parent|--bump-parent)
 		bump_parent=t
 		;;
 	--default|--default-properties)
@@ -114,7 +114,7 @@ set $(sed -n '/^	<properties>/,/<\(\/properties>\|!-- Open Microscopy Environmen
 
 test $# -ge 2 &&
 test 0 = $(($#%2)) ||
-die "Usage: $0 [--skip-commit] (--bump-parent | --default | <key> <value>...)"
+die "Usage: $0 [--skip-commit] (--parent | --default | <key> <value>...)"
 
 pom=pom.xml
 
