@@ -148,17 +148,10 @@ do
 		artifactId=ij
 		test ! -t 0 ||
 		printf '\rLooking at %s...\033[K\r' "$artifactId"
-		case "$artifactId" in
-		scijava-maven-plugin)
-			ga=org.scijava:$artifactId
-			;;
-		*)
-			ga="$(sed -n '/<groupId>/{
+		ga="$(sed -n '/<groupId>/{
 N;
 s/.*<groupId>\([^<]*\).*<artifactId>'"$artifactId"'<.*/\1/p
 }' pom.xml | head -n 1):$artifactId"
-			;;
-		esac
 		latest_message=" (latest $ga)"
 		value="$(sh "$maven_helper" latest-version "$ga")"
 	fi
