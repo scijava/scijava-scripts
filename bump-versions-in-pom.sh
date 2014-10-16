@@ -157,6 +157,12 @@ s/.*<groupId>\([^<]*\).*<artifactId>'"$artifactId"'<.*/\1/p
 }' pom.xml | head -n 1):$artifactId"
 		latest_message=" (latest $ga)"
 		value="$(sh "$maven_helper" latest-version "$ga")"
+		test -n "$value" || {
+			echo "Warning: no version found for $ga" >&2
+			shift
+			shift
+			continue
+		}
 	fi
 
 	p="$(sed_quote "$property")"
