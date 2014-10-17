@@ -88,11 +88,6 @@ BASE_GAV="$(maven_helper gav-from-pom pom.xml)" ||
 die "Could not obtain GAV coordinates for base project"
 
 case "$BASE_GAV" in
-net.imglib2:pom-imglib2:2.0.0-*SNAPSHOT)
-	test -n "$TAG" || TAG=-Dtag=imglib2-$VERSION
-	test -n "$DEV_VERSION" ||
-	DEV_VERSION=-DdevelopmentVersion=2.0.0-SNAPSHOT
-	;;
 net.imagej:imagej-launcher:*)
 	SKIP_DEPLOY=t
 	;;
@@ -110,7 +105,9 @@ org.scijava:pom-jython-shaded:*)
 |org.scijava:swing-checkbox-tree:*|org.scijava:jep:*|*:scijava-maven-plugin:*\
 |org.scijava:native-lib-loader:*|org.scijava:scijava-log-slf4j:*\
 |*:imagej-maven-plugin:*\
-|org.scijava:pom-scijava:*|io.scif:pom-scifio:*|net.imagej:pom-imagej:*)
+|net.imglib2:imglib2:*\
+|org.scijava:pom-scijava:*|net.imglib2:pom-imglib2:*\
+|io.scif:pom-scifio:*|net.imagej:pom-imagej:*)
 	test -n "$GPG_KEYNAME" || die "Need to set GPG_KEYNAME"
 	test -n "$GPG_PASSPHRASE" || die "Need to set GPG_PASSPHRASE"
 	PROFILE=-Psonatype-oss-release
