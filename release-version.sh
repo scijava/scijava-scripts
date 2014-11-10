@@ -113,6 +113,8 @@ org.scijava:pom-jython-shaded:*)
 	PROFILE=-Psonatype-oss-release
 	INVALIDATE_NEXUS=t
 	;;
+*:pom-fiji:*)
+	;;
 *:pom-*:*)
 	ARTIFACT_ID=${BASE_GAV#*:pom-}
 	ARTIFACT_ID=${ARTIFACT_ID%:*}
