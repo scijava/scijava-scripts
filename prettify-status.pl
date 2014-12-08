@@ -31,6 +31,9 @@ my @warnings = ();
 my @lines = <>;
 sort(@lines);
 
+my $lastAheadGID = '';
+my $lastReleasedGID = '';
+
 for my $line (@lines) {
   chomp $line;
   if ($line =~ /([^:]+):([^:]+): (\d+) commits on (\w+) since (.+)/) {
@@ -45,17 +48,30 @@ for my $line (@lines) {
       push @warnings, "No known GitHub org for groupId '$groupId'\n";
     }
     my $link = "https://github.com/$orgs{$groupId}/$artifactId";
+
     if ($commitCount > 0) {
       # a release is needed
+      if ($groupId ne $lastAheadGID) {
+        # add section header for each groupId
+        push @ahead, "<td class=\"section first\" colspan=4>" .
+          "<a href=\"https://github.com/$org\">$org</a></td>\n";
+        $lastAheadGID = $groupId;
+      }
       push @ahead, "<td class=\"first\"></td>\n" .
-        "<td><a href=\"$link\">$groupId:$artifactId</a></td>\n" .
+        "<td><a href=\"$link\">$artifactId</a></td>\n" .
         "<td><a href=\"$link/compare/$tag...$branch\">$commitCount</a></td>\n" .
         "<td><a href=\"$link/tree/$tag\">$version</a></td>\n";
     }
     else {
       # everything is up to date
+      if ($groupId ne $lastReleasedGID) {
+        # add section header for each groupId
+        push @released, "<td class=\"section first\" colspan=4>" .
+          "<a href=\"https://github.com/$org\">$org</a></td>\n";
+        $lastReleasedGID = $groupId;
+      }
       push @released, "<td class=\"first\"></td>\n" .
-        "<td><a href=\"$link\">$groupId:$artifactId</a></td>\n" .
+        "<td><a href=\"$link\">$artifactId</a></td>\n" .
         "<td><a href=\"$link/tree/$tag\">$version</a></td>\n";
     }
   }
