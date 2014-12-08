@@ -11,6 +11,7 @@ my %orgs = (
   'io.scif'     => 'scifio',
   'net.imagej'  => 'imagej',
   'net.imglib2' => 'imglib',
+  'sc.fiji'     => 'fiji',
 );
 
 sub rowClass($$) {
