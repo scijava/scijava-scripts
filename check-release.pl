@@ -36,6 +36,11 @@ chomp $gav;
 my ($groupId, $artifactId, $version) = split(':', $gav);
 my $ga = "$groupId:$artifactId";
 
+# HACK: Some Fiji projects end in underscore for hysterical raisins.
+# Specifically: the artifactId does, but the repo name and tags do not.
+my $tagPrefix = $artifactId;
+$tagPrefix =~ s/_$//;
+
 my ($latest, $tag);
 if ($ask_nexus_for_latest_version) {
   # determine the latest release
@@ -48,7 +53,7 @@ if ($ask_nexus_for_latest_version) {
   }
 
   # compare the release tag with the master branch
-  $tag = "$artifactId-$latest";
+  $tag = "$tagPrefix-$latest";
   if ($tag =~ /^pom-(.*)$/) {
     $tag = $1;
   }
@@ -58,7 +63,7 @@ if ($ask_nexus_for_latest_version) {
     exit 3;
   }
 } else {
-  my $name = $artifactId;
+  my $name = $tagPrefix;
   $name =~ s/^pom-//;
   my $prefix = "refs/tags/$name-";
 
