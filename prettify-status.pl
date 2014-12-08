@@ -53,7 +53,7 @@ for my $line (@lines) {
       # a release is needed
       if ($groupId ne $lastAheadGID) {
         # add section header for each groupId
-        push @ahead, "<td class=\"section first\" colspan=4>" .
+        push @ahead, "<td class=\"section\" colspan=4>" .
           "<a href=\"https://github.com/$org\">$org</a></td>\n";
         $lastAheadGID = $groupId;
       }
@@ -66,7 +66,7 @@ for my $line (@lines) {
       # everything is up to date
       if ($groupId ne $lastReleasedGID) {
         # add section header for each groupId
-        push @released, "<td class=\"section first\" colspan=4>" .
+        push @released, "<td class=\"section\" colspan=4>" .
           "<a href=\"https://github.com/$org\">$org</a></td>\n";
         $lastReleasedGID = $groupId;
       }
