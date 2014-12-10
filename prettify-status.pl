@@ -42,7 +42,7 @@ for my $line (@lines) {
     my $commitCount = $3;
     my $branch = $4;
     my $version = $5;
-    my $tag = "$artifactId-$version";
+    my $tag = $version ? "$artifactId-$version" : "";
     my $org = $orgs{$groupId};
     my $link = "https://github.com/$orgs{$groupId}/$artifactId";
 
