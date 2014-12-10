@@ -103,13 +103,15 @@ for my $line (@lines) {
 
 # dump prettified version
 
-print "<html>\n";
-print "<head>\n";
-print "<title>SciJava software status</title>\n";
-print "<link type=\"text/css\" rel=\"stylesheet\" href=\"status.css\" />\n";
-print "<link rel=\"icon\" type=\"image/png\" href=\"favicon.png\" />\n";
-print "</head>\n";
-print "<body>\n\n";
+print <<HEADER;
+<html>
+<head>
+<title>SciJava software status</title>
+<link type="text/css" rel="stylesheet" href="status.css" />
+<link rel="icon" type="image/png" href="favicon.png" />
+</head>
+<body>
+HEADER
 
 if (@warnings > 0) {
   print "<div class=\"warnings\">\n";
