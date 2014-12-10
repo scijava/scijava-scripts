@@ -46,6 +46,7 @@ for my $line (@lines) {
     my $version = $5;
     my $tag = $version ? "$artifactId-$version" : "";
     my $org = $orgs{$groupId};
+    if (!$org) { $org = $groupId; }
     my $link = "https://github.com/$orgs{$groupId}/$artifactId";
 
     my $data = {
