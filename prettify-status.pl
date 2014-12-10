@@ -24,6 +24,7 @@ sub rowClass($$) {
 }
 
 # parse status output
+my @unknown = ();
 my @ahead = ();
 my @released = ();
 my @warnings = ();
@@ -31,6 +32,7 @@ my @warnings = ();
 my @lines = <>;
 sort(@lines);
 
+my $lastUnknownGID = '';
 my $lastAheadGID = '';
 my $lastReleasedGID = '';
 
@@ -62,7 +64,22 @@ for my $line (@lines) {
       push @warnings, $warning;
     }
 
-    if ($commitCount > 0) {
+    if (!$version) {
+      # release status is unknown
+      if ($groupId ne $lastUnknownGID) {
+        # add section header for each groupId
+        my $header = { %$data };
+        $header->{line} = "<td class=\"section\" colspan=2>" .
+          "<a href=\"https://github.com/$org\">$org</a></td>\n";
+        push @unknown, $header;
+        $lastUnknownGID = $groupId;
+      }
+      $data->{line} = "<td class=\"first\"></td>\n" .
+        "<td><a href=\"$link\">$artifactId</a></td>\n";
+      push @unknown, $data;
+    }
+
+    elsif ($commitCount > 0) {
       # a release is needed
       if ($groupId ne $lastAheadGID) {
         # add section header for each groupId
@@ -126,6 +143,25 @@ if (@warnings > 0) {
     print "<li class=\"$rowClass\">\n$line\n</li>\n";
   }
   print "</ul>\n";
+  print "</div>\n\n";
+}
+
+if (@unknown > 0) {
+  print "<div class=\"unknown\">\n";
+  print "<h2>Unknown</h2>\n";
+  print "<table>\n";
+  print "<tr>\n";
+  print "<th>&nbsp;</th>\n";
+  print "<th>Project</th>\n";
+  print "</tr>\n";
+  my $rowIndex = 0;
+  my $rowCount = @unknown;
+  for my $row (@unknown) {
+    my $line = $row->{line};
+    my $rowClass = rowClass($rowIndex++, $rowCount);
+    print "<tr class=\"$rowClass\">\n$line</tr>\n";
+  }
+  print "</table>\n";
   print "</div>\n\n";
 }
 
