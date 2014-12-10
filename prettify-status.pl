@@ -44,39 +44,60 @@ for my $line (@lines) {
     my $version = $5;
     my $tag = "$artifactId-$version";
     my $org = $orgs{$groupId};
-    if (not $org) {
-      push @warnings, "No known GitHub org for groupId '$groupId'\n";
-    }
     my $link = "https://github.com/$orgs{$groupId}/$artifactId";
+
+    my $data = {
+      groupId     => $groupId,
+      artifactId  => $artifactId,
+      commitCount => $commitCount,
+      branch      => $branch,
+      version     => $version,
+      tag         => $tag,
+      org         => $org,
+    };
+
+    if (not $org) {
+      my $warning = { %$data };
+      $warning->{line} = "No known GitHub org for groupId '$groupId'\n";
+      push @warnings, $warning;
+    }
 
     if ($commitCount > 0) {
       # a release is needed
       if ($groupId ne $lastAheadGID) {
         # add section header for each groupId
-        push @ahead, "<td class=\"section\" colspan=4>" .
+        my $header = { %$data };
+        $header->{line} = "<td class=\"section\" colspan=4>" .
           "<a href=\"https://github.com/$org\">$org</a></td>\n";
+        push @ahead, $header;
         $lastAheadGID = $groupId;
       }
-      push @ahead, "<td class=\"first\"></td>\n" .
+      $data->{line} = "<td class=\"first\"></td>\n" .
         "<td><a href=\"$link\">$artifactId</a></td>\n" .
         "<td><a href=\"$link/compare/$tag...$branch\">$commitCount</a></td>\n" .
         "<td><a href=\"$link/tree/$tag\">$version</a></td>\n";
+      push @ahead, $data;
     }
     else {
       # everything is up to date
       if ($groupId ne $lastReleasedGID) {
         # add section header for each groupId
-        push @released, "<td class=\"section\" colspan=4>" .
+        my $header = { %$data };
+        $header->{line} = "<td class=\"section\" colspan=4>" .
           "<a href=\"https://github.com/$org\">$org</a></td>\n";
+        push @released, $header;
         $lastReleasedGID = $groupId;
       }
-      push @released, "<td class=\"first\"></td>\n" .
+      $data->{line} = "<td class=\"first\"></td>\n" .
         "<td><a href=\"$link\">$artifactId</a></td>\n" .
         "<td><a href=\"$link/tree/$tag\">$version</a></td>\n";
+      push @released, $data;
     }
   }
   else {
-    push @warnings, $line;
+    my $data = {};
+    $data->{line} = $line;
+    push @warnings, $data;
   }
 }
 
@@ -96,7 +117,8 @@ if (@warnings > 0) {
   print "<ul class=\"warnings\">\n";
   my $rowIndex = 0;
   my $rowCount = @warnings;
-  for my $line (@warnings) {
+  for my $row (@warnings) {
+    my $line = $row->{line};
     my $rowClass = rowClass($rowIndex++, $rowCount);
     print "<li class=\"$rowClass\">\n$line\n</li>\n";
   }
@@ -117,8 +139,9 @@ if (@ahead > 0) {
   my $rowIndex = 0;
   my $rowCount = @ahead;
   for my $row (@ahead) {
+    my $line = $row->{line};
     my $rowClass = rowClass($rowIndex++, $rowCount);
-    print "<tr class=\"$rowClass\">\n$row</tr>\n";
+    print "<tr class=\"$rowClass\">\n$line</tr>\n";
   }
   print "</table>\n";
   print "</div>\n\n";
@@ -136,8 +159,9 @@ if (@released > 0) {
   my $rowIndex = 0;
   my $rowCount = @released;
   for my $row (@released) {
+    my $line = $row->{line};
     my $rowClass = rowClass($rowIndex++, $rowCount);
-    print "<tr class=\"$rowClass\">\n$row</tr>\n";
+    print "<tr class=\"$rowClass\">\n$line</tr>\n";
   }
   print "</table>\n";
   print "</div>\n\n";
