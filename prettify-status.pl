@@ -135,6 +135,36 @@ if (@warnings > 0) {
   print "</div>\n\n";
 }
 
+if (@released > 0) {
+  print "<div class=\"released\">\n";
+  print "<h2>Released</h2>\n";
+  print "<table>\n";
+  print "<tr>\n";
+  print "<th>&nbsp;</th>\n";
+  print "<th>Project</th>\n";
+  print "<th>Latest version</th>\n";
+  print "</tr>\n";
+  my $lastGroupId = '';
+  my $rowIndex = 0;
+  my $rowCount = @released;
+  for my $row (@released) {
+    my $org = $row->{org};
+    my $groupId = $row->{groupId};
+    if ($lastGroupId ne $groupId) {
+      print "<tr class=\"$org\">\n";
+      print "<td class=\"section\" colspan=4>" .
+        "<a href=\"https://github.com/$org\">$org</a></td>\n";
+      print "</tr>\n";
+      $lastGroupId = $groupId;
+    }
+    my $line = $row->{line};
+    my $rowClass = rowClass($rowIndex++, $rowCount);
+    print "<tr class=\"$org $rowClass\">\n$line</tr>\n";
+  }
+  print "</table>\n";
+  print "</div>\n\n";
+}
+
 if (@unknown > 0) {
   print "<div class=\"unknown\">\n";
   print "<h2>Unknown</h2>\n";
@@ -178,36 +208,6 @@ if (@ahead > 0) {
   my $rowIndex = 0;
   my $rowCount = @ahead;
   for my $row (@ahead) {
-    my $org = $row->{org};
-    my $groupId = $row->{groupId};
-    if ($lastGroupId ne $groupId) {
-      print "<tr class=\"$org\">\n";
-      print "<td class=\"section\" colspan=4>" .
-        "<a href=\"https://github.com/$org\">$org</a></td>\n";
-      print "</tr>\n";
-      $lastGroupId = $groupId;
-    }
-    my $line = $row->{line};
-    my $rowClass = rowClass($rowIndex++, $rowCount);
-    print "<tr class=\"$org $rowClass\">\n$line</tr>\n";
-  }
-  print "</table>\n";
-  print "</div>\n\n";
-}
-
-if (@released > 0) {
-  print "<div class=\"released\">\n";
-  print "<h2>Released</h2>\n";
-  print "<table>\n";
-  print "<tr>\n";
-  print "<th>&nbsp;</th>\n";
-  print "<th>Project</th>\n";
-  print "<th>Latest version</th>\n";
-  print "</tr>\n";
-  my $lastGroupId = '';
-  my $rowIndex = 0;
-  my $rowCount = @released;
-  for my $row (@released) {
     my $org = $row->{org};
     my $groupId = $row->{groupId};
     if ($lastGroupId ne $groupId) {
