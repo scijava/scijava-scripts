@@ -30,9 +30,8 @@ my @released = ();
 my @warnings = ();
 
 my @lines = <>;
-sort(@lines);
 
-for my $line (@lines) {
+for my $line (sort @lines) {
   chomp $line;
   if ($line =~ /([^:]+):([^:]+): (\d+) commits on (\w+) since (.*)/) {
     my $groupId = $1;
