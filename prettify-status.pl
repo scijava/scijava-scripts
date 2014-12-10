@@ -36,7 +36,7 @@ my $lastReleasedGID = '';
 
 for my $line (@lines) {
   chomp $line;
-  if ($line =~ /([^:]+):([^:]+): (\d+) commits on (\w+) since (.+)/) {
+  if ($line =~ /([^:]+):([^:]+): (\d+) commits on (\w+) since (.*)/) {
     my $groupId = $1;
     my $artifactId = $2;
     my $commitCount = $3;
