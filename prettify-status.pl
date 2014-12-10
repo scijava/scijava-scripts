@@ -99,9 +99,26 @@ print <<HEADER;
 <title>SciJava software status</title>
 <link type="text/css" rel="stylesheet" href="status.css" />
 <link rel="icon" type="image/png" href="favicon.png" />
+<script type="text/javascript" src="http://code.jquery.com/jquery.js"></script>
+<script type="text/javascript">
+  \$(document).ready(function() {
+    \$('input[type="checkbox"]').click(function() {
+      \$("." + \$(this).attr("value")).toggle();
+    });
+  });
+</script>
 </head>
 <body>
 HEADER
+
+print "<div class=\"toggles\">\n";
+print "<h2>Projects</h2>\n";
+print "<ul>\n";
+for my $org (sort values %orgs) {
+  print "<li><input type=\"checkbox\" value=\"$org\" checked>$org</li>\n";
+}
+print "</ul>\n";
+print "</div>\n";
 
 if (@warnings > 0) {
   print "<div class=\"warnings\">\n";
@@ -133,7 +150,7 @@ if (@unknown > 0) {
     my $org = $row->{org};
     my $groupId = $row->{groupId};
     if ($lastGroupId ne $groupId) {
-      print "<tr>\n";
+      print "<tr class=\"$org\">\n";
       print "<td class=\"section\" colspan=2>" .
         "<a href=\"https://github.com/$org\">$org</a></td>\n";
       print "</tr>\n";
@@ -141,7 +158,7 @@ if (@unknown > 0) {
     }
     my $line = $row->{line};
     my $rowClass = rowClass($rowIndex++, $rowCount);
-    print "<tr class=\"$rowClass\">\n$line</tr>\n";
+    print "<tr class=\"$org $rowClass\">\n$line</tr>\n";
   }
   print "</table>\n";
   print "</div>\n\n";
@@ -164,7 +181,7 @@ if (@ahead > 0) {
     my $org = $row->{org};
     my $groupId = $row->{groupId};
     if ($lastGroupId ne $groupId) {
-      print "<tr>\n";
+      print "<tr class=\"$org\">\n";
       print "<td class=\"section\" colspan=4>" .
         "<a href=\"https://github.com/$org\">$org</a></td>\n";
       print "</tr>\n";
@@ -172,7 +189,7 @@ if (@ahead > 0) {
     }
     my $line = $row->{line};
     my $rowClass = rowClass($rowIndex++, $rowCount);
-    print "<tr class=\"$rowClass\">\n$line</tr>\n";
+    print "<tr class=\"$org $rowClass\">\n$line</tr>\n";
   }
   print "</table>\n";
   print "</div>\n\n";
@@ -194,7 +211,7 @@ if (@released > 0) {
     my $org = $row->{org};
     my $groupId = $row->{groupId};
     if ($lastGroupId ne $groupId) {
-      print "<tr>\n";
+      print "<tr class=\"$org\">\n";
       print "<td class=\"section\" colspan=4>" .
         "<a href=\"https://github.com/$org\">$org</a></td>\n";
       print "</tr>\n";
@@ -202,7 +219,7 @@ if (@released > 0) {
     }
     my $line = $row->{line};
     my $rowClass = rowClass($rowIndex++, $rowCount);
-    print "<tr class=\"$rowClass\">\n$line</tr>\n";
+    print "<tr class=\"$org $rowClass\">\n$line</tr>\n";
   }
   print "</table>\n";
   print "</div>\n\n";
