@@ -32,10 +32,6 @@ my @warnings = ();
 my @lines = <>;
 sort(@lines);
 
-my $lastUnknownGID = '';
-my $lastAheadGID = '';
-my $lastReleasedGID = '';
-
 for my $line (@lines) {
   chomp $line;
   if ($line =~ /([^:]+):([^:]+): (\d+) commits on (\w+) since (.*)/) {
@@ -67,29 +63,12 @@ for my $line (@lines) {
 
     if (!$version) {
       # release status is unknown
-      if ($groupId ne $lastUnknownGID) {
-        # add section header for each groupId
-        my $header = { %$data };
-        $header->{line} = "<td class=\"section\" colspan=2>" .
-          "<a href=\"https://github.com/$org\">$org</a></td>\n";
-        push @unknown, $header;
-        $lastUnknownGID = $groupId;
-      }
       $data->{line} = "<td class=\"first\"></td>\n" .
         "<td><a href=\"$link\">$artifactId</a></td>\n";
       push @unknown, $data;
     }
-
     elsif ($commitCount > 0) {
       # a release is needed
-      if ($groupId ne $lastAheadGID) {
-        # add section header for each groupId
-        my $header = { %$data };
-        $header->{line} = "<td class=\"section\" colspan=4>" .
-          "<a href=\"https://github.com/$org\">$org</a></td>\n";
-        push @ahead, $header;
-        $lastAheadGID = $groupId;
-      }
       $data->{line} = "<td class=\"first\"></td>\n" .
         "<td><a href=\"$link\">$artifactId</a></td>\n" .
         "<td><a href=\"$link/compare/$tag...$branch\">$commitCount</a></td>\n" .
@@ -98,14 +77,6 @@ for my $line (@lines) {
     }
     else {
       # everything is up to date
-      if ($groupId ne $lastReleasedGID) {
-        # add section header for each groupId
-        my $header = { %$data };
-        $header->{line} = "<td class=\"section\" colspan=4>" .
-          "<a href=\"https://github.com/$org\">$org</a></td>\n";
-        push @released, $header;
-        $lastReleasedGID = $groupId;
-      }
       my $tagLink = $tag ? "<a href=\"$link/tree/$tag\">$version</a>" : "-";
       $data->{line} = "<td class=\"first\"></td>\n" .
         "<td><a href=\"$link\">$artifactId</a></td>\n" .
@@ -155,9 +126,19 @@ if (@unknown > 0) {
   print "<th>&nbsp;</th>\n";
   print "<th>Project</th>\n";
   print "</tr>\n";
+  my $lastGroupId = '';
   my $rowIndex = 0;
   my $rowCount = @unknown;
   for my $row (@unknown) {
+    my $org = $row->{org};
+    my $groupId = $row->{groupId};
+    if ($lastGroupId ne $groupId) {
+      print "<tr>\n";
+      print "<td class=\"section\" colspan=2>" .
+        "<a href=\"https://github.com/$org\">$org</a></td>\n";
+      print "</tr>\n";
+      $lastGroupId = $groupId;
+    }
     my $line = $row->{line};
     my $rowClass = rowClass($rowIndex++, $rowCount);
     print "<tr class=\"$rowClass\">\n$line</tr>\n";
@@ -176,9 +157,19 @@ if (@ahead > 0) {
   print "<th>Commits</th>\n";
   print "<th>Latest version</th>\n";
   print "</tr>\n";
+  my $lastGroupId = '';
   my $rowIndex = 0;
   my $rowCount = @ahead;
   for my $row (@ahead) {
+    my $org = $row->{org};
+    my $groupId = $row->{groupId};
+    if ($lastGroupId ne $groupId) {
+      print "<tr>\n";
+      print "<td class=\"section\" colspan=4>" .
+        "<a href=\"https://github.com/$org\">$org</a></td>\n";
+      print "</tr>\n";
+      $lastGroupId = $groupId;
+    }
     my $line = $row->{line};
     my $rowClass = rowClass($rowIndex++, $rowCount);
     print "<tr class=\"$rowClass\">\n$line</tr>\n";
@@ -196,9 +187,19 @@ if (@released > 0) {
   print "<th>Project</th>\n";
   print "<th>Latest version</th>\n";
   print "</tr>\n";
+  my $lastGroupId = '';
   my $rowIndex = 0;
   my $rowCount = @released;
   for my $row (@released) {
+    my $org = $row->{org};
+    my $groupId = $row->{groupId};
+    if ($lastGroupId ne $groupId) {
+      print "<tr>\n";
+      print "<td class=\"section\" colspan=4>" .
+        "<a href=\"https://github.com/$org\">$org</a></td>\n";
+      print "</tr>\n";
+      $lastGroupId = $groupId;
+    }
     my $line = $row->{line};
     my $rowClass = rowClass($rowIndex++, $rowCount);
     print "<tr class=\"$rowClass\">\n$line</tr>\n";
