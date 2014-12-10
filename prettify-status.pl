@@ -88,9 +88,10 @@ for my $line (@lines) {
         push @released, $header;
         $lastReleasedGID = $groupId;
       }
+      my $tagLink = $tag ? "<a href=\"$link/tree/$tag\">$version</a>" : "-";
       $data->{line} = "<td class=\"first\"></td>\n" .
         "<td><a href=\"$link\">$artifactId</a></td>\n" .
-        "<td><a href=\"$link/tree/$tag\">$version</a></td>\n";
+        "<td>$tagLink</td>\n";
       push @released, $data;
     }
   }
