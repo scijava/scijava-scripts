@@ -1,6 +1,10 @@
 # A list of obsolete artifacts.
 
 io.scif:bf-formats
+io.scif:bom-scifio
+io.scif:jai_imageio
+io.scif:ome-formats
+io.scif:pom-ome-formats
 io.scif:pom-scifio-lifesci
 io.scif:scifio-bio-formats
 loci:bf-autogen
@@ -35,6 +39,7 @@ loci:test-suite
 loci:turbojpeg
 loci:wiscscan-utils
 loci:xsd-fu
+net.imagej:bom-imagej
 net.imagej:ij-app
 net.imagej:ij-commands
 net.imagej:ij-commands-app
@@ -119,10 +124,15 @@ net.imagej:pom-ij-updater
 net.imagej:pom-ij-uploaders
 net.imagej:pom-script
 net.imglib2:GameOfDeath2
+net.imglib2:bom-imglib2
 net.imglib2:imglib-pom-base
+net.imglib2:imglib2-algorithms
+net.imglib2:imglib2-algorithms-gpl
+net.imglib2:imglib2-algorithms-legacy
 net.imglib2:imglib2-base
 net.imglib2:imglib2-io
 net.imglib2:pom-imglib
+net.imglib2:pom-imglib2-algorithms
 net.imglib2:pom-imglib2-examples
 ome:bio-formats
 ome:loci-common
