@@ -1,33 +1,126 @@
 #!/usr/bin/perl
 
 # check-release.pl - checks whether the tip of the master branch
-#                    has changed since the last release.
+#                    has changed since the specified release.
 
 use strict;
 use File::Basename qw(dirname);
 use Getopt::Long;
 
-my $ask_nexus_for_latest_version;
-my $git_fetch_first;
-my $verbose;
+# -- Constants --
 
-GetOptions ('ask-nexus-for-latest-version' => \$ask_nexus_for_latest_version,
-  'git-fetch-first' => \$git_fetch_first,
-  'verbose' => \$verbose)
-or die ('Usage: ' . $0
-  . ' [--ask-nexus-for-latest-version] [--git-fetch-first] [--verbose]');
+my $cachePath = "$ENV{HOME}/.m2/repository";
+
+# -- Options --
+
+my $release_version;
+my $verbose;
+my $debug;
+
+GetOptions(
+  'release-version=s' => \$release_version,
+  'verbose' => \$verbose,
+  'debug' => \$debug)
+or die ('Usage: ' . $0 .
+  ' [--release-version <version>]' .
+  ' [--verbose]' .
+  ' [--debug]');
+
+# -- Subroutines --
+
+sub debug($) {
+  my $msg = shift;
+  if ($debug) { print STDERR "[DEBUG] $msg\n"; }
+}
+
+sub error($$) {
+  my $no = shift;
+  my $msg = shift;
+  print STDERR "[ERROR] $msg\n";
+  exit $no;
+}
+
+sub tagExists($) {
+  my $tag = shift;
+  return `git tag -l | grep '^$tag\$'` ? 1 : 0;
+}
+
+sub latestRelease($) {
+  my $ga = shift;
+
+  debug("Downloading latest release metadata");
+
+  # download the latest release POM from the Maven repository
+  `mvn dependency:get -Dartifact=$ga:LATEST -Dpackaging=pom`;
+
+  # extract the latest release version from local repository cache metadata
+  my $gaPath = $ga;
+  $gaPath =~ s/[\.:]/\//g;
+  my $release = `grep release "$cachePath/$gaPath"/*.xml | head -n 1`;
+  $release =~ s/.*<release>//;
+  $release =~ s/<\/release>.*//;
+  return $release;
+}
+
+sub releaseRef($$$) {
+  my $groupId = shift;
+  my $artifactId = shift;
+  my $releaseVersion = shift;
+
+  # look for a suitable tag
+  my $tag = "$artifactId-$releaseVersion";
+  if (tagExists($tag)) { return $tag; }
+  $tag = "v$releaseVersion";
+  if (tagExists($tag)) { return $tag; }
+  if ($tag =~ /_$/) {
+    $tag =~ s/_$//;
+    if (tagExists($tag)) { return $tag; }
+  }
+  if ($tag =~ /^pom-/) {
+    $tag =~ s/^pom-//;
+    if (tagExists($tag)) { return $tag; }
+  }
+
+  # no tag found; extract ref from the JAR
+  return extractRef($groupId, $artifactId, $releaseVersion);
+}
+
+sub extractRef($$$) {
+  my $groupId = shift;
+  my $artifactId = shift;
+  my $version = shift;
+
+  my $ga = "$groupId:$artifactId";
+  my $gaPath = $ga;
+  $gaPath =~ s/[\.:]/\//g;
+  my $jarPath = "$cachePath/$gaPath/$version/$artifactId-$version.jar";
+
+  if (! -e $jarPath) {
+    # download the version from the Maven repository
+    debug("Fetching JAR: '$jarPath'");
+    `mvn dependency:get -Dartifact=$ga:$version`;
+  }
+
+  if (! -e $jarPath) {
+    # the requested GAV could not be found
+    return '';
+  }
+
+  # extract Implementation-Build from the JAR manifest
+  debug("Extracting release ref from JAR");
+  my $implBuild = `unzip -q -c "$jarPath" META-INF/MANIFEST.MF | grep Implementation-Build`;
+  chomp $implBuild;
+  $implBuild =~ s/.* ([0-9a-f]+).*/\1/;
+  return $implBuild;
+}
+
+# -- Main --
 
 # add SciJava scripts to the search path
 $ENV{PATH} .= ':' . dirname($0);
 
-if ($git_fetch_first) {
-  # make sure the latest tags are available
-  `git fetch --tags 2> /dev/null`;
-}
-
 if (! -e "pom.xml") {
-  print STDERR "[ERROR] No pom.xml: " . `pwd`;
-  exit 1;
+  error(1, "No pom.xml: " . `pwd`);
 }
 
 # determine the project's GAV
@@ -36,50 +129,42 @@ chomp $gav;
 my ($groupId, $artifactId, $version) = split(':', $gav);
 my $ga = "$groupId:$artifactId";
 
-# HACK: Some Fiji projects end in underscore for hysterical raisins.
-# Specifically: the artifactId does, but the repo name and tags do not.
-my $tagPrefix = $artifactId;
-$tagPrefix =~ s/_$//;
+debug("groupId = $groupId");
+debug("artifactId = $artifactId");
 
-my ($latest, $tag);
-if ($ask_nexus_for_latest_version) {
-  # determine the latest release
-  $latest = `maven-helper.sh latest-version \"$ga\"`;
-  chomp $latest;
+# make sure the latest tags are available
+`git fetch --tags 2> /dev/null`;
 
-  if (!$latest || $latest =~ /\-SNAPSHOT$/) {
-    print STDERR "[ERROR] $ga: No release version\n";
-    exit 2;
-  }
-
-  # compare the release tag with the master branch
-  $tag = "$tagPrefix-$latest";
-  if ($tag =~ /^pom-(.*)$/) {
-    $tag = $1;
-  }
-
-  if (!`git tag -l | grep $tag`) {
-    print STDERR "[ERROR] $ga: No release tag: $tag\n";
-    exit 3;
-  }
-} else {
-  my $name = $tagPrefix;
-  $name =~ s/^pom-//;
-  my $prefix = "refs/tags/$name-";
-
-  # just use the available tags to determine the latest release
-  $tag = `git for-each-ref --count=1 --sort='-*authordate' --format='%(refname)' $prefix\*`;
-  chomp $tag;
-  $tag =~ s/refs\/tags\///;
-  $latest = substr($tag, length($name) + 1);
+if (!$release_version) {
+  # no release version specified; use the latest release
+  $release_version = latestRelease($ga);
 }
 
-my $mains = `git ls-files */src/main/ src/main/ | sed 's-/main/.*-/main-' | uniq | tr '\n' ' '`;
-if ($mains ne '') {
-  my @commits = `git rev-list $tag..origin/master -- $mains`;
-  my $commitCount = @commits;
-  if ($verbose || $commitCount > 0) {
-    # new commits on master; a release is potentially needed
-    print "$ga: $commitCount commits on master since $latest\n";
-  }
+debug("Release version = $release_version");
+
+if (!$release_version || $release_version =~ /\-SNAPSHOT$/) {
+  error(2, "$ga: No release version");
+}
+
+my $releaseRef = releaseRef($groupId, $artifactId, $release_version);
+
+if (!$releaseRef) {
+  error(3, "$ga: No ref for version $release_version");
+}
+
+debug("Release ref = $releaseRef");
+
+my $sourceDirs = `git ls-files */src/main/ src/main/ | sed 's-/main/.*-/main-' | uniq | tr '\n' ' '`;
+
+if (!$sourceDirs) {
+  error(4, "[ERROR] $ga: No sources to compare");
+}
+
+debug("Source directories = $sourceDirs");
+
+my @commits = `git rev-list $releaseRef...origin/master -- $sourceDirs`;
+my $commitCount = @commits;
+if ($verbose || $commitCount > 0) {
+  # new commits on master; a release is potentially needed
+  print "$ga: $commitCount commits on master since $release_version\n";
 }
