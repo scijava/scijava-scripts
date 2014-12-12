@@ -126,9 +126,10 @@ if (@warnings > 0) {
   my $rowIndex = 0;
   my $rowCount = @warnings;
   for my $row (@warnings) {
+    my $org = $row->{org};
     my $line = $row->{line};
     my $rowClass = rowClass($rowIndex++, $rowCount);
-    print "<li class=\"$rowClass\">\n$line\n</li>\n";
+    print "<li class=\"$org $rowClass\">\n$line\n</li>\n";
   }
   print "</ul>\n";
   print "</div>\n\n";
