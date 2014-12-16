@@ -70,8 +70,6 @@ sub releaseRef($$$) {
   # look for a suitable tag
   my $tag = "$artifactId-$releaseVersion";
   if (tagExists($tag)) { return $tag; }
-  $tag = "v$releaseVersion";
-  if (tagExists($tag)) { return $tag; }
   if ($tag =~ /_$/) {
     $tag =~ s/_$//;
     if (tagExists($tag)) { return $tag; }
@@ -80,6 +78,8 @@ sub releaseRef($$$) {
     $tag =~ s/^pom-//;
     if (tagExists($tag)) { return $tag; }
   }
+  $tag = "v$releaseVersion";
+  if (tagExists($tag)) { return $tag; }
 
   # no tag found; extract ref from the JAR
   return extractRef($groupId, $artifactId, $releaseVersion);
