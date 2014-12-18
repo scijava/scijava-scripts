@@ -21,7 +21,8 @@ build = project.getBuildByNumber(buildNumber)
 emailMap = [
         "Curtis Rueden": "ctrueden@wisc.edu",
         "Johannes Schindelin": "johannes.schindelin@gmx.de",
-        "Mark Hiner": "hinerm@gmail.com"
+        "Mark Hiner": "hinerm@gmail.com",
+        "Tobias Pietzsch" : "tobias.pietzsch@gmail.com"
 ]
 
 for (cause in build.getCauses()) try {
