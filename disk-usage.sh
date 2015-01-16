@@ -6,11 +6,10 @@
 # http://www.cyberciti.biz/faq/mac-osx-unix-get-an-alert-when-my-disk-is-full/
 
 check() {
-	FS="$1"
-	OUTPUT=($(LC_ALL=C df -P ${FS}))
-	CURRENT=$(echo ${OUTPUT[11]} | sed 's/%//')
-	[ $CURRENT -gt $threshold ] && \
-		echo "$FS: file system usage at $CURRENT%" && \
+	FS=$1
+	CURRENT=$(df -P "$FS" | tail -n1 | awk '{print $5}' | sed 's/%//')
+	test "$CURRENT" -gt "$threshold" &&
+		echo "$FS: file system usage at $CURRENT%" &&
 		return 1
 	return 0
 }
