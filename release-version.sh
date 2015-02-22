@@ -104,6 +104,7 @@ org.scijava:pom-jython-shaded:*)
 *:scijava-common:*|*:ij1-patcher:*|*:minimaven:*|org.scijava:junit-benchmarks:*\
 |org.scijava:swing-checkbox-tree:*|org.scijava:jep:*|*:scijava-maven-plugin:*\
 |org.scijava:native-lib-loader:*|org.scijava:scijava-log-slf4j:*\
+|org.scijava:scijava-expression-parser:*\
 |*:imagej-maven-plugin:*\
 |net.imglib2:imglib2:*\
 |org.scijava:pom-scijava:*|net.imglib2:pom-imglib2:*\
