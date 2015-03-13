@@ -100,15 +100,23 @@ org.scijava:pom-jython-shaded:*)
 	PROFILE=-Psonatype-oss-release
 	INVALIDATE_NEXUS=t
 	;;
-*:nar-maven-plugin:*|\
-*:scijava-common:*|*:ij1-patcher:*|*:minimaven:*|org.scijava:junit-benchmarks:*\
-|org.scijava:swing-checkbox-tree:*|org.scijava:jep:*|*:scijava-maven-plugin:*\
-|org.scijava:native-lib-loader:*|org.scijava:scijava-log-slf4j:*\
-|org.scijava:scijava-expression-parser:*\
-|*:imagej-maven-plugin:*\
-|net.imglib2:imglib2:*\
-|org.scijava:pom-scijava:*|net.imglib2:pom-imglib2:*\
-|io.scif:pom-scifio:*|net.imagej:pom-imagej:*)
+com.github.maven-nar:nar-maven-plugin:*|\
+io.scif:pom-scifio:*|\
+net.imagej:ij1-patcher:*|\
+net.imagej:imagej-maven-plugin:*|\
+net.imagej:pom-imagej:*|\
+net.imglib2:imglib2:*|\
+net.imglib2:pom-imglib2:*|\
+org.scijava:jep:*|\
+org.scijava:junit-benchmarks:*|\
+org.scijava:minimaven:*|\
+org.scijava:native-lib-loader:*|\
+org.scijava:pom-scijava:*|\
+org.scijava:scijava-common:*|\
+org.scijava:scijava-expression-parser:*|\
+org.scijava:scijava-log-slf4j:*|\
+org.scijava:scijava-maven-plugin:*|\
+org.scijava:swing-checkbox-tree:*)
 	test -n "$GPG_KEYNAME" || die "Need to set GPG_KEYNAME"
 	test -n "$GPG_PASSPHRASE" || die "Need to set GPG_PASSPHRASE"
 	PROFILE=-Psonatype-oss-release
