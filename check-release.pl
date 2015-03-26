@@ -165,6 +165,18 @@ debug("Source directories = $sourceDirs");
 
 my @commits = `git rev-list $releaseRef...origin/master -- $sourceDirs`;
 my $commitCount = @commits;
+
+# ignore commits which are known to be irrelevant
+foreach my $commit (@commits) {
+  chomp $commit;
+  my $commitMessage = `git log -1 --oneline $commit`;
+  if ($commitMessage =~ /^[a-z0-9]{7} [Hh]appy .*[Nn]ew [Yy]ear/) {
+    # Ignore "Happy New Year" copyright header updates
+    debug("Ignoring Happy New Year commit: $commit");
+    $commitCount--;
+  }
+}
+
 if ($verbose || $commitCount > 0) {
   # new commits on master; a release is potentially needed
   print "$ga: $commitCount commits on master since $release_version\n";
