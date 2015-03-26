@@ -57,6 +57,7 @@ sub latestRelease($) {
   my $gaPath = $ga;
   $gaPath =~ s/[\.:]/\//g;
   my $release = `grep release "$cachePath/$gaPath"/*.xml | head -n 1`;
+  chomp $release;
   $release =~ s/.*<release>//;
   $release =~ s/<\/release>.*//;
   return $release;
