@@ -170,9 +170,15 @@ my $commitCount = @commits;
 foreach my $commit (@commits) {
   chomp $commit;
   my $commitMessage = `git log -1 --oneline $commit`;
+  chomp $commitMessage;
   if ($commitMessage =~ /^[a-z0-9]{7} [Hh]appy .*[Nn]ew [Yy]ear/) {
     # Ignore "Happy New Year" copyright header updates
     debug("Ignoring Happy New Year commit: $commit");
+    $commitCount--;
+  }
+  if ($commitMessage =~ /^[a-z0-9]{7} Organize imports$/) {
+    # Ignore "Organize imports" copyright header updates
+    debug("Ignoring 'Organize imports' commit: $commit");
     $commitCount--;
   }
 }
