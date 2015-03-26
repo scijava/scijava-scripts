@@ -42,7 +42,9 @@ for my $line (sort @lines) {
     my $tag = $version ? "$artifactId-$version" : "";
     my $org = $orgs{$groupId};
     if (!$org) { $org = $groupId; }
-    my $link = "https://github.com/$orgs{$groupId}/$artifactId";
+    my $repo = $artifactId;
+    $repo =~ s/_$//;
+    my $link = "https://github.com/$orgs{$groupId}/$repo";
 
     my $data = {
       groupId     => $groupId,
@@ -52,6 +54,7 @@ for my $line (sort @lines) {
       version     => $version,
       tag         => $tag,
       org         => $org,
+      repo        => $repo,
     };
 
     if (not $org) {
