@@ -123,9 +123,7 @@ org.scijava:swing-checkbox-tree:*)
 	PROFILE=-Psonatype-oss-release
 	INVALIDATE_NEXUS=t
 	;;
-*:pom-fiji:*)
-	;;
-*:pom-*:*)
+*:pom-trakem2:*)
 	ARTIFACT_ID=${BASE_GAV#*:pom-}
 	ARTIFACT_ID=${ARTIFACT_ID%:*}
 	test -n "$TAG" || TAG=-Dtag=$ARTIFACT_ID-$VERSION
