@@ -4,7 +4,9 @@
 #                   recording whether the build passes or fails for each.
 
 commits=$@
-test "$commits" || commits=$(git rev-list HEAD ^master | tail -r)
+test "$commits" || commits=$(git rev-list HEAD ^master | sed '1!G;h;$!d')
+# NB: The sed line above reverses the order of the commits.
+# See: http://stackoverflow.com/a/744093
 
 branch=$(git rev-parse --abbrev-ref HEAD)
 
