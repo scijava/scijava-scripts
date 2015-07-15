@@ -176,7 +176,12 @@ foreach my $commit (@commits) {
     debug("Ignoring Happy New Year commit: $commit");
     $commitCount--;
   }
-  if ($commitMessage =~ /^[a-z0-9]{7} Organize imports$/) {
+  elsif ($commitMessage =~ /^[a-z0-9]{7} [Uu]pdate.*[Cc]opyright.*20[0-9]{2}/) {
+    # Ignore "Update copyrights" copyright header updates
+    debug("Ignoring copyright year update commit: $commit");
+    $commitCount--;
+  }
+  elsif ($commitMessage =~ /^[a-z0-9]{7} Organize imports$/) {
     # Ignore "Organize imports" copyright header updates
     debug("Ignoring 'Organize imports' commit: $commit");
     $commitCount--;
