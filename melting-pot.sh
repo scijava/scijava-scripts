@@ -87,7 +87,7 @@ error() {
 }
 
 die() {
-	code="$1"
+	local code="$1"
 	shift
 	error $@
 	exit "$code"
@@ -204,12 +204,12 @@ groupId() {
 }
 
 artifactId() {
-	result="${1#*:}" # strip groupId
+	local result="${1#*:}" # strip groupId
 	echo "${result%%:*}"
 }
 
 version() {
-	result="${1#*:}" # strip groupId
+	local result="${1#*:}" # strip groupId
 	case "$result" in
 		*:*)
 			result="${result#*:}" # strip artifactId
@@ -234,15 +234,15 @@ version() {
 
 # Converts the given GAV into a path in the local repository cache.
 repoPath() {
-	gPath="$(echo "$(groupId "$1")" | tr :. /)"
-	aPath="$(artifactId "$1")"
-	vPath="$(version "$1")"
+	local gPath="$(echo "$(groupId "$1")" | tr :. /)"
+	local aPath="$(artifactId "$1")"
+	local vPath="$(version "$1")"
 	echo "$repoBase/$gPath/$aPath/$vPath"
 }
 
 # Gets the path to the given GAV's POM file in the local repository cache.
 pomPath() {
-	pomFile="$(artifactId "$1")-$(version "$1").pom"
+	local pomFile="$(artifactId "$1")-$(version "$1").pom"
 	echo "$(repoPath "$1")/$pomFile"
 }
 
@@ -258,14 +258,14 @@ downloadPOM() {
 
 # Gets the POM path for the given GAV, ensuring it exists locally.
 pom() {
-	pomPath="$(pomPath "$1")"
+	local pomPath="$(pomPath "$1")"
 	test -f "$pomPath" || downloadPOM "$1"
 	echo "$pomPath"
 }
 
 # Gets the SCM URL for the given GAV.
 scmURL() {
-	scmXPath="//*[local-name()='project']/*[local-name()='scm']/*[local-name()='connection']"
+	local scmXPath="//*[local-name()='project']/*[local-name()='scm']/*[local-name()='connection']"
 	xmllint --xpath "$scmXPath" "$(pom "$1")" | sed -E 's/.*>scm:git:(.*)<.*/\1/'
 }
 
@@ -276,9 +276,9 @@ scmTag() {
 
 # Fetches the source code for the given GAV. Returns the directory.
 retrieveSource() {
-	scmURL="$(scmURL "$1")"
-	scmTag="$(scmTag "$1")"
-	dir="$(groupId "$1")/$(artifactId "$1")"
+	local scmURL="$(scmURL "$1")"
+	local scmTag="$(scmTag "$1")"
+	local dir="$(groupId "$1")/$(artifactId "$1")"
 	git clone "$scmURL" --branch "$scmTag" --depth 1 "$dir" 2> /dev/null
 	echo "$dir"
 }
@@ -290,12 +290,12 @@ deps() {
 
 # Checks whether the given GA(V) matches the specified filter pattern.
 gaMatch() {
-	ga="$1"
-	filter="$2"
-	g="$(groupId "$ga")"
-	a="$(artifactId "$ga")"
-	fg="$(groupId "$filter")"
-	fa="$(artifactId "$filter")"
+	local ga="$1"
+	local filter="$2"
+	local g="$(groupId "$ga")"
+	local a="$(artifactId "$ga")"
+	local fg="$(groupId "$filter")"
+	local fa="$(artifactId "$filter")"
 	test "$fg" = "$g" -o "$fg" = "*" || return
 	test "$fa" = "$a" -o "$fa" = "*" || return
 	echo 1
@@ -305,6 +305,7 @@ gaMatch() {
 isChanged() {
 	local IFS=","
 
+	local change
 	for change in $changes
 	do
 		test "$(gaMatch "$1" "$change")" && echo 1 && return
@@ -319,6 +320,7 @@ isIncluded() {
 	local IFS=","
 
 	# ensure GA is not excluded
+	local exclude
 	for exclude in $excludes
 	do
 		test "$(gaMatch "$1" "$exclude")" && return
@@ -326,6 +328,7 @@ isIncluded() {
 
 	# ensure GA is included
 	test -z "$includes" && echo 1 && return
+	local include
 	for include in $includes
 	do
 		test "$(gaMatch "$1" "$include")" && echo 1 && return
@@ -349,6 +352,7 @@ generatePOM() {
 	echo '	<name>Melting Pot</name>' >> pom.xml
 	echo >> pom.xml
 	echo '	<modules>' >> pom.xml
+	local dir
 	for dir in */*
 	do
 		test -d "$dir" &&
@@ -365,24 +369,25 @@ generatePOM() {
 meltDown() {
 	# Fetch the project source code.
 	debug "$1: fetching project source"
-	dir="$(retrieveSource "$1")"
+	local dir="$(retrieveSource "$1")"
 
 	# Get the project dependencies.
 	debug "$1: determining project dependencies"
 	cd "$dir"
-	deps="$(deps)"
+	local deps="$(deps)"
 	cd - > /dev/null
 
 	args="-Denforcer.skip"
 
 	# Process the dependencies.
 	debug "$1: processing project dependencies"
+	local dep
 	for dep in $deps
 	do
-		g="$(groupId "$dep")"
-		a="$(artifactId "$dep")"
-		v="$(version "$dep")"
-		gav="$g:$a:$v"
+		local g="$(groupId "$dep")"
+		local a="$(artifactId "$dep")"
+		local v="$(version "$dep")"
+		local gav="$g:$a:$v"
 
 		test -z "$(isChanged "$gav")" &&
 			args="$args -D$a.version=$v"
@@ -397,10 +402,11 @@ meltDown() {
 	# Override versions of changed GAVs.
 	debug "$1: processing changed components"
 	local TLS=,
+	local gav
 	for gav in $changes
 	do
-		a="$(artifactId "$gav")"
-		v="$(version "$gav")"
+		local a="$(artifactId "$gav")"
+		local v="$(version "$gav")"
 		args="$args -D$a.version=$v"
 	done
 	unset TLS
