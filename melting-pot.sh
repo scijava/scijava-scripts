@@ -132,6 +132,9 @@ parseArguments() {
 			-f|--force)
 				force=1
 				;;
+			-s|--skipBuild)
+				skipBuild=1
+				;;
 			-h|--help)
 				usage=1
 				;;
@@ -151,7 +154,7 @@ parseArguments() {
 	if [ "$usage" ]
 	then
 		echo "Usage: $(basename "$0") <project> [-c <GAVs>] \\
-       [-i <GAs>] [-e <GAs>] [-r <URLs>] [-l <dir>] [-o <dir>] [-vfh]
+       [-i <GAs>] [-e <GAs>] [-r <URLs>] [-l <dir>] [-o <dir>] [-vfsh]
 
 <project>
     The project to build, including dependencies, with consistent versions.
@@ -175,6 +178,8 @@ parseArguments() {
     Enable verbose/debugging output.
 -f, --force
     Wipe out the output directory if it already exists.
+-s, --skipBuild
+    Skips the final build step. Useful for automated testing.
 -h, --help
     Display this usage information."
 		exit 1
@@ -405,9 +410,15 @@ meltDown() {
 	generatePOM
 
 	# Build everything.
-	debug "Building the project!"
-	# NB: All code is fresh; no need to clean.
-	mvn $args test
+	if [ "$skipBuild" ]
+	then
+		debug "Skipping the build; the command would have been:"
+		debug "mvn $args test"
+	else
+		debug "Building the project!"
+		# NB: All code is fresh; no need to clean.
+		mvn $args test
+	fi
 
 	debug "$1: complete"
 }
