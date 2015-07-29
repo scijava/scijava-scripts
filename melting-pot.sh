@@ -126,6 +126,9 @@ parseArguments() {
 				outputDir="$2"
 				shift
 				;;
+			-p|--prune)
+				prune=1
+				;;
 			-v|--verbose)
 				verbose=1
 				;;
@@ -154,7 +157,7 @@ parseArguments() {
 	if [ "$usage" ]
 	then
 		echo "Usage: $(basename "$0") <project> [-c <GAVs>] \\
-       [-i <GAs>] [-e <GAs>] [-r <URLs>] [-l <dir>] [-o <dir>] [-vfsh]
+       [-i <GAs>] [-e <GAs>] [-r <URLs>] [-l <dir>] [-o <dir>] [-pvfsh]
 
 <project>
     The project to build, including dependencies, with consistent versions.
@@ -174,6 +177,10 @@ parseArguments() {
     Overrides the directory of the Maven local repository cache.
 -o, --outputDir
     Overrides the output directory. The default is \"melting-pot\".
+-p, --prune
+    Build only the components which themselves depend on a changed
+    artifact. This will make the build much faster, at the expense of
+    not fully testing runtime compatibility across all components.
 -v, --verbose
     Enable verbose/debugging output.
 -f, --force
@@ -337,6 +344,32 @@ isIncluded() {
 	done
 }
 
+# Deletes components which do not depend on a changed GAV.
+pruneReactor() {
+	local dir
+	for dir in */*
+	do
+		debug "Checking relevance of component $dir"
+		local deps="$(deps "$dir")"
+
+		# Determine whether the component depends on a changed GAV.
+		local keep
+		unset keep
+		local dep
+		for dep in $deps
+		do
+			test "$(isChanged "$dep")" && keep=1 && break
+		done
+
+		# If the component is irrelevant, prune it.
+		if [ -z "$keep" ]
+		then
+			debug "Pruning irrelevant component: $dir"
+			rm -rf "$dir"
+		fi
+	done
+}
+
 # Generates an aggregator POM for all modules in the current directory.
 generatePOM() {
 	echo '<?xml version="1.0" encoding="UTF-8"?>' > pom.xml
@@ -410,6 +443,9 @@ meltDown() {
 		args="$args -D$a.version=$v"
 	done
 	unset TLS
+
+	# Prune the build, if applicable.
+	test "$prune" && pruneReactor
 
 	# Generate the aggregator POM.
 	debug "Generating aggregator POM"
