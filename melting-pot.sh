@@ -285,7 +285,9 @@ retrieveSource() {
 
 # Gets the list of dependencies for the project in the CWD.
 deps() {
+	cd "$1"
 	mvn dependency:list | grep '^\[INFO\]    [^ ]' | sed 's/\[INFO\]    //'
+	cd - > /dev/null
 }
 
 # Checks whether the given GA(V) matches the specified filter pattern.
@@ -373,9 +375,7 @@ meltDown() {
 
 	# Get the project dependencies.
 	debug "$1: determining project dependencies"
-	cd "$dir"
-	local deps="$(deps)"
-	cd - > /dev/null
+	local deps="$(deps "$dir")"
 
 	args="-Denforcer.skip"
 
