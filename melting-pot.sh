@@ -290,7 +290,8 @@ xpath() {
 		xpath="$xpath/*[local-name()='$1']"
 		shift
 	done
-	xmllint --xpath "$xpath" "$xmlFile" | sed -E 's/^[^>]*>(.*)<[^<]*$/\1/'
+	xmllint --xpath "$xpath" "$xmlFile" 2> /dev/null |
+		sed -E 's/^[^>]*>(.*)<[^<]*$/\1/'
 }
 
 # For the given GAV ($1), recursively gets the value of the
