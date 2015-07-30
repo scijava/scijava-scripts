@@ -303,6 +303,7 @@ xpath() {
 		xpath="$xpath/*[local-name()='$1']"
 		shift
 	done
+	debug "xmllint --xpath \"$xpath\" \"$xmlFile\""
 	xmllint --xpath "$xpath" "$xmlFile" 2> /dev/null |
 		sed -E 's/^[^>]*>(.*)<[^<]*$/\1/'
 }
