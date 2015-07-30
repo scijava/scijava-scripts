@@ -276,12 +276,21 @@ pomPath() {
 
 # Fetches the POM for the given GAV into the local repository cache.
 downloadPOM() {
+	local g="$(groupId "$1")"
+	local a="$(artifactId "$1")"
+	local v="$(version "$1")"
+	debug "mvn dependency:get \\
+	-DrepoUrl=\"$remoteRepos\" \\
+	-DgroupId=\"$g\" \\
+	-DartifactId=\"$a\" \\
+	-Dversion=\"$v\" \\
+	-Dpackaging=pom"
 	mvn dependency:get \
 		-DrepoUrl="$remoteRepos" \
-		-DgroupId="$(groupId "$1")" \
-		-DartifactId="$(artifactId "$1")" \
-		-Dversion="$(version "$1")" \
-		-Dpackaging=pom
+		-DgroupId="$g" \
+		-DartifactId="$a" \
+		-Dversion="$v" \
+		-Dpackaging=pom > /dev/null
 }
 
 # Gets the POM path for the given GAV, ensuring it exists locally.
