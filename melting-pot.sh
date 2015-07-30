@@ -86,13 +86,6 @@ error() {
 	stderr "[ERROR] $@"
 }
 
-die() {
-	local code="$1"
-	shift
-	error $@
-	exit "$code"
-}
-
 unknownArg() {
 	error "Unknown option: $@"
 	usage=1
@@ -207,7 +200,7 @@ parseArguments() {
 
 createDir() {
 	test -z "$force" -a -e "$1" &&
-		die 2 "Directory already exists: $1"
+		error "Directory already exists: $1" && exit 2
 
 	rm -rf "$1"
 	mkdir -p "$1"
