@@ -444,6 +444,7 @@ meltDown() {
 	# Fetch the project source code.
 	info "$1: fetching project source"
 	local dir="$(retrieveSource "$1" "$branch")"
+	test ! -d "$dir" && error "Could not fetch project source" && exit 3
 
 	# Get the project dependencies.
 	info "$1: determining project dependencies"
