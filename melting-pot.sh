@@ -152,7 +152,8 @@ parseArguments() {
 		shift
 	done
 
-	test -z "$project" && error "No project specified!" && usage=1
+	test -z "$project" -a -z "$usage" &&
+		error "No project specified!" && usage=1
 
 	if [ "$usage" ]
 	then
