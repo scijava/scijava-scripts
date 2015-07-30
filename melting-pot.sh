@@ -293,9 +293,31 @@ xpath() {
 	xmllint --xpath "$xpath" "$xmlFile" | sed -E 's/^[^>]*>(.*)<[^<]*$/\1/'
 }
 
+# For the given GAV ($1), recursively gets the value of the
+# specified XPath expression of the form "//$2/$3/$4/...".
+pomValue() {
+	local pomPath="$(pom "$1")"
+	shift
+	local value="$(xpath "$pomPath" $@)"
+	if [ "$value" ]
+	then
+		echo "$value"
+	else
+		# Path not found in POM; look in the parent POM.
+		local pg="$(xpath "$pomPath" project parent groupId)"
+		if [ "$pg" ]
+		then
+			# There is a parent POM declaration in this POM.
+			local pa="$(xpath "$pomPath" project parent artifactId)"
+			local pv="$(xpath "$pomPath" project parent version)"
+			pomValue "$pg:$pa:$pv" $@
+		fi
+	fi
+}
+
 # Gets the SCM URL for the given GAV.
 scmURL() {
-	xpath "$(pom "$1")" project scm connection | sed -E 's/.*>scm:git:(.*)<.*/\1/'
+	pomValue "$1" project scm connection | sed -E 's/^scm:git://'
 }
 
 # Gets the SCM tag for the given GAV.
