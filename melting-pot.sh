@@ -419,6 +419,12 @@ pruneReactor() {
 	done
 }
 
+# Tests if the given directory contains the appropriate source code.
+isProject() {
+	local a="$(xpath "$1/pom.xml" project artifactId)"
+	test "$a" = "$(basename "$1")" && echo 1
+}
+
 # Generates an aggregator POM for all modules in the current directory.
 generatePOM() {
 	echo '<?xml version="1.0" encoding="UTF-8"?>' > pom.xml
@@ -439,8 +445,15 @@ generatePOM() {
 	local dir
 	for dir in */*
 	do
-		test -d "$dir" &&
+		if [ "$(isProject "$dir")" ]
+		then
 			echo "		<module>$dir</module>" >> pom.xml
+		else
+			# Check for a child component of a multi-module project.
+			local childDir="$dir/$(basename "$dir")"
+			test "$(isProject "$childDir")" &&
+				echo "		<module>$childDir</module>" >> pom.xml
+		fi
 	done
 	echo '	</modules>' >> pom.xml
 	echo '</project>' >> pom.xml

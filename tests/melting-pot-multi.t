@@ -1,4 +1,4 @@
-Test that recursive SCM retrieval works:
+Test that recursive SCM retrieval and multi-module projects work:
 
   $ sh "$TESTDIR/../melting-pot.sh" sc.fiji:TrakEM2_:1.0f -r http://maven.imagej.net/content/groups/public -i 'sc.fiji:TrakEM2_' -v -s -d -f
   [INFO] sc.fiji:TrakEM2_:1.0f: fetching project source
@@ -17,3 +17,6 @@ Test that recursive SCM retrieval works:
   melting-pot/pom.xml
   melting-pot/sc.fiji
   melting-pot/sc.fiji/TrakEM2_
+
+  $ grep '<module>sc.fiji/TrakEM2_/TrakEM2_</module>' melting-pot/pom.xml
+  \t\t<module>sc.fiji/TrakEM2_/TrakEM2_</module> (esc)
