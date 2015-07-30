@@ -355,7 +355,8 @@ retrieveSource() {
 deps() {
 	cd "$1"
 	debug "mvn dependency:list"
-	mvn dependency:list | grep '^\[INFO\]    [^ ]' | sed 's/\[INFO\]    //'
+	mvn dependency:list |
+		grep '^\[INFO\]    [^ ]' | sed 's/\[INFO\]    //' | sort
 	cd - > /dev/null
 }
 
