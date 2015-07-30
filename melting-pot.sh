@@ -102,6 +102,10 @@ parseArguments() {
 	while [ $# -ge 1 ]
 	do
 		case "$1" in
+			-b|--branch)
+				branch="$2"
+				shift
+				;;
 			-c|--changes)
 				changes="$2"
 				shift
@@ -157,11 +161,14 @@ parseArguments() {
 
 	if [ "$usage" ]
 	then
-		echo "Usage: $(basename "$0") <project> [-c <GAVs>] \\
+		echo "Usage: $(basename "$0") <project> [-b <branch>] [-c <GAVs>] \\
        [-i <GAs>] [-e <GAs>] [-r <URLs>] [-l <dir>] [-o <dir>] [-pvfsh]
 
 <project>
     The project to build, including dependencies, with consistent versions.
+-b, --branch
+    Override the branch/tag of the project to build. By default,
+    the branch used will be the tag named \"artifactId-version\".
 -c, --changes
     Comma-separated list of GAVs to inject into the project, replacing
     normal versions. E.g.: \"com.mycompany:myartifact:1.2.3-SNAPSHOT\"
@@ -285,9 +292,10 @@ scmTag() {
 # Fetches the source code for the given GAV. Returns the directory.
 retrieveSource() {
 	local scmURL="$(scmURL "$1")"
-	local scmTag="$(scmTag "$1")"
+	local scmBranch
+	test "$2" && scmBranch="$2" || scmBranch="$(scmTag "$1")"
 	local dir="$(groupId "$1")/$(artifactId "$1")"
-	git clone "$scmURL" --branch "$scmTag" --depth 1 "$dir" 2> /dev/null
+	git clone "$scmURL" --branch "$scmBranch" --depth 1 "$dir" 2> /dev/null
 	echo "$dir"
 }
 
@@ -405,7 +413,7 @@ generatePOM() {
 meltDown() {
 	# Fetch the project source code.
 	debug "$1: fetching project source"
-	local dir="$(retrieveSource "$1")"
+	local dir="$(retrieveSource "$1" "$branch")"
 
 	# Get the project dependencies.
 	debug "$1: determining project dependencies"
