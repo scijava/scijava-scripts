@@ -411,7 +411,7 @@ meltDown() {
 	debug "$1: determining project dependencies"
 	local deps="$(deps "$dir")"
 
-	args="-Denforcer.skip"
+	local args="-Denforcer.skip"
 
 	# Process the dependencies.
 	debug "$1: processing project dependencies"
