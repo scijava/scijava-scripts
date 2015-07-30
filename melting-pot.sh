@@ -68,7 +68,6 @@
 # assumption will not be properly overridden in the melting pot!
 #
 # Author: Curtis Rueden
-# Dependencies: git, mvn, xmllint
 # ============================================================================
 
 # -- Functions --
@@ -94,6 +93,19 @@ error() {
 unknownArg() {
 	error "Unknown option: $@"
 	usage=1
+}
+
+checkPrereqs() {
+	while [ $# -gt 0 ]
+	do
+		which $1 > /dev/null 2> /dev/null
+		test $? -ne 0 && echo "Missing prerequisite: $1" && exit 255
+		shift
+	done
+}
+
+verifyPrereqs() {
+	checkPrereqs git mvn xmllint
 }
 
 parseArguments() {
@@ -531,6 +543,7 @@ meltDown() {
 
 # -- Main --
 
+verifyPrereqs
 parseArguments $@
 createDir "$outputDir"
 meltDown "$project"
