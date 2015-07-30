@@ -278,10 +278,24 @@ pom() {
 	echo "$pomPath"
 }
 
+# For the given XML file on disk ($1), gets the value of the
+# specified XPath expression of the form "//$2/$3/$4/...".
+xpath() {
+	local xmlFile="$1"
+	shift
+	local xpath="/"
+	while [ $# -gt 0 ]
+	do
+		# NB: Ignore namespace issues; see: http://stackoverflow.com/a/8266075
+		xpath="$xpath/*[local-name()='$1']"
+		shift
+	done
+	xmllint --xpath "$xpath" "$xmlFile" | sed -E 's/^[^>]*>(.*)<[^<]*$/\1/'
+}
+
 # Gets the SCM URL for the given GAV.
 scmURL() {
-	local scmXPath="//*[local-name()='project']/*[local-name()='scm']/*[local-name()='connection']"
-	xmllint --xpath "$scmXPath" "$(pom "$1")" | sed -E 's/.*>scm:git:(.*)<.*/\1/'
+	xpath "$(pom "$1")" project scm connection | sed -E 's/.*>scm:git:(.*)<.*/\1/'
 }
 
 # Gets the SCM tag for the given GAV.
