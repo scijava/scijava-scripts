@@ -77,6 +77,11 @@ stderr() {
 	>&2 echo "$@"
 }
 
+debug() {
+	test "$debug" &&
+		stderr "+ $@"
+}
+
 info() {
 	test "$verbose" &&
 		stderr "[INFO] $@"
@@ -128,6 +133,9 @@ parseArguments() {
 				;;
 			-v|--verbose)
 				verbose=1
+				;;
+			-d|--debug)
+				debug=1
 				;;
 			-f|--force)
 				force=1
@@ -325,6 +333,7 @@ retrieveSource() {
 	local scmBranch
 	test "$2" && scmBranch="$2" || scmBranch="$(scmTag "$1")"
 	local dir="$(groupId "$1")/$(artifactId "$1")"
+	debug "git clone \"$scmURL\" --branch \"$scmBranch\" --depth 1 \"$dir\""
 	git clone "$scmURL" --branch "$scmBranch" --depth 1 "$dir" 2> /dev/null
 	echo "$dir"
 }
@@ -332,6 +341,7 @@ retrieveSource() {
 # Gets the list of dependencies for the project in the CWD.
 deps() {
 	cd "$1"
+	debug "mvn dependency:list"
 	mvn dependency:list | grep '^\[INFO\]    [^ ]' | sed 's/\[INFO\]    //'
 	cd - > /dev/null
 }
@@ -499,6 +509,7 @@ meltDown() {
 	else
 		info "Building the project!"
 		# NB: All code is fresh; no need to clean.
+		debug "mvn $args test"
 		mvn $args test
 	fi
 
