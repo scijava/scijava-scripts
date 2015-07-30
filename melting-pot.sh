@@ -77,9 +77,9 @@ stderr() {
 	>&2 echo "$@"
 }
 
-debug() {
+info() {
 	test "$verbose" &&
-		stderr "[DEBUG] $@"
+		stderr "[INFO] $@"
 }
 
 error() {
@@ -395,7 +395,7 @@ pruneReactor() {
 	local dir
 	for dir in */*
 	do
-		debug "Checking relevance of component $dir"
+		info "Checking relevance of component $dir"
 		local deps="$(deps "$dir")"
 
 		# Determine whether the component depends on a changed GAV.
@@ -410,7 +410,7 @@ pruneReactor() {
 		# If the component is irrelevant, prune it.
 		if [ -z "$keep" ]
 		then
-			debug "Pruning irrelevant component: $dir"
+			info "Pruning irrelevant component: $dir"
 			rm -rf "$dir"
 		fi
 	done
@@ -449,17 +449,17 @@ generatePOM() {
 # specified version for the corresponding GA.
 meltDown() {
 	# Fetch the project source code.
-	debug "$1: fetching project source"
+	info "$1: fetching project source"
 	local dir="$(retrieveSource "$1" "$branch")"
 
 	# Get the project dependencies.
-	debug "$1: determining project dependencies"
+	info "$1: determining project dependencies"
 	local deps="$(deps "$dir")"
 
 	local args="-Denforcer.skip"
 
 	# Process the dependencies.
-	debug "$1: processing project dependencies"
+	info "$1: processing project dependencies"
 	local dep
 	for dep in $deps
 	do
@@ -473,13 +473,13 @@ meltDown() {
 
 		if [ "$(isIncluded "$gav")" ]
 		then
-			debug "$1: $a: fetching component source"
+			info "$1: $a: fetching component source"
 			dir="$(retrieveSource "$gav")"
 		fi
 	done
 
 	# Override versions of changed GAVs.
-	debug "$1: processing changed components"
+	info "$1: processing changed components"
 	local TLS=,
 	local gav
 	for gav in $changes
@@ -494,21 +494,21 @@ meltDown() {
 	test "$prune" && pruneReactor
 
 	# Generate the aggregator POM.
-	debug "Generating aggregator POM"
+	info "Generating aggregator POM"
 	generatePOM
 
 	# Build everything.
 	if [ "$skipBuild" ]
 	then
-		debug "Skipping the build; the command would have been:"
-		debug "mvn $args test"
+		info "Skipping the build; the command would have been:"
+		info "mvn $args test"
 	else
-		debug "Building the project!"
+		info "Building the project!"
 		# NB: All code is fresh; no need to clean.
 		mvn $args test
 	fi
 
-	debug "$1: complete"
+	info "$1: complete"
 }
 
 # -- Main --
