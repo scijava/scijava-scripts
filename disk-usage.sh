@@ -15,6 +15,7 @@ check() {
 }
 
 threshold=80
+code=0
 while test $# -gt 0
 do
 	case "$1" in
@@ -23,8 +24,10 @@ do
 		threshold="$1"
 		;;
 	*)
-		check "$1"
+		check "$1" || code=$((code+1))
 		;;
 	esac
 	shift
 done
+
+exit $code
