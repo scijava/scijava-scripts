@@ -20,7 +20,7 @@ do
 	case "$1" in
 	--threshold|-t)
 		shift
-		threshold=$1
+		threshold="$1"
 		;;
 	*)
 		check "$1"
