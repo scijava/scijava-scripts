@@ -195,5 +195,7 @@ foreach my $commit (@commits) {
 
 if ($verbose || $commitCount > 0) {
   # new commits on master; a release is potentially needed
-  print "$ga: $commitCount commits on master since $release_version\n";
+  my @allCommits = `git rev-list $releaseRef...origin/master`;
+  my $totalCommits = @allCommits;
+  print "$ga: $commitCount/$totalCommits commits on master since $release_version\n";
 }

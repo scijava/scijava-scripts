@@ -33,12 +33,13 @@ my @lines = <>;
 
 for my $line (sort @lines) {
   chomp $line;
-  if ($line =~ /([^:]+):([^:]+): (\d+) commits on (\w+) since (.*)/) {
+  if ($line =~ /([^:]+):([^:]+): (\d+)\/(\d+) commits on (\w+) since (.*)/) {
     my $groupId = $1;
     my $artifactId = $2;
     my $commitCount = $3;
-    my $branch = $4;
-    my $version = $5;
+    my $totalCommits = $4;
+    my $branch = $5;
+    my $version = $6;
     my $tag = $version ? "$artifactId-$version" : "";
     my $org = $orgs{$groupId};
     if (!$org) { $org = $groupId; }
@@ -47,14 +48,15 @@ for my $line (sort @lines) {
     my $link = "https://github.com/$orgs{$groupId}/$repo";
 
     my $data = {
-      groupId     => $groupId,
-      artifactId  => $artifactId,
-      commitCount => $commitCount,
-      branch      => $branch,
-      version     => $version,
-      tag         => $tag,
-      org         => $org,
-      repo        => $repo,
+      groupId      => $groupId,
+      artifactId   => $artifactId,
+      commitCount  => $commitCount,
+      totalCommits => $totalCommits,
+      branch       => $branch,
+      version      => $version,
+      tag          => $tag,
+      org          => $org,
+      repo         => $repo,
     };
 
     if (not $org) {
@@ -73,7 +75,7 @@ for my $line (sort @lines) {
       # a release is needed
       $data->{line} = "<td class=\"first\"></td>\n" .
         "<td><a href=\"$link\">$artifactId</a></td>\n" .
-        "<td><a href=\"$link/compare/$tag...$branch\">$commitCount</a></td>\n" .
+        "<td><a href=\"$link/compare/$tag...$branch\">$commitCount/$totalCommits</a></td>\n" .
         "<td><a href=\"$link/tree/$tag\">$version</a></td>\n";
       push @ahead, $data;
     }
