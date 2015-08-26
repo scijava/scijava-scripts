@@ -182,7 +182,7 @@ foreach my $commit (@commits) {
     $commitCount--;
   }
   elsif ($commitMessage =~ /^[a-z0-9]{7} Organize imports$/) {
-    # Ignore "Organize imports" copyright header updates
+    # Ignore "Organize imports" updates
     debug("Ignoring 'Organize imports' commit: $commit");
     $commitCount--;
   }
