@@ -183,7 +183,7 @@ foreach my $commit (@commits) {
   }
   elsif ($commitMessage =~ /^[a-z0-9]{7} [Uu]pdate license (blurb|header)s$/) {
     # Ignore "Update license headers" updates
-    debug("Ignoring 'Organize imports' commit: $commit");
+    debug("Ignoring 'Update license headers' commit: $commit");
     $commitCount--;
   }
   elsif ($commitMessage =~ /^[a-z0-9]{7} Organize imports$/) {
