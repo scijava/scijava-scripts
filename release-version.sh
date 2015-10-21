@@ -107,8 +107,8 @@ net.imagej:imagej-maven-plugin:*|\
 net.imagej:pom-imagej:*|\
 net.imglib2:imglib2:*|\
 net.imglib2:pom-imglib2:*|\
-org.scijava:java3d-core:*|\
-org.scijava:java3d-utils:*|\
+org.scijava:j3dcore:*|\
+org.scijava:j3dutils:*|\
 org.scijava:jep:*|\
 org.scijava:junit-benchmarks:*|\
 org.scijava:minimaven:*|\
