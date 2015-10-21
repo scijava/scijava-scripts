@@ -107,6 +107,8 @@ net.imagej:imagej-maven-plugin:*|\
 net.imagej:pom-imagej:*|\
 net.imglib2:imglib2:*|\
 net.imglib2:pom-imglib2:*|\
+org.scijava:java3d-core:*|\
+org.scijava:java3d-utils:*|\
 org.scijava:jep:*|\
 org.scijava:junit-benchmarks:*|\
 org.scijava:minimaven:*|\
@@ -117,7 +119,8 @@ org.scijava:scijava-config:*|\
 org.scijava:scijava-expression-parser:*|\
 org.scijava:scijava-log-slf4j:*|\
 org.scijava:scijava-maven-plugin:*|\
-org.scijava:swing-checkbox-tree:*)
+org.scijava:swing-checkbox-tree:*|\
+org.scijava:vecmath:*)
 	test -n "$GPG_KEYNAME" || die "Need to set GPG_KEYNAME"
 	test -n "$GPG_PASSPHRASE" || die "Need to set GPG_PASSPHRASE"
 	PROFILE=-Psonatype-oss-release
