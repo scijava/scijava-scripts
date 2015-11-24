@@ -49,10 +49,9 @@ do
       then
         version="J2SE $(expr $major - 44)"
       else
-        java="Unknown"
+        version="Unknown"
       fi
       ;;
-    
   esac
 
   # report the results
