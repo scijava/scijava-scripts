@@ -7,6 +7,12 @@ do
   # find the first class of the JAR
   class="$(jar tf "$jar" | grep '\.class' | head -n 1 | sed 's/\//./g' | sed 's/\.class$//')"
 
+  if [ -z "$class" ]
+  then
+    echo "$jar: No classes"
+    continue
+  fi
+
   # extract bytes 4-7
   info="$(unzip -p "$jar" "$(jar tf "$jar" | grep \.class$ | head -n 1)" | head -c 8 | hexdump -s 4 -e '4/1 "%d\n" "\n"')"
   minor1="$(echo "$info" | sed -n 1p)"
