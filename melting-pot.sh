@@ -209,7 +209,31 @@ parseArguments() {
 -s, --skipBuild
     Skips the final build step. Useful for automated testing.
 -h, --help
-    Display this usage information."
+    Display this usage information.
+
+--== Example ==--
+
+    sh melting-pot.sh net.imagej:imagej-common:0.15.1 \\
+        -r http://maven.imagej.net/content/groups/public \\
+        -c org.scijava:scijava-common:2.44.2 \\
+        -i 'org.scijava:*,net.imagej:*,net.imglib2:*,io.scif:*' \\
+        -e net.imglib2:imglib2-roi \\
+        -v -f -s
+
+This command tests net.imagej:imagej-common:0.15.1 along with all of its
+dependencies, pulled from its usual ImageJ Maven repository location.
+
+The -c flag is used to override the org.scijava:scijava-common
+dependency to use version 2.44.2 instead of its declared version 2.42.0.
+
+Note that such overrides do not need to be release versions; you can
+also test SNAPSHOTs the same way.
+
+The -i option is used to include all imagej-common dependencies with
+groupIds org.scijava, net.imagej, net.imglib2 and io.scif in the pot.
+
+The -e flag is used to exclude net.imglib2:imglib2-roi from the pot.
+"
 		exit 1
 	fi
 
