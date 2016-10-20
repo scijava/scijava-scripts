@@ -113,10 +113,10 @@ org.scijava:jep:*|\
 org.scijava:junit-benchmarks:*|\
 org.scijava:minimaven:*|\
 org.scijava:native-lib-loader:*|\
+org.scijava:parsington:*|\
 org.scijava:pom-scijava:*|\
 org.scijava:scijava-common:*|\
 org.scijava:scijava-config:*|\
-org.scijava:scijava-expression-parser:*|\
 org.scijava:scijava-log-slf4j:*|\
 org.scijava:scijava-maven-plugin:*|\
 org.scijava:swing-checkbox-tree:*|\
