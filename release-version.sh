@@ -114,6 +114,7 @@ org.scijava:junit-benchmarks:*|\
 org.scijava:minimaven:*|\
 org.scijava:native-lib-loader:*|\
 org.scijava:parsington:*|\
+org.scijava:pom-scijava-base:*|\
 org.scijava:pom-scijava:*|\
 org.scijava:scijava-common:*|\
 org.scijava:scijava-config:*|\
