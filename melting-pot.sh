@@ -90,6 +90,11 @@ error() {
 	stderr "[ERROR] $@"
 }
 
+die() {
+	error $1
+	exit $2
+}
+
 unknownArg() {
 	error "Unknown option: $@"
 	usage=1
@@ -99,7 +104,7 @@ checkPrereqs() {
 	while [ $# -gt 0 ]
 	do
 		which $1 > /dev/null 2> /dev/null
-		test $? -ne 0 && echo "Missing prerequisite: $1" && exit 255
+		test $? -ne 0 && die "Missing prerequisite: $1" 255
 		shift
 	done
 }
@@ -244,7 +249,7 @@ The -e flag is used to exclude net.imglib2:imglib2-roi from the pot.
 
 createDir() {
 	test -z "$force" -a -e "$1" &&
-		error "Directory already exists: $1" && exit 2
+		die "Directory already exists: $1" 2
 
 	rm -rf "$1"
 	mkdir -p "$1"
@@ -514,7 +519,7 @@ meltDown() {
 	# Fetch the project source code.
 	info "$1: fetching project source"
 	local dir="$(retrieveSource "$1" "$branch")"
-	test ! -d "$dir" && error "Could not fetch project source" && exit 3
+	test ! -d "$dir" && die "Could not fetch project source" 3
 
 	# Get the project dependencies.
 	info "$1: determining project dependencies"
