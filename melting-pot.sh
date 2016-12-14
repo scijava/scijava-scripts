@@ -319,13 +319,15 @@ downloadPOM() {
 		-DgroupId="$g" \
 		-DartifactId="$a" \
 		-Dversion="$v" \
-		-Dpackaging=pom > /dev/null
+		-Dpackaging=pom > /dev/null ||
+	die "Problem fetching $g:$a:$v from $remoteRepos" 4
 }
 
 # Gets the POM path for the given GAV, ensuring it exists locally.
 pom() {
 	local pomPath="$(pomPath "$1")"
 	test -f "$pomPath" || downloadPOM "$1"
+	test -f "$pomPath" || die "Cannot access POM: $pomPath" 9
 	echo "$pomPath"
 }
 
@@ -350,6 +352,7 @@ xpath() {
 # specified XPath expression of the form "//$2/$3/$4/...".
 pomValue() {
 	local pomPath="$(pom "$1")"
+	test "$pomPath" || die "Cannot discern POM path for $1" 6
 	shift
 	local value="$(xpath "$pomPath" $@)"
 	if [ "$value" ]
@@ -381,6 +384,7 @@ scmTag() {
 # Fetches the source code for the given GAV. Returns the directory.
 retrieveSource() {
 	local scmURL="$(scmURL "$1")"
+	test "$scmURL" || die "Cannot glean SCM URL for $1" 10
 	local scmBranch
 	test "$2" && scmBranch="$2" || scmBranch="$(scmTag "$1")"
 	local dir="$(groupId "$1")/$(artifactId "$1")"
@@ -393,8 +397,9 @@ retrieveSource() {
 deps() {
 	cd "$1"
 	debug "mvn dependency:list"
-	mvn dependency:list |
-		grep '^\[INFO\]    [^ ]' | sed 's/\[INFO\]    //' | sort
+	local depList=$(mvn dependency:list) ||
+		die "Problem fetching dependencies!" 5
+	echo "$depList" | grep '^\[INFO\]    [^ ]' | sed 's/\[INFO\]    //' | sort
 	cd - > /dev/null
 }
 
@@ -452,6 +457,7 @@ pruneReactor() {
 	do
 		info "Checking relevance of component $dir"
 		local deps="$(deps "$dir")"
+		test "$deps" || die "Cannot glean dependencies for '$dir'" 8
 
 		# Determine whether the component depends on a changed GAV.
 		local keep
@@ -524,6 +530,7 @@ meltDown() {
 	# Get the project dependencies.
 	info "$1: determining project dependencies"
 	local deps="$(deps "$dir")"
+	test "$deps" || die "Cannot glean project dependencies" 7
 
 	local args="-Denforcer.skip"
 
