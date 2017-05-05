@@ -12,6 +12,33 @@ maven_helper () {
 	die "Could not find maven-helper in '$MAVEN_HELPER'"
 }
 
+verify_gpg_settings () {
+	gpg=$(xmllint --xpath '//settings/profiles/profile' "$HOME/.m2/settings.xml")
+	test "$gpg" && id=$(echo "$gpg" | xmllint --xpath '//profile/id/text()' -)
+	test "$gpg" && keyname=$(echo "$gpg" | xmllint --xpath '//profile/properties/gpg.keyname' -)
+	test "$gpg" && passphrase=$(echo "$gpg" | xmllint --xpath '//profile/properties/gpg.passphrase' -)
+	test "$keyname" -a "$passphrase" ||
+		die 'GPG configuration not found in settings.xml. Please add it:
+<settings>
+	<profiles>
+		<profile>
+			<id>gpg</id>
+			<activation>
+				<file>
+					<exists>${env.HOME}/.gnupg</exists>
+				</file>
+			</activation>
+			<properties>
+				<gpg.keyname>(your GPG email address)</gpg.keyname>
+				<gpg.passphrase>(your GPG passphrase)</gpg.passphrase>
+			</properties>
+		</profile>
+	</profiles>
+</settings>
+
+See also: https://github.com/scijava/pom-scijava/wiki/GPG-Signing'
+}
+
 IMAGEJ_BASE_REPOSITORY=-DaltDeploymentRepository=imagej.releases::default::dav:http://maven.imagej.net/content/repositories
 IMAGEJ_RELEASES_REPOSITORY=$IMAGEJ_BASE_REPOSITORY/releases
 IMAGEJ_THIRDPARTY_REPOSITORY=$IMAGEJ_BASE_REPOSITORY/thirdparty
@@ -95,8 +122,7 @@ org.scijava:pom-jython-shaded:*)
 	ARTIFACT_ID=${BASE_GAV#*:pom-}
 	ARTIFACT_ID=${ARTIFACT_ID%:*}
 	test -n "$TAG" || TAG=-Dtag=$ARTIFACT_ID-$VERSION
-	test -n "$GPG_KEYNAME" || die "Need to set GPG_KEYNAME"
-	test -n "$GPG_PASSPHRASE" || die "Need to set GPG_PASSPHRASE"
+	verify_gpg_settings
 	PROFILE=-Psonatype-oss-release
 	INVALIDATE_NEXUS=t
 	;;
@@ -122,8 +148,7 @@ org.scijava:scijava-log-slf4j:*|\
 org.scijava:scijava-maven-plugin:*|\
 org.scijava:swing-checkbox-tree:*|\
 org.scijava:vecmath:*)
-	test -n "$GPG_KEYNAME" || die "Need to set GPG_KEYNAME"
-	test -n "$GPG_PASSPHRASE" || die "Need to set GPG_PASSPHRASE"
+	verify_gpg_settings
 	PROFILE=-Psonatype-oss-release
 	INVALIDATE_NEXUS=t
 	;;
@@ -183,13 +208,9 @@ if test -z "$SKIP_DEPLOY"
 then
 	$DRY_RUN git checkout $tag &&
 	$DRY_RUN mvn $PROFILE \
-		-Dgpg.keyname="$GPG_KEYNAME" \
-		-Dgpg.passphrase="$GPG_PASSPHRASE" \
 		-DperformRelease \
 		clean verify &&
 	$DRY_RUN mvn $PROFILE \
-		-Dgpg.keyname="$GPG_KEYNAME" \
-		-Dgpg.passphrase="$GPG_PASSPHRASE" \
 		$ALT_REPOSITORY \
 		-DperformRelease -DupdateReleaseInfo=true \
 		deploy &&
