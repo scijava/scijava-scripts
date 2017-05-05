@@ -12,6 +12,14 @@ maven_helper () {
 	die "Could not find maven-helper in '$MAVEN_HELPER'"
 }
 
+VALID_SEMVER_BUMP="$(cd "$(dirname "$0")" && pwd)/valid-semver-bump.sh"
+
+valid_semver_bump () {
+	test -f "$VALID_SEMVER_BUMP" ||
+		die "Could not find valid-semver-bump in '$VALID_SEMVER_BUMP'"
+	sh -$- "$VALID_SEMVER_BUMP" "$@" || die
+}
+
 verify_gpg_settings () {
 	gpg=$(xmllint --xpath '//settings/profiles/profile' "$HOME/.m2/settings.xml")
 	test "$gpg" && id=$(echo "$gpg" | xmllint --xpath '//profile/id/text()' -)
@@ -86,9 +94,9 @@ do
 	shift
 done
 
+pomVersion="$(sed -n 's/^	<version>\(.*\)-SNAPSHOT<\/version>$/\1/p' pom.xml)"
 test $# = 1 || test ! -t 0 || {
-	version="$(sed -n 's/^	<version>\(.*\)-SNAPSHOT<\/version>$/\1/p' \
-		pom.xml)"
+	version=$pomVersion
 	printf 'Version? [%s]: ' "$version"
 	read line
 	test -z "$line" || version="$line"
@@ -108,6 +116,7 @@ case "$VERSION" in
 *)
 	die "Version '$VERSION' does not start with a digit!"
 esac
+valid_semver_bump "$pomVersion" "$VERSION"
 
 # defaults
 
