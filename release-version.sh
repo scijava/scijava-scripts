@@ -47,6 +47,17 @@ verify_gpg_settings () {
 See also: https://github.com/scijava/pom-scijava/wiki/GPG-Signing'
 }
 
+verify_netrc_settings () {
+	grep -q 'machine maven.imagej.net' "$HOME/.netrc" 2>/dev/null &&
+		grep -q 'login jenkins-expire-cache' "$HOME/.netrc" 2>/dev/null ||
+		die 'maven.imagej.net cache expiration credentials not found in .netrc. Please add it:
+machine maven.imagej.net
+login jenkins-expire-cache
+password (the-correct-password)
+
+See also: https://github.com/scijava/pom-scijava/wiki/Adding-Maven-Users'
+}
+
 IMAGEJ_BASE_REPOSITORY=-DaltDeploymentRepository=imagej.releases::default::dav:http://maven.imagej.net/content/repositories
 IMAGEJ_RELEASES_REPOSITORY=$IMAGEJ_BASE_REPOSITORY/releases
 IMAGEJ_THIRDPARTY_REPOSITORY=$IMAGEJ_BASE_REPOSITORY/thirdparty
@@ -93,6 +104,8 @@ do
 	esac
 	shift
 done
+
+verify_netrc_settings
 
 pomVersion="$(sed -n 's/^	<version>\(.*\)-SNAPSHOT<\/version>$/\1/p' pom.xml)"
 test $# = 1 || test ! -t 0 || {
