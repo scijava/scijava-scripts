@@ -58,7 +58,7 @@ password (the-correct-password)
 See also: https://github.com/scijava/pom-scijava/wiki/Adding-Maven-Users'
 }
 
-IMAGEJ_BASE_REPOSITORY=-DaltDeploymentRepository=imagej.releases::default::dav:http://maven.imagej.net/content/repositories
+IMAGEJ_BASE_REPOSITORY=-DaltDeploymentRepository=imagej.releases::default::dav:https://maven.imagej.net/content/repositories
 IMAGEJ_RELEASES_REPOSITORY=$IMAGEJ_BASE_REPOSITORY/releases
 IMAGEJ_THIRDPARTY_REPOSITORY=$IMAGEJ_BASE_REPOSITORY/thirdparty
 
