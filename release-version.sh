@@ -47,6 +47,15 @@ verify_gpg_settings () {
 See also: https://github.com/scijava/pom-scijava/wiki/GPG-Signing'
 }
 
+verify_git_settings () {
+	if [ ! "$SKIP_PUSH" ]
+	then
+		local push=$(git remote -v | grep origin | grep '(push)')
+		test "$push" || die 'No push URL found for remote origin'
+		echo "$push" | grep -q 'git:/' && die 'Remote origin is read-only'
+	fi
+}
+
 verify_netrc_settings () {
 	grep -q 'machine maven.imagej.net' "$HOME/.netrc" 2>/dev/null &&
 		grep -q 'login jenkins-expire-cache' "$HOME/.netrc" 2>/dev/null ||
@@ -105,6 +114,7 @@ do
 	shift
 done
 
+verify_git_settings
 verify_netrc_settings
 
 pomVersion="$(sed -n 's/^	<version>\(.*\)-SNAPSHOT<\/version>$/\1/p' pom.xml)"
