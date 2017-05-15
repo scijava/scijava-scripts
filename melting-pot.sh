@@ -184,6 +184,7 @@ parseArguments() {
 
 <project>
     The project to build, including dependencies, with consistent versions.
+    Can be either G:A:V form, or a local directory pointing at a project.
 -b, --branch
     Override the branch/tag of the project to build. By default,
     the branch used will be the tag named \"artifactId-version\".
@@ -241,6 +242,9 @@ The -e flag is used to exclude net.imglib2:imglib2-roi from the pot.
 "
 		exit 1
 	fi
+
+	# If project is a local directory path, get its absolute path.
+	test -d "$project" && project=$(cd "$project" && pwd)
 
 	# Assign default parameter values.
 	test "$outputDir" || outputDir="melting-pot"
@@ -523,9 +527,21 @@ generatePOM() {
 # specified version for the corresponding GA.
 meltDown() {
 	# Fetch the project source code.
-	info "$1: fetching project source"
-	local dir="$(retrieveSource "$1" "$branch")"
-	test ! -d "$dir" && die "Could not fetch project source" 3
+	if [ -d "$1" ]
+	then
+		# Use local directory for the specified project.
+		test -d "$1" || die "No such directory: $1" 11
+		test -f "$1/pom.xml" || die "Not a Maven project: $1" 12
+		info "$1: local Maven project"
+		mkdir -p "LOCAL"
+		local dir="LOCAL/PROJECT"
+		ln -s "$1" "$dir"
+	else
+		# Treat specified project as a GAV.
+		info "$1: fetching project source"
+		local dir="$(retrieveSource "$1" "$branch")"
+		test -d "$dir" || die "Could not fetch project source" 3
+	fi
 
 	# Get the project dependencies.
 	info "$1: determining project dependencies"
