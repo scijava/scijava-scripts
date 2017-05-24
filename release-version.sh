@@ -50,7 +50,7 @@ See also: https://github.com/scijava/pom-scijava/wiki/GPG-Signing'
 verify_git_settings () {
 	if [ ! "$SKIP_PUSH" ]
 	then
-		local push=$(git remote -v | grep origin | grep '(push)')
+		push=$(git remote -v | grep origin | grep '(push)')
 		test "$push" || die 'No push URL found for remote origin'
 		echo "$push" | grep -q 'git:/' && die 'Remote origin is read-only'
 	fi
