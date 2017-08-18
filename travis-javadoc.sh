@@ -14,10 +14,10 @@ then
   mvn -Pbuild-javadocs &&
   test -d target/apidocs &&
 
-  # Configure SSH. SSH_PRIVATE_KEY must contain the private
-  # RSA key for communicating with the git remote.
+  # Configure SSH. The file .travis/javadoc.scijava.org.enc must contain
+  # an encrypted private RSA key for communicating with the git remote.
   mkdir -p "$HOME/.ssh" &&
-  echo "$SSH_PRIVATE_KEY" > "$HOME/.ssh/id_rsa" &&
+  openssl aes-256-cbc -K "$encrypted_cb3727795fd5_key" -iv "$encrypted_cb3727795fd5_iv" -in '.travis/javadoc.scijava.org.enc' -out "$HOME/.ssh/id_rsa" -d &&
   echo 'github.com,192.30.252.130 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==' > "$HOME/.ssh/known_hosts" &&
 
   # Configure git settings.
