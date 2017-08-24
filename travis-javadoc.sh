@@ -11,7 +11,7 @@ then
   project=$1
 
   # Build the javadocs.
-  mvn -Pbuild-javadocs &&
+  mvn -Pbuild-javadoc &&
   test -d target/apidocs &&
 
   # Configure SSH. The file .travis/javadoc.scijava.org.enc must contain
