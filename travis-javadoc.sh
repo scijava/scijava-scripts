@@ -12,6 +12,9 @@ then
   openssl_key=$2
   openssl_iv=$3
 
+  # Emit some details useful for debugging.
+  mvn dependency:tree &&
+
   # Build the javadocs.
   mvn -Dadditionalparam=-Xdoclint:none -Pbuild-javadoc &&
   test -d target/apidocs &&
