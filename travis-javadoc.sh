@@ -9,6 +9,8 @@ if [ "$TRAVIS_SECURE_ENV_VARS" = true \
   -a "$TRAVIS_BRANCH" = master ]
 then
   project=$1
+  openssl_key=$2
+  openssl_iv=$3
 
   # Build the javadocs.
   mvn -Dadditionalparam=-Xdoclint:none -Pbuild-javadoc &&
@@ -19,7 +21,7 @@ then
   # Configure SSH. The file .travis/javadoc.scijava.org.enc must contain
   # an encrypted private RSA key for communicating with the git remote.
   mkdir -p "$HOME/.ssh" &&
-  openssl aes-256-cbc -K "$encrypted_cb3727795fd5_key" -iv "$encrypted_cb3727795fd5_iv" -in '.travis/javadoc.scijava.org.enc' -out "$HOME/.ssh/id_rsa" -d &&
+  openssl aes-256-cbc -K "$openssl_key" -iv "$openssl_iv" -in '.travis/javadoc.scijava.org.enc' -out "$HOME/.ssh/id_rsa" -d &&
   chmod 400 "$HOME/.ssh/id_rsa" &&
   echo 'github.com,192.30.253.113 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==' >> "$HOME/.ssh/known_hosts" &&
   echo '192.30.253.112 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==' >> "$HOME/.ssh/known_hosts" &&
