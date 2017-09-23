@@ -146,49 +146,10 @@ valid_semver_bump "$pomVersion" "$VERSION"
 BASE_GAV="$(maven_helper gav-from-pom pom.xml)" ||
 die "Could not obtain GAV coordinates for base project"
 
-case "$BASE_GAV" in
-net.imagej:imagej-launcher:*)
-	SKIP_DEPLOY=t
-	;;
-org.scijava:pom-jython-shaded:*)
-	ARTIFACT_ID=${BASE_GAV#*:pom-}
-	ARTIFACT_ID=${ARTIFACT_ID%:*}
-	test -n "$TAG" || TAG=-Dtag=$ARTIFACT_ID-$VERSION
-	verify_gpg_settings
-	PROFILE=-Psonatype-oss-release
+# If releasing to OSS Sonatype, enable some extra stuff
+mvn -Dexec.executable='echo' -Dexec.args='${releaseProfiles}' exec:exec -q | grep -q 'sonatype-oss-release' &&
+	verify_gpg_settings &&
 	INVALIDATE_NEXUS=t
-	;;
-com.github.maven-nar:nar-maven-plugin:*|\
-io.scif:pom-scifio:*|\
-net.imagej:ij1-patcher:*|\
-net.imagej:imagej-maven-plugin:*|\
-net.imagej:pom-imagej:*|\
-net.imglib2:imglib2:*|\
-net.imglib2:pom-imglib2:*|\
-org.scijava:j3dcore:*|\
-org.scijava:j3dutils:*|\
-org.scijava:jep:*|\
-org.scijava:junit-benchmarks:*|\
-org.scijava:minimaven:*|\
-org.scijava:native-lib-loader:*|\
-org.scijava:parsington:*|\
-org.scijava:pom-scijava-base:*|\
-org.scijava:pom-scijava:*|\
-org.scijava:scijava-common:*|\
-org.scijava:scijava-config:*|\
-org.scijava:scijava-log-slf4j:*|\
-org.scijava:scijava-maven-plugin:*|\
-org.scijava:swing-checkbox-tree:*|\
-org.scijava:vecmath:*)
-	verify_gpg_settings
-	PROFILE=-Psonatype-oss-release
-	INVALIDATE_NEXUS=t
-	;;
-*:pom-trakem2:*)
-	ARTIFACT_ID=${BASE_GAV#*:pom-}
-	ARTIFACT_ID=${ARTIFACT_ID%:*}
-	test -n "$TAG" || TAG=-Dtag=$ARTIFACT_ID-$VERSION
-esac
 
 git update-index -q --refresh &&
 git diff-files --quiet --ignore-submodules &&
