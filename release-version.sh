@@ -115,7 +115,9 @@ do
 done
 
 verify_git_settings
-verify_netrc_settings
+
+test -n "$INVALIDATE_NEXUS" &&
+	verify_netrc_settings
 
 pomVersion="$(sed -n 's/^	<version>\(.*\)-SNAPSHOT<\/version>$/\1/p' pom.xml)"
 test $# = 1 || test ! -t 0 || {
