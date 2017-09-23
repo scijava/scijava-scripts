@@ -4,6 +4,17 @@
 # travis-javadoc.sh - A script to build the javadocs of a SciJava-based project.
 #
 
+# The following repositories are known to use this script:
+#
+#   fiji/fiji-javadoc
+#   imagej/imagej-javadoc
+#   imglib/imglib2-javadoc
+#   scifio/scifio-javadoc
+#   scijava/java3d-javadoc
+#   scijava/scijava-javadoc
+#   slim-curve/slim-javadoc
+#   uw-loci/loci-javadoc
+
 if [ "$TRAVIS_SECURE_ENV_VARS" = true \
   -a "$TRAVIS_PULL_REQUEST" = false \
   -a "$TRAVIS_BRANCH" = master ]
