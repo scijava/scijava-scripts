@@ -182,14 +182,24 @@ then
 	$DRY_RUN git commit -s -m "Bump to next development cycle"
 fi &&
 
-# push the current branch and the tag
+# extract the name of the new tag
 if test -z "$DRY_RUN"
 then
 	tag=$(sed -n 's/^scm.tag=//p' < release.properties)
 else
 	tag="<tag>"
 fi &&
+
+# rewrite the tag to include release.properties
 test -n "$tag" &&
+$DRY_RUN git checkout "$tag" &&
+$DRY_RUN git add release.properties &&
+$DRY_RUN git commit --amend --no-edit &&
+$DRY_RUN git tag -d "$tag" &&
+$DRY_RUN git tag "$tag" HEAD &&
+$DRY_RUN git checkout @{-1} &&
+
+# push the current branch and the tag
 if test -z "$SKIP_PUSH"
 then
 	$DRY_RUN git push "$REMOTE" HEAD &&
