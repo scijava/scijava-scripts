@@ -204,8 +204,7 @@ $DRY_RUN git checkout @{-1} &&
 # push the current branch and the tag
 if test -z "$SKIP_PUSH"
 then
-	$DRY_RUN git push "$REMOTE" HEAD &&
-	$DRY_RUN git push "$REMOTE" $tag
+	$DRY_RUN git push "$REMOTE" HEAD $tag
 fi ||
 exit
 
