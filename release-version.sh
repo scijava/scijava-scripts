@@ -73,7 +73,7 @@ IMAGEJ_THIRDPARTY_REPOSITORY=$IMAGEJ_BASE_REPOSITORY/thirdparty
 
 BATCH_MODE=--batch-mode
 SKIP_PUSH=
-SKIP_DEPLOY=
+DEPLOY=
 TAG=
 DEV_VERSION=
 EXTRA_ARGS=
@@ -87,7 +87,7 @@ do
 	--dry-run) DRY_RUN=echo;;
 	--no-batch-mode) BATCH_MODE=;;
 	--skip-push) SKIP_PUSH=t;;
-	--skip-deploy) SKIP_DEPLOY=t;;
+	--deploy) DEPLOY=t;;
 	--tag=*)
 		! git rev-parse --quiet --verify refs/tags/"${1#--*=}" ||
 		die "Tag ${1#--*=} exists already!"
@@ -236,7 +236,8 @@ then
 fi ||
 exit
 
-if test -z "$SKIP_DEPLOY"
+# TODO - Evaluate whether to use "mvn release:perform" when doing local deploy.
+if test "$DEPLOY"
 then
 	$DRY_RUN git checkout $tag &&
 	$DRY_RUN mvn $PROFILE \
