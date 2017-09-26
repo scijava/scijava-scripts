@@ -11,6 +11,12 @@ if [ "$TRAVIS_SECURE_ENV_VARS" = true
 then
   echo "== Building and deploying master SNAPSHOT =="
   mvn -Pdeploy-to-imagej deploy --settings "$dir/settings.xml"
+elif [ "$TRAVIS_SECURE_ENV_VARS" = true
+  -a "$TRAVIS_PULL_REQUEST" = false
+  -a -f release.properties ]
+then
+  echo "== Cutting and deploying release version =="
+  mvn release:perform
 else
   echo "== Building the artifact locally only =="
   mvn install
