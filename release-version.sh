@@ -194,6 +194,13 @@ fi &&
 
 # rewrite the tag to include release.properties
 test -n "$tag" &&
+# HACK: SciJava projects use SSH (git@github.com:...) for developerConnection.
+# The release:perform command wants to use the developerConnection URL when
+# checking out the release tag. But reading from this URL requires credentials
+# which we would rather Travis not need. So we replace the scm.url in the
+# release.properties file to use the read-only (git://github.com/...) URL.
+# This is OK, since release:perform does not need write access to the repo.
+sed -i '' -e 's|^scm.url=scm\\:git\\:git@github.com\\:|scm.url=scm\\:git\\:git\\://github.com/|' release.properties &&
 $DRY_RUN git checkout "$tag" &&
 $DRY_RUN git add release.properties &&
 $DRY_RUN git commit --amend --no-edit &&
