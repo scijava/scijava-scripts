@@ -10,7 +10,7 @@ if [ "$TRAVIS_SECURE_ENV_VARS" = true \
   -a "$TRAVIS_BRANCH" = master ]
 then
   echo "== Building and deploying master SNAPSHOT =="
-  mvn -Pdeploy-to-imagej deploy --settings "$dir/settings.xml"
+  mvn -Pdeploy-to-imagej deploy --settings "$dir/.travis/settings.xml"
 elif [ "$TRAVIS_SECURE_ENV_VARS" = true \
   -a "$TRAVIS_PULL_REQUEST" = false \
   -a -f release.properties ]
