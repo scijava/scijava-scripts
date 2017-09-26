@@ -20,7 +20,7 @@ elif [ "$TRAVIS_SECURE_ENV_VARS" = true \
   -a -f release.properties ]
 then
   echo "== Cutting and deploying release version =="
-  mvn -B release:perform
+  mvn -B --settings "$dir/.travis/settings.xml" release:perform
 else
   echo "== Building the artifact locally only =="
   mvn -B install
