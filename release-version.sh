@@ -73,7 +73,7 @@ IMAGEJ_THIRDPARTY_REPOSITORY=$IMAGEJ_BASE_REPOSITORY/thirdparty
 
 BATCH_MODE=--batch-mode
 SKIP_PUSH=
-SKIP_DEPLOY=
+DEPLOY=
 TAG=
 DEV_VERSION=
 EXTRA_ARGS=
@@ -87,7 +87,7 @@ do
 	--dry-run) DRY_RUN=echo;;
 	--no-batch-mode) BATCH_MODE=;;
 	--skip-push) SKIP_PUSH=t;;
-	--skip-deploy) SKIP_DEPLOY=t;;
+	--deploy) DEPLOY=t;;
 	--tag=*)
 		! git rev-parse --quiet --verify refs/tags/"${1#--*=}" ||
 		die "Tag ${1#--*=} exists already!"
@@ -115,7 +115,9 @@ do
 done
 
 verify_git_settings
-verify_netrc_settings
+
+test -n "$INVALIDATE_NEXUS" &&
+	verify_netrc_settings
 
 pomVersion="$(sed -n 's/^	<version>\(.*\)-SNAPSHOT<\/version>$/\1/p' pom.xml)"
 test $# = 1 || test ! -t 0 || {
@@ -146,49 +148,10 @@ valid_semver_bump "$pomVersion" "$VERSION"
 BASE_GAV="$(maven_helper gav-from-pom pom.xml)" ||
 die "Could not obtain GAV coordinates for base project"
 
-case "$BASE_GAV" in
-net.imagej:imagej-launcher:*)
-	SKIP_DEPLOY=t
-	;;
-org.scijava:pom-jython-shaded:*)
-	ARTIFACT_ID=${BASE_GAV#*:pom-}
-	ARTIFACT_ID=${ARTIFACT_ID%:*}
-	test -n "$TAG" || TAG=-Dtag=$ARTIFACT_ID-$VERSION
-	verify_gpg_settings
-	PROFILE=-Psonatype-oss-release
+# If releasing to OSS Sonatype, enable some extra stuff
+mvn -Dexec.executable='echo' -Dexec.args='${releaseProfiles}' exec:exec -q | grep -q 'sonatype-oss-release' &&
+	verify_gpg_settings &&
 	INVALIDATE_NEXUS=t
-	;;
-com.github.maven-nar:nar-maven-plugin:*|\
-io.scif:pom-scifio:*|\
-net.imagej:ij1-patcher:*|\
-net.imagej:imagej-maven-plugin:*|\
-net.imagej:pom-imagej:*|\
-net.imglib2:imglib2:*|\
-net.imglib2:pom-imglib2:*|\
-org.scijava:j3dcore:*|\
-org.scijava:j3dutils:*|\
-org.scijava:jep:*|\
-org.scijava:junit-benchmarks:*|\
-org.scijava:minimaven:*|\
-org.scijava:native-lib-loader:*|\
-org.scijava:parsington:*|\
-org.scijava:pom-scijava-base:*|\
-org.scijava:pom-scijava:*|\
-org.scijava:scijava-common:*|\
-org.scijava:scijava-config:*|\
-org.scijava:scijava-log-slf4j:*|\
-org.scijava:scijava-maven-plugin:*|\
-org.scijava:swing-checkbox-tree:*|\
-org.scijava:vecmath:*)
-	verify_gpg_settings
-	PROFILE=-Psonatype-oss-release
-	INVALIDATE_NEXUS=t
-	;;
-*:pom-trakem2:*)
-	ARTIFACT_ID=${BASE_GAV#*:pom-}
-	ARTIFACT_ID=${ARTIFACT_ID%:*}
-	test -n "$TAG" || TAG=-Dtag=$ARTIFACT_ID-$VERSION
-esac
 
 git update-index -q --refresh &&
 git diff-files --quiet --ignore-submodules &&
@@ -221,22 +184,32 @@ then
 	$DRY_RUN git commit -s -m "Bump to next development cycle"
 fi &&
 
-# push the current branch and the tag
+# extract the name of the new tag
 if test -z "$DRY_RUN"
 then
 	tag=$(sed -n 's/^scm.tag=//p' < release.properties)
 else
 	tag="<tag>"
 fi &&
+
+# rewrite the tag to include release.properties
 test -n "$tag" &&
+$DRY_RUN git checkout "$tag" &&
+$DRY_RUN git add release.properties &&
+$DRY_RUN git commit --amend --no-edit &&
+$DRY_RUN git tag -d "$tag" &&
+$DRY_RUN git tag "$tag" HEAD &&
+$DRY_RUN git checkout @{-1} &&
+
+# push the current branch and the tag
 if test -z "$SKIP_PUSH"
 then
-	$DRY_RUN git push "$REMOTE" HEAD &&
-	$DRY_RUN git push "$REMOTE" $tag
+	$DRY_RUN git push "$REMOTE" HEAD $tag
 fi ||
 exit
 
-if test -z "$SKIP_DEPLOY"
+# TODO - Evaluate whether to use "mvn release:perform" when doing local deploy.
+if test "$DEPLOY"
 then
 	$DRY_RUN git checkout $tag &&
 	$DRY_RUN mvn $PROFILE \
