@@ -6,6 +6,8 @@
 
 dir="$(dirname "$0")"
 
+echo "== Configuring Maven =="
+
 # NB: Suppress "Downloading/Downloaded" messages.
 # See: https://stackoverflow.com/a/35653426/1207769
 export MAVEN_OPTS=-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
