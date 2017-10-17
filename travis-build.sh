@@ -4,11 +4,12 @@
 # travis-build.sh - A script to build and/or release SciJava-based projects.
 #
 
+dir="$(dirname "$0")"
+
 # NB: Suppress "Downloading/Downloaded" messages.
 # See: https://stackoverflow.com/a/35653426/1207769
 export MAVEN_OPTS=-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
 
-dir="$(dirname "$0")"
 if [ "$TRAVIS_SECURE_ENV_VARS" = true \
 	-a "$TRAVIS_PULL_REQUEST" = false \
 	-a "$TRAVIS_BRANCH" = master ]
