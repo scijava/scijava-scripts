@@ -36,8 +36,33 @@ cat >"$settingsFile" <<EOL
 			<password>${env.OSSRH_PASS}</password>
 		</server>
 	</servers>
+	<profiles>
+		<profile>
+			<id>gpg</id>
+			<activation>
+				<file>
+					<exists>${env.HOME}/.gnupg</exists>
+				</file>
+			</activation>
+			<properties>
+				<gpg.keyname>${env.GPG_KEY_NAME}</gpg.keyname>
+				<gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
+			</properties>
+		</profile>
+	</profiles>
 </settings>
 EOL
+
+# Populate the GPG signing key.
+keyFile=.travis/signingkey.asc
+if [ "$TRAVIS_SECURE_ENV_VARS" = true \
+	-a "$TRAVIS_PULL_REQUEST" = false \
+	-a -f "$keyFile.enc" -a -e "$1" -a -e "$2" ]
+then
+	echo "== Decrypting GPG keypair =="
+	openssl aes-256-cbc -K "$1" -iv "$2" -in "$keyFile.enc" -out "$keyFile" -d &&
+	gpg --batch --fast-import "$keyFile" --passphrase "$GPG_PASSPHRASE"
+fi
 
 # Run the build.
 if [ "$TRAVIS_SECURE_ENV_VARS" = true \
