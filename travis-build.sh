@@ -23,17 +23,17 @@ cat >"$settingsFile" <<EOL
 		<server>
 			<id>imagej.releases</id>
 			<username>travis</username>
-			<password>${env.MAVEN_PASS}</password>
+			<password>\${env.MAVEN_PASS}</password>
 		</server>
 		<server>
 			<id>imagej.snapshots</id>
 			<username>travis</username>
-			<password>${env.MAVEN_PASS}</password>
+			<password>\${env.MAVEN_PASS}</password>
 		</server>
 		<server>
 			<id>sonatype-nexus-releases</id>
 			<username>scijava-ci</username>
-			<password>${env.OSSRH_PASS}</password>
+			<password>\${env.OSSRH_PASS}</password>
 		</server>
 	</servers>
 	<profiles>
@@ -41,12 +41,12 @@ cat >"$settingsFile" <<EOL
 			<id>gpg</id>
 			<activation>
 				<file>
-					<exists>${env.HOME}/.gnupg</exists>
+					<exists>\${env.HOME}/.gnupg</exists>
 				</file>
 			</activation>
 			<properties>
-				<gpg.keyname>${env.GPG_KEY_NAME}</gpg.keyname>
-				<gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
+				<gpg.keyname>\${env.GPG_KEY_NAME}</gpg.keyname>
+				<gpg.passphrase>\${env.GPG_PASSPHRASE}</gpg.passphrase>
 			</properties>
 		</profile>
 	</profiles>
