@@ -12,6 +12,7 @@ travisDir=.travis
 travisConfig=.travis.yml
 travisBuildScript=$travisDir/build.sh
 travisSettingsFile=$travisDir/settings.xml
+travisNotifyScript=$travisDir/notify.sh
 credentialsDir=$HOME/.scijava/credentials
 varsFile=$credentialsDir/vars
 signingKeySourceFile=$credentialsDir/scijava-ci-signing.asc
@@ -114,12 +115,10 @@ EOL
 	update "$travisBuildScript"
 
 	# Remove obsolete Travis-related files.
-	if [ -f "$travisSettingsFile" ]
-	then
-		info "Removing obsolete $travisSettingsFile (travis-build.sh generates it now)."
-		$EXEC git rm -f "$travisSettingsFile"
-		$EXEC git ci -m "Travis: remove obsolete $travisSettingsFile"
-	fi
+	test -f "$travisSettingsFile" && info "Removing obsolete $travisSettingsFile (travis-build.sh generates it now)"
+	test -f "$travisNotifyScript" && info "Removing obsolete $travisNotifyScript (ImageJ Jenkins is going away)"
+	$EXEC git rm -f "$travisSettingsFile" "$travisNotifyScript"
+	$EXEC git diff-index --quiet HEAD -- || $EXEC git ci -m "Travis: remove obsolete files"
 
 	# Upgrade version of pom-scijava.
 	version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='parent']/*[local-name()='version']" pom.xml|sed 's/[^>]*>//'|sed 's/<.*//')
