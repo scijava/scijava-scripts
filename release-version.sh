@@ -21,29 +21,8 @@ valid_semver_bump () {
 }
 
 verify_gpg_settings () {
-	gpg=$(xmllint --xpath '//settings/profiles/profile' "$HOME/.m2/settings.xml")
-	test "$gpg" && id=$(echo "$gpg" | xmllint --xpath '//profile/id/text()' -)
-	test "$gpg" && keyname=$(echo "$gpg" | xmllint --xpath '//profile/properties/gpg.keyname' -)
-	test "$gpg" && passphrase=$(echo "$gpg" | xmllint --xpath '//profile/properties/gpg.passphrase' -)
-	test "$keyname" -a "$passphrase" ||
-		die 'GPG configuration not found in settings.xml. Please add it:
-<settings>
-	<profiles>
-		<profile>
-			<id>gpg</id>
-			<activation>
-				<file>
-					<exists>${env.HOME}/.gnupg</exists>
-				</file>
-			</activation>
-			<properties>
-				<gpg.keyname>(your GPG email address)</gpg.keyname>
-				<gpg.passphrase>(your GPG passphrase)</gpg.passphrase>
-			</properties>
-		</profile>
-	</profiles>
-</settings>
-
+	test -f .travis/signingkey.asc.enc ||
+		die 'GPG configuration not found. Please use travisify.sh to add it.
 See also: https://github.com/scijava/pom-scijava/wiki/GPG-Signing'
 }
 
