@@ -73,7 +73,6 @@ IMAGEJ_THIRDPARTY_REPOSITORY=$IMAGEJ_BASE_REPOSITORY/thirdparty
 
 BATCH_MODE=--batch-mode
 SKIP_PUSH=
-DEPLOY=
 TAG=
 DEV_VERSION=
 EXTRA_ARGS=
@@ -87,7 +86,6 @@ do
 	--dry-run) DRY_RUN=echo;;
 	--no-batch-mode) BATCH_MODE=;;
 	--skip-push) SKIP_PUSH=t;;
-	--deploy) DEPLOY=t;;
 	--tag=*)
 		! git rev-parse --quiet --verify refs/tags/"${1#--*=}" ||
 		die "Tag ${1#--*=} exists already!"
@@ -215,21 +213,3 @@ then
 	$DRY_RUN git push "$REMOTE" HEAD $tag
 fi ||
 exit
-
-# TODO - Evaluate whether to use "mvn release:perform" when doing local deploy.
-if test "$DEPLOY"
-then
-	$DRY_RUN git checkout $tag &&
-	$DRY_RUN mvn $PROFILE \
-		-DperformRelease \
-		clean verify &&
-	$DRY_RUN mvn $PROFILE \
-		$ALT_REPOSITORY \
-		-DperformRelease -DupdateReleaseInfo=true \
-		deploy &&
-	$DRY_RUN git checkout @{-1}
-	if test -n "$INVALIDATE_NEXUS"
-	then
-		$DRY_RUN maven_helper invalidate-cache "${BASE_GAV%:*}"
-	fi
-fi
