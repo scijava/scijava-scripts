@@ -53,14 +53,13 @@ cat >"$settingsFile" <<EOL
 </settings>
 EOL
 
-# Populate the GPG signing key.
+# Import the GPG signing key.
 keyFile=.travis/signingkey.asc
 if [ "$TRAVIS_SECURE_ENV_VARS" = true \
 	-a "$TRAVIS_PULL_REQUEST" = false \
-	-a -f "$keyFile.enc" -a -e "$1" -a -e "$2" ]
+	-a -f "$keyFile" ]
 then
-	echo "== Decrypting GPG keypair =="
-	openssl aes-256-cbc -K "$1" -iv "$2" -in "$keyFile.enc" -out "$keyFile" -d &&
+	echo "== Importing GPG keypair =="
 	gpg --batch --fast-import "$keyFile" --passphrase "$GPG_PASSPHRASE"
 fi
 
