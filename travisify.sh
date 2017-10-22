@@ -161,7 +161,10 @@ EOL
 	if [ -f "$varsFile" ]
 	then
 		while read p; do
-			test "${p:0:1}" = "#" && continue
+			# Skip comments. (Cannot use ${p:0:1} because it's bash-specific.)
+			case "$p" in
+				'#'*) continue;;
+			esac
 			info "Encrypting ${p%%=*}"
 			echo yes | $EXEC travis encrypt "$p" --add env.global
 		done <"$varsFile"
