@@ -60,7 +60,7 @@ if [ "$TRAVIS_SECURE_ENV_VARS" = true \
 	-a -f "$keyFile" ]
 then
 	echo "== Importing GPG keypair =="
-	gpg --batch --fast-import "$keyFile" --passphrase "$GPG_PASSPHRASE"
+	gpg --batch --fast-import "$keyFile"
 fi
 
 # Run the build.
