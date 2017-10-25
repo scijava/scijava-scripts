@@ -179,7 +179,7 @@ EOL
 		info "Encrypting $signingKeyDestFile"
 		# NB: We have to copy the file first, so that --add does the right thing.
 		$EXEC cp "$signingKeySourceFile" "$signingKeyDestFile"
-		$EXEC travis encrypt-file "$signingKeyDestFile" "$signingKeyDestFile.enc" --add
+		$EXEC travis encrypt-file "$signingKeyDestFile" "$signingKeyDestFile.enc" --add --repo $repoSlug
 		$EXEC rm -f "$signingKeyDestFile"
 		$EXEC git add "$travisConfig" "$signingKeyDestFile.enc"
 		$EXEC git commit -m "Travis: add encrypted GPG signing keypair"
