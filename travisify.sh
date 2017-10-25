@@ -66,7 +66,7 @@ process() {
 	cd "$1"
 
 	# -- Git sanity checks --
-	repoSlug=$(git remote -v | grep origin | head -n1 | sed 's/.*github.com.\([^ ]*\) .*/\1/' | sed 's/\.git$//')
+	repoSlug=$(grep '<connection>' pom.xml 2>/dev/null | sed 's/[^>]*>//' | sed 's/<.*//' | cut -d'/' -f4,5)
 	test "$repoSlug" && info "Repository = $repoSlug" || die 'Could not determine GitHub repository slug'
 	git fetch >/dev/null
 	git diff-index --quiet HEAD -- || die "Dirty working copy"
