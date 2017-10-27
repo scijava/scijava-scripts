@@ -166,7 +166,7 @@ EOL
 				'#'*) continue;;
 			esac
 			info "Encrypting ${p%%=*}"
-			echo yes | $EXEC travis encrypt "$p" --add env.global --repo $repoSlug
+			echo yes | $EXEC travis encrypt "$p" --add env.global --repo "$repoSlug"
 		done <"$varsFile"
 		$EXEC git commit "$travisConfig" -m "Travis: add encrypted environment variables"
 	else
@@ -179,7 +179,7 @@ EOL
 		info "Encrypting $signingKeyDestFile"
 		# NB: We have to copy the file first, so that --add does the right thing.
 		$EXEC cp "$signingKeySourceFile" "$signingKeyDestFile"
-		$EXEC travis encrypt-file "$signingKeyDestFile" "$signingKeyDestFile.enc" --add --repo $repoSlug
+		$EXEC travis encrypt-file "$signingKeyDestFile" "$signingKeyDestFile.enc" --add --repo "$repoSlug"
 		$EXEC rm -f "$signingKeyDestFile"
 		$EXEC git add "$travisConfig" "$signingKeyDestFile.enc"
 		$EXEC git commit -m "Travis: add encrypted GPG signing keypair"
