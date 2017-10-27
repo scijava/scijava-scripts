@@ -66,7 +66,7 @@ process() {
 	cd "$1"
 
 	# -- Git sanity checks --
-	repoSlug=$(grep '<connection>' pom.xml 2>/dev/null | sed 's/[^>]*>//' | sed 's/<.*//' | cut -d'/' -f4,5)
+	repoSlug=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='scm']/*[local-name()='connection']" pom.xml|sed 's_.*github.com[:/]\(.*\)<.*_\1_')
 	test "$repoSlug" && info "Repository = $repoSlug" || die 'Could not determine GitHub repository slug'
 	git fetch >/dev/null
 	git diff-index --quiet HEAD -- || die "Dirty working copy"
