@@ -66,7 +66,7 @@ process() {
 	cd "$1"
 
 	# -- Git sanity checks --
-	repoSlug=$(git remote -v | grep origin | head -n1 | sed 's/.*github.com.\([^ ]*\) .*/\1/' | sed 's/\.git$//')
+	repoSlug=$(grep '<connection>' pom.xml 2>/dev/null | sed 's/[^>]*>//' | sed 's/<.*//' | cut -d'/' -f4,5)
 	test "$repoSlug" && info "Repository = $repoSlug" || die 'Could not determine GitHub repository slug'
 	git fetch >/dev/null
 	git diff-index --quiet HEAD -- || die "Dirty working copy"
@@ -166,7 +166,7 @@ EOL
 				'#'*) continue;;
 			esac
 			info "Encrypting ${p%%=*}"
-			echo yes | $EXEC travis encrypt "$p" --add env.global
+			echo yes | $EXEC travis encrypt "$p" --add env.global --repo $repoSlug
 		done <"$varsFile"
 		$EXEC git commit "$travisConfig" -m "Travis: add encrypted environment variables"
 	else
@@ -179,7 +179,7 @@ EOL
 		info "Encrypting $signingKeyDestFile"
 		# NB: We have to copy the file first, so that --add does the right thing.
 		$EXEC cp "$signingKeySourceFile" "$signingKeyDestFile"
-		$EXEC travis encrypt-file "$signingKeyDestFile" "$signingKeyDestFile.enc" --add
+		$EXEC travis encrypt-file "$signingKeyDestFile" "$signingKeyDestFile.enc" --add --repo $repoSlug
 		$EXEC rm -f "$signingKeyDestFile"
 		$EXEC git add "$travisConfig" "$signingKeyDestFile.enc"
 		$EXEC git commit -m "Travis: add encrypted GPG signing keypair"
