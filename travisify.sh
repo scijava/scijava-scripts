@@ -166,7 +166,7 @@ EOL
 				'#'*) continue;;
 			esac
 			info "Encrypting ${p%%=*}"
-			echo yes | $EXEC travis encrypt "$p" --add env.global --repo "$repoSlug"
+			$EXEC travis encrypt "$p" --add env.global --repo "$repoSlug"
 		done <"$varsFile"
 		$EXEC git commit "$travisConfig" -m "Travis: add encrypted environment variables"
 	else
