@@ -55,6 +55,14 @@ EOL
 
 # Import the GPG signing key.
 keyFile=.travis/signingkey.asc
+key=$1
+iv=$2
+if [ "$key" -a "$iv" -a -f "$keyFile.enc" ]
+then
+	# NB: Key and iv values were given as arguments.
+	echo "== Decrypting GPG keypair =="
+	openssl aes-256-cbc -K "$key" -iv "$iv" -in "$keyFile.enc" -out "$keyFile" -d
+fi
 if [ "$TRAVIS_SECURE_ENV_VARS" = true \
 	-a "$TRAVIS_PULL_REQUEST" = false \
 	-a -f "$keyFile" ]
