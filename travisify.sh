@@ -177,15 +177,16 @@ EOL
 	if [ -f "$signingKeySourceFile" ]
 	then
 		info "Encrypting $signingKeyDestFile"
-		# NB: We have to copy the file first, so that --add does the right thing.
-		$EXEC cp "$signingKeySourceFile" "$signingKeyDestFile"
-		$EXEC travis encrypt-file "$signingKeyDestFile" "$signingKeyDestFile.enc" --add --repo "$repoSlug"
-		# NB: Decrypt only when secure env vars are set.
-		# Without this adjustment, all PR builds will fail.
-		$EXEC perl -0777 -i -pe 's/\n- (openssl aes-256-cbc)/\n- test "\$TRAVIS_SECURE_ENV_VARS" = true &&\n  \1/igs' .travis.yml
-		$EXEC rm -f "$signingKeyDestFile"
-		$EXEC git add "$travisConfig" "$signingKeyDestFile.enc"
-		$EXEC git commit -m "Travis: add encrypted GPG signing keypair"
+		if [ -z "$EXEC" ]
+		then
+			encryptResult=$(travis encrypt-file "$signingKeySourceFile" "$signingKeyDestFile.enc" --repo "$repoSlug" | grep openssl)
+			key=$(echo "$encryptResult" | cut -d' ' -f4)
+			iv=$(echo "$encryptResult" | cut -d' ' -f6)
+			sed -i.bak "s/\(sh travis-build.sh\)/\1 $key $iv/" "$travisBuildScript"
+			rm -f "$travisBuildScript.bak"
+			git add "$travisBuildScript" "$signingKeyDestFile.enc"
+			git commit -m "Travis: add encrypted GPG signing keypair"
+		fi
 	else
 		warn "No $signingKeySourceFile found. Travis will not be able to do GPG signing!"
 	fi
@@ -198,7 +199,7 @@ test -d "$credentialsDir" ||
 		"Please contact a SciJava administrator to receive a copy of this content."
 
 # check prerequisites
-check git sed perl xmllint travis
+check git sed cut perl xmllint travis
 
 # parse arguments
 EXEC=:
