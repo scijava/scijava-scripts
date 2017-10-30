@@ -180,6 +180,9 @@ EOL
 		# NB: We have to copy the file first, so that --add does the right thing.
 		$EXEC cp "$signingKeySourceFile" "$signingKeyDestFile"
 		$EXEC travis encrypt-file "$signingKeyDestFile" "$signingKeyDestFile.enc" --add --repo "$repoSlug"
+		# NB: Decrypt only when secure env vars are set.
+		# Without this adjustment, all PR builds will fail.
+		$EXEC perl -0777 -i -pe 's/\n- (openssl aes-256-cbc)/\n- test "\$TRAVIS_SECURE_ENV_VARS" = true &&\n  \1/igs' .travis.yml
 		$EXEC rm -f "$signingKeyDestFile"
 		$EXEC git add "$travisConfig" "$signingKeyDestFile.enc"
 		$EXEC git commit -m "Travis: add encrypted GPG signing keypair"
@@ -195,7 +198,7 @@ test -d "$credentialsDir" ||
 		"Please contact a SciJava administrator to receive a copy of this content."
 
 # check prerequisites
-check git sed xmllint travis
+check git sed perl xmllint travis
 
 # parse arguments
 EXEC=:
