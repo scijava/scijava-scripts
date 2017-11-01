@@ -116,9 +116,16 @@ EOL
 	update "$travisBuildScript"
 
 	# Remove obsolete Travis-related files.
-	test -f "$travisSettingsFile" && info "Removing obsolete $travisSettingsFile (travis-build.sh generates it now)"
-	test -f "$travisNotifyScript" && info "Removing obsolete $travisNotifyScript (ImageJ Jenkins is going away)"
-	$EXEC git rm -f "$travisSettingsFile" "$travisNotifyScript"
+	if [ -f "$travisSettingsFile" ]
+	then
+		info "Removing obsolete $travisSettingsFile (travis-build.sh generates it now)"
+		$EXEC git rm -f "$travisSettingsFile"
+	fi
+	if [ -f "$travisNotifyScript" ]
+	then
+		info "Removing obsolete $travisNotifyScript (ImageJ Jenkins is going away)"
+		$EXEC git rm -f "$travisNotifyScript"
+	fi
 	$EXEC git diff-index --quiet HEAD -- || $EXEC git ci -m "Travis: remove obsolete files"
 
 	# Upgrade version of pom-scijava.
