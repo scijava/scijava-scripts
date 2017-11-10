@@ -180,7 +180,7 @@ test -n "$tag" &&
 sed -i.bak -e 's|^scm.url=scm\\:git\\:git@github.com\\:|scm.url=scm\\:git\\:git\\://github.com/|' release.properties &&
 rm release.properties.bak &&
 $DRY_RUN git checkout "$tag" &&
-$DRY_RUN git add release.properties &&
+$DRY_RUN git add -f release.properties &&
 $DRY_RUN git commit --amend --no-edit &&
 $DRY_RUN git tag -d "$tag" &&
 $DRY_RUN git tag "$tag" HEAD &&
