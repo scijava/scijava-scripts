@@ -66,7 +66,7 @@ process() {
 	cd "$1"
 
 	# -- Git sanity checks --
-	repoSlug=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='scm']/*[local-name()='connection']" pom.xml|sed 's_.*github.com[:/]\(.*\)<.*_\1_')
+	repoSlug=$(xmllint --xpath '//*[local-name()="project"]/*[local-name()="scm"]/*[local-name()="connection"]' pom.xml|sed 's_.*github.com[:/]\(.*\)<.*_\1_')
 	test "$repoSlug" && info "Repository = $repoSlug" || die 'Could not determine GitHub repository slug'
 	git fetch >/dev/null
 	git diff-index --quiet HEAD -- || die "Dirty working copy"
@@ -78,7 +78,7 @@ process() {
 #		die "Mismatch with upstream branch (local ahead?)"
 
 	# -- POM sanity checks --
-	parent=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='parent']/*[local-name()='artifactId']" pom.xml|sed 's/[^>]*>//'|sed 's/<.*//')
+	parent=$(xmllint --xpath '//*[local-name()="project"]/*[local-name()="parent"]/*[local-name()="artifactId"]' pom.xml|sed 's/[^>]*>//'|sed 's/<.*//')
 	test "$parent" = "pom-scijava" ||
 		die "Not pom-scijava parent: $parent"
 
@@ -129,7 +129,7 @@ EOL
 	$EXEC git diff-index --quiet HEAD -- || $EXEC git ci -m "Travis: remove obsolete files"
 
 	# Upgrade version of pom-scijava.
-	version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='parent']/*[local-name()='version']" pom.xml|sed 's/[^>]*>//'|sed 's/<.*//')
+	version=$(xmllint --xpath '//*[local-name()="project"]/*[local-name()="parent"]/*[local-name()="version"]' pom.xml|sed 's/[^>]*>//'|sed 's/<.*//')
 	# HACK: Using a lexicographic comparison here is imperfect.
 	if [ "$version" \< "$pomMinVersion" ]
 	then
