@@ -53,6 +53,12 @@ cat >"$settingsFile" <<EOL
 </settings>
 EOL
 
+# Install GPG on OSX/macOS
+if [ "$TRAVIS_OS_NAME" = osx ]
+then
+	brew install gnupg2
+fi
+
 # Import the GPG signing key.
 keyFile=.travis/signingkey.asc
 key=$1
