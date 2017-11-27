@@ -96,7 +96,8 @@ verify_git_settings
 test -n "$INVALIDATE_NEXUS" &&
 	verify_netrc_settings
 
-pomVersion="$(sed -n 's/^	<version>\(.*\)-SNAPSHOT<\/version>$/\1/p' pom.xml)"
+devVersion=$(mvn -Dexec.executable='echo' -Dexec.args='${project.version}' exec:exec -q)
+pomVersion=${devVersion%-SNAPSHOT}
 test $# = 1 || test ! -t 0 || {
 	version=$pomVersion
 	printf 'Version? [%s]: ' "$version"
