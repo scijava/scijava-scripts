@@ -68,6 +68,7 @@ process() {
 	# -- Git sanity checks --
 	repoSlug=$(xmllint --xpath '//*[local-name()="project"]/*[local-name()="scm"]/*[local-name()="connection"]' pom.xml|sed 's_.*github.com[:/]\(.*\)<.*_\1_')
 	test "$repoSlug" && info "Repository = $repoSlug" || die 'Could not determine GitHub repository slug'
+	[[ "$repoSlug" == *.git ]] && die 'GitHub repository slug ('$repoSlug') ends in ".git". Please fix the pom'
 	git fetch >/dev/null
 	git diff-index --quiet HEAD -- || die "Dirty working copy"
 	branch=$(git rev-parse --abbrev-ref HEAD)
