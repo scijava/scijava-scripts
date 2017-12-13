@@ -4,6 +4,8 @@
 # travis-build.sh - A script to build and/or release SciJava-based projects.
 #
 
+echo travis_fold:start:travis-build.sh
+
 dir="$(dirname "$0")"
 
 echo "== Configuring Maven =="
@@ -94,3 +96,4 @@ else
 	echo "== Building the artifact locally only =="
 	mvn -B install
 fi
+echo travis_fold:end:travis-build.sh
