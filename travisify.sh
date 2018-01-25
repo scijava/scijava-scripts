@@ -84,8 +84,11 @@ process() {
 
 	# -- POM sanity checks --
 	parent=$(xmllint --xpath '//*[local-name()="project"]/*[local-name()="parent"]/*[local-name()="artifactId"]' pom.xml|sed 's/[^>]*>//'|sed 's/<.*//')
-	test "$parent" = "pom-scijava" ||
-		die "Not pom-scijava parent: $parent"
+	if [ -z "$SKIPPARENTCHECK" ]
+	then
+		test "$parent" = "pom-scijava" ||
+			die "Not pom-scijava parent: $parent. Run with -p flag to skip this check."
+	fi
 
 	# -- Travis sanity checks --
 	test -e "$travisDir" -a ! -d "$travisDir" && die "$travisDir is not a directory"
@@ -134,15 +137,18 @@ EOL
 	$EXEC git diff-index --quiet HEAD -- || $EXEC git ci -m "Travis: remove obsolete files"
 
 	# Upgrade version of pom-scijava.
-	version=$(xmllint --xpath '//*[local-name()="project"]/*[local-name()="parent"]/*[local-name()="version"]' pom.xml|sed 's/[^>]*>//'|sed 's/<.*//')
-	# HACK: Using a lexicographic comparison here is imperfect.
-	if [ "$version" \< "$pomMinVersion" ]
+	if [ -z "$SKIPPARENTCHECK" ]
 	then
-		info 'Upgrading pom-scijava version'
-		sed "s|^		<version>$version</version>$|		<version>$pomMinVersion</version>|" pom.xml >"$tmpFile"
-		update pom.xml "POM: update pom-scijava parent to $pomMinVersion"
-	else
-		info "Version of pom-scijava ($version) is OK"
+		version=$(xmllint --xpath '//*[local-name()="project"]/*[local-name()="parent"]/*[local-name()="version"]' pom.xml|sed 's/[^>]*>//'|sed 's/<.*//')
+		# HACK: Using a lexicographic comparison here is imperfect.
+		if [ "$version" \< "$pomMinVersion" ]
+		then
+			info 'Upgrading pom-scijava version'
+			sed "s|^		<version>$version</version>$|		<version>$pomMinVersion</version>|" pom.xml >"$tmpFile"
+			update pom.xml "POM: update pom-scijava parent to $pomMinVersion"
+		else
+			info "Version of pom-scijava ($version) is OK"
+		fi
 	fi
 
 	releaseProfile=$(grep '<releaseProfiles>' pom.xml 2>/dev/null | sed 's/[^>]*>//' | sed 's/<.*//')
@@ -215,10 +221,12 @@ check git sed cut perl xmllint travis
 
 # parse arguments
 EXEC=:
+SKIPPARENTCHECK=
 while test $# -gt 0
 do
 	case "$1" in
 	-f) EXEC=;;
+	-p) SKIPPARENTCHECK=true;;
 	--) break;;
 	-*) echo "Ignoring unknown option: $1" >&2; break;;
 	*) break;;
