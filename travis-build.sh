@@ -86,14 +86,18 @@ if [ "$TRAVIS_SECURE_ENV_VARS" = true \
 then
 	echo "== Building and deploying master SNAPSHOT =="
 	mvn -B -Pdeploy-to-imagej deploy
+	success=$?
 elif [ "$TRAVIS_SECURE_ENV_VARS" = true \
 	-a "$TRAVIS_PULL_REQUEST" = false \
 	-a -f release.properties ]
 then
 	echo "== Cutting and deploying release version =="
 	mvn -B release:perform
+	success=$?
 else
 	echo "== Building the artifact locally only =="
 	mvn -B install
+	success=$?
 fi
 echo travis_fold:end:travis-build.sh
+exit $success
