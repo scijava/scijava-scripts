@@ -484,7 +484,7 @@ pruneReactor() {
 # Tests if the given directory contains the appropriate source code.
 isProject() {
 	local a="$(xpath "$1/pom.xml" project artifactId)"
-	test "$a" = "$(basename "$1")" && echo 1
+	test "$1" = "LOCAL/PROJECT" -o "$a" = "$(basename "$1")" && echo 1
 }
 
 # Generates an aggregator POM for all modules in the current directory.
