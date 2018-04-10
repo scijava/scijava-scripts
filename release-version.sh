@@ -36,17 +36,6 @@ verify_git_settings () {
 	fi
 }
 
-verify_netrc_settings () {
-	grep -q 'machine maven.imagej.net' "$HOME/.netrc" 2>/dev/null &&
-		grep -q 'login jenkins-expire-cache' "$HOME/.netrc" 2>/dev/null ||
-		die 'maven.imagej.net cache expiration credentials not found in .netrc. Please add it:
-machine maven.imagej.net
-login jenkins-expire-cache
-password (the-correct-password)
-
-See also: https://github.com/scijava/pom-scijava/wiki/Adding-Maven-Users'
-}
-
 IMAGEJ_BASE_REPOSITORY=-DaltDeploymentRepository=imagej.releases::default::dav:https://maven.imagej.net/content/repositories
 IMAGEJ_RELEASES_REPOSITORY=$IMAGEJ_BASE_REPOSITORY/releases
 IMAGEJ_THIRDPARTY_REPOSITORY=$IMAGEJ_BASE_REPOSITORY/thirdparty
@@ -59,7 +48,6 @@ DEV_VERSION=
 EXTRA_ARGS=
 ALT_REPOSITORY=
 PROFILE=-Pdeploy-to-imagej
-INVALIDATE_NEXUS=
 DRY_RUN=
 while test $# -gt 0
 do
@@ -96,9 +84,6 @@ done
 
 verify_git_settings
 
-test -n "$INVALIDATE_NEXUS" &&
-	verify_netrc_settings
-
 devVersion=$(mvn -Dexec.executable='echo' -Dexec.args='${project.version}' exec:exec -q)
 pomVersion=${devVersion%-SNAPSHOT}
 test $# = 1 || test ! -t 0 || {
@@ -131,8 +116,7 @@ die "Could not obtain GAV coordinates for base project"
 
 # If releasing to OSS Sonatype, enable some extra stuff
 mvn -Dexec.executable='echo' -Dexec.args='${releaseProfiles}' exec:exec -q | grep -q 'sonatype-oss-release' &&
-	verify_gpg_settings &&
-	INVALIDATE_NEXUS=t
+	verify_gpg_settings
 
 git update-index -q --refresh &&
 git diff-files --quiet --ignore-submodules &&
