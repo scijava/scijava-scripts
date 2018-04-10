@@ -21,9 +21,12 @@ valid_semver_bump () {
 }
 
 verify_gpg_settings () {
-	test -f .travis/signingkey.asc.enc ||
-		die 'GPG configuration not found. Please use travisify.sh to add it.
+	if [ ! "$SKIP_GPG" ]
+	then
+		test -f .travis/signingkey.asc.enc ||
+			die 'GPG configuration not found. Please use travisify.sh to add it.
 See also: https://github.com/scijava/pom-scijava/wiki/GPG-Signing'
+	fi
 }
 
 verify_git_settings () {
@@ -52,6 +55,7 @@ IMAGEJ_THIRDPARTY_REPOSITORY=$IMAGEJ_BASE_REPOSITORY/thirdparty
 
 BATCH_MODE=--batch-mode
 SKIP_PUSH=
+SKIP_GPG=
 TAG=
 DEV_VERSION=
 EXTRA_ARGS=
@@ -84,6 +88,7 @@ do
 		SKIP_PUSH=t
 		ALT_REPOSITORY=$IMAGEJ_THIRDPARTY_REPOSITORY;;
 	--skip-gpg)
+		SKIP_GPG=t
 		EXTRA_ARGS="$EXTRA_ARGS -Dgpg.skip=true";;
 	-*) echo "Unknown option: $1" >&2; break;;
 	*) break;;
