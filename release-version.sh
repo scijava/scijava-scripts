@@ -21,10 +21,8 @@ valid_semver_bump () {
 }
 
 verify_gpg_settings () {
-	if [ ! "$SKIP_GPG" ]
-	then
-		test -f .travis/signingkey.asc.enc ||
-			die 'GPG configuration not found. Please use travisify.sh to add it.
+	test "$SKIP_GPG" -o -f .travis/signingkey.asc.enc ||
+		die 'GPG configuration not found. Please use travisify.sh to add it.
 See also: https://github.com/scijava/pom-scijava/wiki/GPG-Signing'
 	fi
 }
