@@ -84,7 +84,7 @@ process() {
 
 	# -- POM sanity checks --
 	parent=$(xmllint --xpath '//*[local-name()="project"]/*[local-name()="parent"]/*[local-name()="artifactId"]' pom.xml|sed 's/[^>]*>//'|sed 's/<.*//')
-	if [ -z "$SKIPPARENTCHECK" ]
+	if [ -z "$SKIP_PARENT_CHECK" ]
 	then
 		test "$parent" = "pom-scijava" ||
 			die "Not pom-scijava parent: $parent. Run with -p flag to skip this check."
@@ -137,7 +137,7 @@ EOL
 	$EXEC git diff-index --quiet HEAD -- || $EXEC git ci -m "Travis: remove obsolete files"
 
 	# Upgrade version of pom-scijava.
-	if [ -z "$SKIPPARENTCHECK" ]
+	if [ -z "$SKIP_PARENT_CHECK" ]
 	then
 		version=$(xmllint --xpath '//*[local-name()="project"]/*[local-name()="parent"]/*[local-name()="version"]' pom.xml|sed 's/[^>]*>//'|sed 's/<.*//')
 		# HACK: Using a lexicographic comparison here is imperfect.
@@ -221,12 +221,12 @@ check git sed cut perl xmllint travis
 
 # parse arguments
 EXEC=:
-SKIPPARENTCHECK=
+SKIP_PARENT_CHECK=
 while test $# -gt 0
 do
 	case "$1" in
 	-f) EXEC=;;
-	-p) SKIPPARENTCHECK=true;;
+	-p) SKIP_PARENT_CHECK=true;;
 	--) break;;
 	-*) echo "Ignoring unknown option: $1" >&2; break;;
 	*) break;;
