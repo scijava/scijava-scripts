@@ -24,7 +24,6 @@ verify_gpg_settings () {
 	test "$SKIP_GPG" -o -f .travis/signingkey.asc.enc ||
 		die 'GPG configuration not found. Please use travisify.sh to add it.
 See also: https://github.com/scijava/pom-scijava/wiki/GPG-Signing'
-	fi
 }
 
 verify_git_settings () {
