@@ -96,7 +96,7 @@ then
 	success=$?
 else
 	echo "== Building the artifact locally only =="
-	mvn -B install
+	mvn -B install javadoc:javadoc
 	success=$?
 fi
 echo travis_fold:end:travis-build.sh
