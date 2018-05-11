@@ -591,7 +591,7 @@ meltDown() {
 	generatePOM
 
 	# Build everything.
-	echo "mvn $args test" > build.sh
+	echo "mvn $args test \$@" > build.sh
 	if [ "$skipBuild" ]
 	then
 		info "Skipping the build; the command would have been:"
