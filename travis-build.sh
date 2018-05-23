@@ -122,6 +122,45 @@ EOL
 	echo travis_fold:end:scijava-maven
 fi
 
+# Configure conda environment, if one is needed.
+if [ -f environment.yml ]
+then
+	echo travis_fold:start:scijava-conda
+	echo "= Conda ="
+
+	condaDir=$HOME/miniconda
+	if [ ! -d "$condaDir" ]; then
+		echo
+		echo "== Installing conda =="
+		if [ "$TRAVIS_PYTHON_VERSION" = "2.7" ]; then
+			wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh
+		else
+			wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+		fi
+		bash miniconda.sh -b -p "$condaDir"
+		checkSuccess $?
+	fi
+
+	echo
+	echo "== Updating conda =="
+	export PATH="$condaDir/bin:$PATH"
+	hash -r &&
+	conda config --set always_yes yes --set changeps1 no &&
+	conda update -q conda &&
+	conda info -a
+	checkSuccess $?
+
+	echo
+	echo "== Configuring environment =="
+	condaEnv=travis-scijava
+	test -d "$condaDir/envs/$condaEnv" && condaAction=update || condaAction=create
+	conda env "$condaAction" -n "$condaEnv" -f environment.yml &&
+	source activate "$condaEnv"
+	checkSuccess $?
+
+	echo travis_fold:end:scijava-conda
+fi
+
 # Execute Jupyter notebooks.
 if which jupyter >/dev/null 2>/dev/null
 then
