@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #
 # travis-build.sh - A script to build and/or release SciJava-based projects.
@@ -154,7 +154,7 @@ then
 	condaEnv=travis-scijava
 	test -d "$condaDir/envs/$condaEnv" && condaAction=update || condaAction=create
 	$condaDir/bin/conda env "$condaAction" -n "$condaEnv" -f environment.yml &&
-	. "$condaDir/bin/activate" "$condaEnv"
+	source "$condaDir/bin/activate" "$condaEnv"
 	checkSuccess $?
 
 	echo travis_fold:end:scijava-conda
