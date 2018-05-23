@@ -129,7 +129,7 @@ then
 	echo "= Conda setup ="
 
 	condaDir=$HOME/miniconda
-	if [ ! -d "$condaDir" ]; then
+	if [ ! -f "$condaDir/bin/conda" ]; then
 		echo
 		echo "== Installing conda =="
 		if [ "$TRAVIS_PYTHON_VERSION" = "2.7" ]; then
