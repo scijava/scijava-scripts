@@ -4,13 +4,14 @@
 # travis-build.sh - A script to build and/or release SciJava-based projects.
 #
 
-echo travis_fold:start:travis-build.sh
-
 dir="$(dirname "$0")"
 
 # Build Maven projects.
 if [ -f pom.xml ]
 then
+	echo travis_fold:start:travis-build.sh-maven
+	echo "= Maven build ="
+	echo
 	echo "== Configuring Maven =="
 
 	# NB: Suppress "Downloading/Downloaded" messages.
@@ -71,6 +72,7 @@ EOL
 	if [ "$key" -a "$iv" -a -f "$keyFile.enc" ]
 	then
 		# NB: Key and iv values were given as arguments.
+		echo
 		echo "== Decrypting GPG keypair =="
 		openssl aes-256-cbc -K "$key" -iv "$iv" -in "$keyFile.enc" -out "$keyFile" -d
 	fi
@@ -78,6 +80,7 @@ EOL
 		-a "$TRAVIS_PULL_REQUEST" = false \
 		-a -f "$keyFile" ]
 	then
+		echo
 		echo "== Importing GPG keypair =="
 		gpg --batch --fast-import "$keyFile"
 	fi
@@ -87,6 +90,7 @@ EOL
 		-a "$TRAVIS_PULL_REQUEST" = false \
 		-a "$TRAVIS_BRANCH" = master ]
 	then
+		echo
 		echo "== Building and deploying master SNAPSHOT =="
 		mvn -B -Pdeploy-to-imagej deploy
 		success=$?
@@ -94,14 +98,17 @@ EOL
 		-a "$TRAVIS_PULL_REQUEST" = false \
 		-a -f release.properties ]
 	then
+		echo
 		echo "== Cutting and deploying release version =="
 		mvn -B release:perform
 		success=$?
 	else
+		echo
 		echo "== Building the artifact locally only =="
 		mvn -B install javadoc:javadoc
 		success=$?
 	fi
+	echo travis_fold:end:travis-build.sh-maven
 fi
-echo travis_fold:end:travis-build.sh
+
 exit $success
