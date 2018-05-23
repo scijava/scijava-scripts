@@ -18,7 +18,7 @@ checkSuccess() {
 # Build Maven projects.
 if [ -f pom.xml ]
 then
-	echo travis_fold:start:travis-build.sh-maven
+	echo travis_fold:start:scijava-maven
 	echo "= Maven build ="
 	echo
 	echo "== Configuring Maven =="
@@ -119,13 +119,13 @@ EOL
 		mvn -B install javadoc:javadoc
 		checkSuccess $?
 	fi
-	echo travis_fold:end:travis-build.sh-maven
+	echo travis_fold:end:scijava-maven
 fi
 
 # Execute Jupyter notebooks.
 if which jupyter >/dev/null 2>/dev/null
 then
-	echo travis_fold:start:travis-build.sh-jupyter
+	echo travis_fold:start:scijava-jupyter
 	echo "= Jupyter notebooks ="
 	# NB: This part is fiddly. We want to loop over files even with spaces,
 	# so we use the "find ... -print0 | while read $'\0' ..." idiom.
@@ -144,7 +144,7 @@ then
 		done
 		echo $success
 	})
-	echo travis_fold:end:travis-build.sh-jupyter
+	echo travis_fold:end:scijava-jupyter
 fi
 
 exit $success
