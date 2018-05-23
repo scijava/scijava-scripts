@@ -8,18 +8,21 @@ echo travis_fold:start:travis-build.sh
 
 dir="$(dirname "$0")"
 
-echo "== Configuring Maven =="
+# Build Maven projects.
+if [ -f pom.xml ]
+then
+	echo "== Configuring Maven =="
 
-# NB: Suppress "Downloading/Downloaded" messages.
-# See: https://stackoverflow.com/a/35653426/1207769
-export MAVEN_OPTS=-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+	# NB: Suppress "Downloading/Downloaded" messages.
+	# See: https://stackoverflow.com/a/35653426/1207769
+	export MAVEN_OPTS=-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
 
-# Populate the settings.xml configuration.
-mkdir -p "$HOME/.m2"
-settingsFile="$HOME/.m2/settings.xml"
-customSettings=.travis/settings.xml
-test -f "$customSettings" && cp "$customSettings" "$settingsFile" ||
-cat >"$settingsFile" <<EOL
+	# Populate the settings.xml configuration.
+	mkdir -p "$HOME/.m2"
+	settingsFile="$HOME/.m2/settings.xml"
+	customSettings=.travis/settings.xml
+	test -f "$customSettings" && cp "$customSettings" "$settingsFile" ||
+	cat >"$settingsFile" <<EOL
 <settings>
 	<servers>
 		<server>
@@ -55,49 +58,50 @@ cat >"$settingsFile" <<EOL
 </settings>
 EOL
 
-# Install GPG on OSX/macOS
-if [ "$TRAVIS_OS_NAME" = osx ]
-then
-	brew install gnupg2
-fi
+	# Install GPG on OSX/macOS
+	if [ "$TRAVIS_OS_NAME" = osx ]
+	then
+		brew install gnupg2
+	fi
 
-# Import the GPG signing key.
-keyFile=.travis/signingkey.asc
-key=$1
-iv=$2
-if [ "$key" -a "$iv" -a -f "$keyFile.enc" ]
-then
-	# NB: Key and iv values were given as arguments.
-	echo "== Decrypting GPG keypair =="
-	openssl aes-256-cbc -K "$key" -iv "$iv" -in "$keyFile.enc" -out "$keyFile" -d
-fi
-if [ "$TRAVIS_SECURE_ENV_VARS" = true \
-	-a "$TRAVIS_PULL_REQUEST" = false \
-	-a -f "$keyFile" ]
-then
-	echo "== Importing GPG keypair =="
-	gpg --batch --fast-import "$keyFile"
-fi
+	# Import the GPG signing key.
+	keyFile=.travis/signingkey.asc
+	key=$1
+	iv=$2
+	if [ "$key" -a "$iv" -a -f "$keyFile.enc" ]
+	then
+		# NB: Key and iv values were given as arguments.
+		echo "== Decrypting GPG keypair =="
+		openssl aes-256-cbc -K "$key" -iv "$iv" -in "$keyFile.enc" -out "$keyFile" -d
+	fi
+	if [ "$TRAVIS_SECURE_ENV_VARS" = true \
+		-a "$TRAVIS_PULL_REQUEST" = false \
+		-a -f "$keyFile" ]
+	then
+		echo "== Importing GPG keypair =="
+		gpg --batch --fast-import "$keyFile"
+	fi
 
-# Run the build.
-if [ "$TRAVIS_SECURE_ENV_VARS" = true \
-	-a "$TRAVIS_PULL_REQUEST" = false \
-	-a "$TRAVIS_BRANCH" = master ]
-then
-	echo "== Building and deploying master SNAPSHOT =="
-	mvn -B -Pdeploy-to-imagej deploy
-	success=$?
-elif [ "$TRAVIS_SECURE_ENV_VARS" = true \
-	-a "$TRAVIS_PULL_REQUEST" = false \
-	-a -f release.properties ]
-then
-	echo "== Cutting and deploying release version =="
-	mvn -B release:perform
-	success=$?
-else
-	echo "== Building the artifact locally only =="
-	mvn -B install javadoc:javadoc
-	success=$?
+	# Run the build.
+	if [ "$TRAVIS_SECURE_ENV_VARS" = true \
+		-a "$TRAVIS_PULL_REQUEST" = false \
+		-a "$TRAVIS_BRANCH" = master ]
+	then
+		echo "== Building and deploying master SNAPSHOT =="
+		mvn -B -Pdeploy-to-imagej deploy
+		success=$?
+	elif [ "$TRAVIS_SECURE_ENV_VARS" = true \
+		-a "$TRAVIS_PULL_REQUEST" = false \
+		-a -f release.properties ]
+	then
+		echo "== Cutting and deploying release version =="
+		mvn -B release:perform
+		success=$?
+	else
+		echo "== Building the artifact locally only =="
+		mvn -B install javadoc:javadoc
+		success=$?
+	fi
 fi
 echo travis_fold:end:travis-build.sh
 exit $success
