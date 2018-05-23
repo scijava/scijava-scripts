@@ -154,7 +154,7 @@ then
 	condaEnv=travis-scijava
 	test -d "$condaDir/envs/$condaEnv" && condaAction=update || condaAction=create
 	$condaDir/bin/conda env "$condaAction" -n "$condaEnv" -f environment.yml &&
-	source "$condaDir/bin/activate" "$condaEnv"
+	. "$condaDir/bin/activate" "$condaEnv"
 	checkSuccess $?
 
 	echo travis_fold:end:scijava-conda
