@@ -122,4 +122,29 @@ EOL
 	echo travis_fold:end:travis-build.sh-maven
 fi
 
+# Execute Jupyter notebooks.
+if which jupyter >/dev/null 2>/dev/null
+then
+	echo travis_fold:start:travis-build.sh-jupyter
+	echo "= Jupyter notebooks ="
+	# NB: This part is fiddly. We want to loop over files even with spaces,
+	# so we use the "find ... -print0 | while read $'\0' ..." idiom.
+	# However, that runs the piped expression in a subshell, which means
+	# that any updates to the success variable will not persist outside
+	# the loop. So we suppress all stdout inside the loop, echoing only
+	# the final value of success upon completion, and then capture the
+	# echoed value back into the parent shell's success variable.
+	success=$(find . -name '*.ipynb' -print0 | {
+		while read -d $'\0' nbf
+		do
+			echo 1>&2
+			echo "== $nbf ==" 1>&2
+			jupyter nbconvert --execute --stdout "$nbf" >/dev/null
+			checkSuccess $?
+		done
+		echo $success
+	})
+	echo travis_fold:end:travis-build.sh-jupyter
+fi
+
 exit $success
