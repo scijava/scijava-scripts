@@ -6,6 +6,15 @@
 
 dir="$(dirname "$0")"
 
+success=0
+checkSuccess() {
+	# Log non-zero exit code.
+  test $1 -eq 0 || echo "==> FAILED: EXIT CODE $1" 1>&2
+
+	# Record the first non-zero exit code.
+  test $success -eq 0 && success=$1
+}
+
 # Build Maven projects.
 if [ -f pom.xml ]
 then
@@ -75,6 +84,7 @@ EOL
 		echo
 		echo "== Decrypting GPG keypair =="
 		openssl aes-256-cbc -K "$key" -iv "$iv" -in "$keyFile.enc" -out "$keyFile" -d
+		checkSuccess $?
 	fi
 	if [ "$TRAVIS_SECURE_ENV_VARS" = true \
 		-a "$TRAVIS_PULL_REQUEST" = false \
@@ -83,6 +93,7 @@ EOL
 		echo
 		echo "== Importing GPG keypair =="
 		gpg --batch --fast-import "$keyFile"
+		checkSuccess $?
 	fi
 
 	# Run the build.
@@ -93,7 +104,7 @@ EOL
 		echo
 		echo "== Building and deploying master SNAPSHOT =="
 		mvn -B -Pdeploy-to-imagej deploy
-		success=$?
+		checkSuccess $?
 	elif [ "$TRAVIS_SECURE_ENV_VARS" = true \
 		-a "$TRAVIS_PULL_REQUEST" = false \
 		-a -f release.properties ]
@@ -101,12 +112,12 @@ EOL
 		echo
 		echo "== Cutting and deploying release version =="
 		mvn -B release:perform
-		success=$?
+		checkSuccess $?
 	else
 		echo
 		echo "== Building the artifact locally only =="
 		mvn -B install javadoc:javadoc
-		success=$?
+		checkSuccess $?
 	fi
 	echo travis_fold:end:travis-build.sh-maven
 fi
