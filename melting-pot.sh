@@ -596,8 +596,7 @@ meltDown() {
 	echo "mvn $args test \$@" > build.sh
 	if [ "$skipBuild" ]
 	then
-		info "Skipping the build; the command would have been:"
-		info "mvn $args test"
+		info "Skipping the build; run build.sh to do it."
 	else
 		info "Building the project!"
 		# NB: All code is fresh; no need to clean.
