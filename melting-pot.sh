@@ -111,6 +111,8 @@ checkPrereqs() {
 
 verifyPrereqs() {
 	checkPrereqs git mvn xmllint
+	git --version | grep -q 'git version 2' ||
+		die "Please use git v2.x; older versions (<=1.7.9.5 at least) mishandle 'git clone <tag> --depth 1'"
 }
 
 parseArguments() {
