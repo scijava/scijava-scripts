@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #
 # travis-javadoc.sh - A script to build the javadocs of a SciJava-based project.
@@ -25,11 +25,11 @@ keep_alive() {
     echo "[ERROR] No PID given"
     return
   fi
-  let i=0
+  i=0
   while kill -0 "$pid" 2>/dev/null; do
-    let i=i+1
-    let m=i/60
-    let s=i%60
+    i=$((i+1))
+    m=$((i/60))
+    s=$((i%60))
     test $s -eq 0 && echo "[$m minutes elapsed]"
     sleep 1
   done
