@@ -19,7 +19,12 @@
 # an occasional message to avoid long periods without output.
 # Return the same exit code as the launched command.
 keep_alive() {
-  local -r pid="$1"
+  pid="$1"
+  if [ "$pid" = "" ]
+  then
+    echo "[ERROR] No PID given"
+    return
+  fi
   let i=0
   while kill -0 "$pid" 2>/dev/null; do
     let i=i+1
