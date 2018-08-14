@@ -166,10 +166,12 @@ EOL
 	fi
 
 	# update the README
-	if ! grep -q "travis-ci.com/$repoSlug" README.md >/dev/null 2>&1
+	if ! grep -q "travis-ci.\(com\|org\)/$repoSlug" README.md >/dev/null 2>&1
 	then
 		info "Adding Travis badge to README.md"
-		echo "[![](https://travis-ci.com/$repoSlug.svg?branch=master)](https://travis-ci.com/$repoSlug)" >"$tmpFile"
+		travisURL=$(grep travis-ci pom.xml | sed 's_.*<url>\(.*\)</url>.*_\1_')
+		test "$travisURL" || travisURL="https://travis-ci.com/$repoSlug"
+		echo "[![]($travisURL.svg?branch=master)]($travisURL)" >"$tmpFile"
 		echo >>"$tmpFile"
 		test -f README.md && cat README.md >>"$tmpFile"
 		update README.md 'Travis: add badge to README.md'
