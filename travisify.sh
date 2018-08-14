@@ -187,6 +187,7 @@ EOL
 			esac
 			info "Encrypting ${p%%=*}"
 			$EXEC travis encrypt "$p" --add env.global --repo "$repoSlug"
+			test $? -eq 0 || die "Failed to encrypt variable '$p'"
 		done <"$varsFile"
 		$EXEC git commit "$travisConfig" -m "Travis: add encrypted environment variables"
 	else
@@ -199,7 +200,10 @@ EOL
 		info "Encrypting $signingKeyDestFile"
 		if [ -z "$EXEC" ]
 		then
-			encryptResult=$(travis encrypt-file "$signingKeySourceFile" "$signingKeyDestFile.enc" --repo "$repoSlug" | grep openssl)
+			encryptOutput=$(travis encrypt-file "$signingKeySourceFile" "$signingKeyDestFile.enc" --repo "$repoSlug")
+			test $? -eq 0 || die "Failed to encrypt signing key."
+			encryptResult=$(echo "$encryptOutput" | grep openssl)
+			test "$encryptResult" || die "No openssl variables emitted."
 			key=$(echo "$encryptResult" | cut -d' ' -f4)
 			iv=$(echo "$encryptResult" | cut -d' ' -f6)
 			sed -i.bak "s/\(sh travis-build.sh\)/\1 $key $iv/" "$travisBuildScript"
