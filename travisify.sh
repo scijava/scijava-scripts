@@ -200,6 +200,7 @@ EOL
 		info "Encrypting $signingKeyDestFile"
 		if [ -z "$EXEC" ]
 		then
+			rm -f "$signingKeyDestFile.enc"
 			encryptOutput=$(travis encrypt-file "$signingKeySourceFile" "$signingKeyDestFile.enc" --repo "$repoSlug")
 			test $? -eq 0 || die "Failed to encrypt signing key."
 			encryptResult=$(echo "$encryptOutput" | grep openssl)
