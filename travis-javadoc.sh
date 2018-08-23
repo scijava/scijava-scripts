@@ -6,6 +6,7 @@
 
 # The following repositories are known to use this script:
 #
+#   bonej-org/bonej-javadoc
 #   fiji/fiji-javadoc
 #   imagej/imagej-javadoc
 #   imglib/imglib2-javadoc
