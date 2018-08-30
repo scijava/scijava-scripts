@@ -51,6 +51,22 @@ then
 			<password>\${env.OSSRH_PASS}</password>
 		</server>
 	</servers>
+EOL
+	# NB: Use maven.imagej.net as sole mirror if defined in <repositories>.
+	# This hopefully avoids intermittent "ReasonPhrase:Forbidden" errors
+	# when the Travis build pings Maven Central; see travis-ci/travis-ci#6593.
+	grep -A 2 '<repository>' pom.xml | grep -q 'maven.imagej.net' &&
+	cat >>"$settingsFile" <<EOL
+	<mirrors>
+		<mirror>
+			<id>imagej-mirror</id>
+			<name>ImageJ mirror</name>
+			<url>https://maven.imagej.net/content/groups/public/</url>
+			<mirrorOf>*</mirrorOf>
+		</mirror>
+	</mirrors>
+EOL
+	cat >>"$settingsFile" <<EOL
 	<profiles>
 		<profile>
 			<id>gpg</id>
