@@ -31,8 +31,11 @@ then
 	mkdir -p "$HOME/.m2"
 	settingsFile="$HOME/.m2/settings.xml"
 	customSettings=.travis/settings.xml
-	test -f "$customSettings" && cp "$customSettings" "$settingsFile" ||
-	cat >"$settingsFile" <<EOL
+	if [ -f "$customSettings" ]
+	then
+		cp "$customSettings" "$settingsFile"
+	else
+		cat >"$settingsFile" <<EOL
 <settings>
 	<servers>
 		<server>
@@ -52,11 +55,11 @@ then
 		</server>
 	</servers>
 EOL
-	# NB: Use maven.imagej.net as sole mirror if defined in <repositories>.
-	# This hopefully avoids intermittent "ReasonPhrase:Forbidden" errors
-	# when the Travis build pings Maven Central; see travis-ci/travis-ci#6593.
-	grep -A 2 '<repository>' pom.xml | grep -q 'maven.imagej.net' &&
-	cat >>"$settingsFile" <<EOL
+		# NB: Use maven.imagej.net as sole mirror if defined in <repositories>.
+		# This hopefully avoids intermittent "ReasonPhrase:Forbidden" errors
+		# when the Travis build pings Maven Central; see travis-ci/travis-ci#6593.
+		grep -A 2 '<repository>' pom.xml | grep -q 'maven.imagej.net' &&
+		cat >>"$settingsFile" <<EOL
 	<mirrors>
 		<mirror>
 			<id>imagej-mirror</id>
@@ -66,7 +69,7 @@ EOL
 		</mirror>
 	</mirrors>
 EOL
-	cat >>"$settingsFile" <<EOL
+		cat >>"$settingsFile" <<EOL
 	<profiles>
 		<profile>
 			<id>gpg</id>
@@ -83,6 +86,7 @@ EOL
 	</profiles>
 </settings>
 EOL
+	fi
 
 	# Install GPG on OSX/macOS
 	if [ "$TRAVIS_OS_NAME" = osx ]
