@@ -45,6 +45,32 @@ then
 	openssl_key=$2
 	openssl_iv=$3
 
+	# Populate the settings.xml configuration.
+	mkdir -p "$HOME/.m2"
+	settingsFile="$HOME/.m2/settings.xml"
+	customSettings=.travis/settings.xml
+	if [ -f "$customSettings" ]
+	then
+		cp "$customSettings" "$settingsFile"
+	else
+		# NB: Use maven.imagej.net as sole mirror if defined in <repositories>.
+		# This hopefully avoids intermittent "ReasonPhrase:Forbidden" errors
+		# when the Travis build pings Maven Central; see travis-ci/travis-ci#6593.
+		test -f pom.xml && grep -A 2 '<repository>' pom.xml | grep -q 'maven.imagej.net' &&
+			cat >"$settingsFile" <<EOL
+<settings>
+	<mirrors>
+		<mirror>
+			<id>imagej-mirror</id>
+			<name>ImageJ mirror</name>
+			<url>https://maven.imagej.net/content/groups/public/</url>
+			<mirrorOf>*</mirrorOf>
+		</mirror>
+	</mirrors>
+</settings>
+EOL
+	fi
+
 	# Emit some details useful for debugging.
 	# NB: We run once with -q to suppress the download messages,
 	# then again without it to emit the desired dependency tree.
