@@ -9,10 +9,10 @@ dir="$(dirname "$0")"
 success=0
 checkSuccess() {
 	# Log non-zero exit code.
-  test $1 -eq 0 || echo "==> FAILED: EXIT CODE $1" 1>&2
+	test $1 -eq 0 || echo "==> FAILED: EXIT CODE $1" 1>&2
 
 	# Record the first non-zero exit code.
-  test $success -eq 0 && success=$1
+	test $success -eq 0 && success=$1
 }
 
 # Build Maven projects.
