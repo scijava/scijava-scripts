@@ -66,6 +66,7 @@ process() {
 	cd "$1"
 
 	# -- Git sanity checks --
+
 	repoSlug=$(xmllint --xpath '//*[local-name()="project"]/*[local-name()="scm"]/*[local-name()="connection"]' pom.xml|sed 's_.*github.com[:/]\(.*\)<.*_\1_')
 	test "$repoSlug" && info "Repository = $repoSlug" || die 'Could not determine GitHub repository slug'
 	case "$repoSlug" in
@@ -83,6 +84,7 @@ process() {
 #		die "Mismatch with upstream branch (local ahead?)"
 
 	# -- POM sanity checks --
+
 	parent=$(xmllint --xpath '//*[local-name()="project"]/*[local-name()="parent"]/*[local-name()="artifactId"]' pom.xml|sed 's/[^>]*>//'|sed 's/<.*//')
 	if [ -z "$SKIP_PARENT_CHECK" ]
 	then
@@ -91,6 +93,7 @@ process() {
 	fi
 
 	# -- Travis sanity checks --
+
 	test -e "$travisDir" -a ! -d "$travisDir" && die "$travisDir is not a directory"
 	test -e "$travisConfig" -a ! -f "$travisConfig" && die "$travisConfig is not a regular file"
 	test -e "$travisConfig" && warn "$travisConfig already exists"
