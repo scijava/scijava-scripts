@@ -92,6 +92,17 @@ process() {
 			die "Not pom-scijava parent: $parent. Run with -p flag to skip this check."
 	fi
 
+	domain=$(grep "travis-ci\.[a-z]*/$repoSlug" pom.xml 2>/dev/null | sed 's/.*\(travis-ci\.[a-z]*\).*/\1/')
+	test "$domain" &&
+		info "Detected domain from pom.xml: $domain" ||
+		die "No valid ciManagement section in pom.xml. Please add one, then try again."
+
+	case $domain in
+		travis-ci.com) mode=pro;;
+		travis-ci.org) mode=org;;
+		*) die "Unsupported domain: $domain";;
+	esac
+
 	# -- Travis sanity checks --
 
 	test -e "$travisDir" -a ! -d "$travisDir" && die "$travisDir is not a directory"
@@ -168,12 +179,14 @@ EOL
 	fi
 
 	# update the README
-	if ! grep -q "travis-ci.\(com\|org\)/$repoSlug" README.md >/dev/null 2>&1
+	if grep -q "travis-ci\.[a-zA-Z0-9/_-]*\.svg" README.md >/dev/null 2>&1
 	then
+		info "Updating README.md Travis badge"
+		sed "s|travis-ci\.[a-zA-Z0-9/_-]*|$domain/$repoSlug|g" README.md >"$tmpFile"
+		update README.md 'Travis: fix README.md badge link'
+	else
 		info "Adding Travis badge to README.md"
-		travisURL=$(grep travis-ci pom.xml | sed 's_.*<url>\(.*\)</url>.*_\1_')
-		test "$travisURL" || travisURL="https://travis-ci.com/$repoSlug"
-		echo "[![]($travisURL.svg?branch=master)]($travisURL)" >"$tmpFile"
+		echo "[![](https://$domain/$repoSlug.svg?branch=master)]($travisURL)" >"$tmpFile"
 		echo >>"$tmpFile"
 		test -f README.md && cat README.md >>"$tmpFile"
 		update README.md 'Travis: add badge to README.md'
@@ -188,7 +201,7 @@ EOL
 				'#'*) continue;;
 			esac
 			info "Encrypting ${p%%=*}"
-			$EXEC travis encrypt "$p" --add env.global --repo "$repoSlug"
+			$EXEC travis encrypt --$mode "$p" --add env.global --repo "$repoSlug"
 			test $? -eq 0 || die "Failed to encrypt variable '$p'"
 		done <"$varsFile"
 		$EXEC git commit "$travisConfig" -m "Travis: add encrypted environment variables"
@@ -203,7 +216,7 @@ EOL
 		if [ -z "$EXEC" ]
 		then
 			rm -f "$signingKeyDestFile.enc"
-			encryptOutput=$(travis encrypt-file "$signingKeySourceFile" "$signingKeyDestFile.enc" --repo "$repoSlug")
+			encryptOutput=$(travis encrypt-file --$mode "$signingKeySourceFile" "$signingKeyDestFile.enc" --repo "$repoSlug")
 			test $? -eq 0 || die "Failed to encrypt signing key."
 			encryptResult=$(echo "$encryptOutput" | grep openssl)
 			test "$encryptResult" || die "No openssl variables emitted."
