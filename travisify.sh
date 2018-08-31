@@ -154,13 +154,12 @@ EOL
 		fi
 	fi
 
+	# ensure <releaseProfiles> section is present
 	releaseProfile=$(grep '<releaseProfiles>' pom.xml 2>/dev/null | sed 's/[^>]*>//' | sed 's/<.*//')
 	if [ "$releaseProfile" ]
 	then
-		if [ "$releaseProfile" != 'deploy-to-imagej' ]
-		then
+		test "$releaseProfile" = 'deploy-to-imagej' ||
 			warn "Unknown release profile: $releaseProfile"
-		fi
 	else
 		info 'Adding <releaseProfiles> property'
 		cp pom.xml "$tmpFile"
