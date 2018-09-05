@@ -186,7 +186,7 @@ EOL
 		update README.md 'Travis: fix README.md badge link'
 	else
 		info "Adding Travis badge to README.md"
-		echo "[![](https://$domain/$repoSlug.svg?branch=master)]($travisURL)" >"$tmpFile"
+		echo "[![](https://$domain/$repoSlug.svg?branch=master)](https://$domain/$repoSlug)" >"$tmpFile"
 		echo >>"$tmpFile"
 		test -f README.md && cat README.md >>"$tmpFile"
 		update README.md 'Travis: add badge to README.md'
