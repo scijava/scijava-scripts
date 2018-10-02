@@ -129,6 +129,7 @@ EOL
 	test "$success" || exit 1
 
 	git commit -m "Update $project javadocs (Travis build $TRAVIS_BUILD_NUMBER)"
+	git pull --rebase &&
 	git push -q origin gh-pages > /dev/null || exit 2
 
 	echo "Update complete."
