@@ -20,12 +20,6 @@ valid_semver_bump () {
 	sh -$- "$VALID_SEMVER_BUMP" "$@" || die
 }
 
-verify_gpg_settings () {
-	test "$SKIP_GPG" -o -f .travis/signingkey.asc.enc ||
-		die 'GPG configuration not found. Please use travisify.sh to add it.
-See also: https://github.com/scijava/pom-scijava/wiki/GPG-Signing'
-}
-
 verify_git_settings () {
 	if [ ! "$SKIP_PUSH" ]
 	then
@@ -112,10 +106,6 @@ valid_semver_bump "$pomVersion" "$VERSION"
 
 BASE_GAV="$(maven_helper gav-from-pom pom.xml)" ||
 die "Could not obtain GAV coordinates for base project"
-
-# If releasing to OSS Sonatype, enable some extra stuff
-mvn -Dexec.executable='echo' -Dexec.args='${releaseProfiles}' exec:exec -q | grep -q 'sonatype-oss-release' &&
-	verify_gpg_settings
 
 git update-index -q --refresh &&
 git diff-files --quiet --ignore-submodules &&
