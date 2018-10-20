@@ -29,9 +29,9 @@ verify_git_settings () {
 	fi
 }
 
-IMAGEJ_BASE_REPOSITORY=-DaltDeploymentRepository=imagej.releases::default::dav:https://maven.imagej.net/content/repositories
-IMAGEJ_RELEASES_REPOSITORY=$IMAGEJ_BASE_REPOSITORY/releases
-IMAGEJ_THIRDPARTY_REPOSITORY=$IMAGEJ_BASE_REPOSITORY/thirdparty
+SCIJAVA_BASE_REPOSITORY=-DaltDeploymentRepository=imagej.releases::default::dav:https://maven.imagej.net/content/repositories
+SCIJAVA_RELEASES_REPOSITORY=$SCIJAVA_BASE_REPOSITORY/releases
+SCIJAVA_THIRDPARTY_REPOSITORY=$SCIJAVA_BASE_REPOSITORY/thirdparty
 
 BATCH_MODE=--batch-mode
 SKIP_PUSH=
@@ -57,15 +57,15 @@ do
 	--extra-arg=*|--extra-args=*)
 		EXTRA_ARGS="$EXTRA_ARGS ${1#--*=}";;
 	--alt-repository=imagej-releases)
-		ALT_REPOSITORY=$IMAGEJ_RELEASES_REPOSITORY;;
+		ALT_REPOSITORY=$SCIJAVA_RELEASES_REPOSITORY;;
 	--alt-repository=imagej-thirdparty)
-		ALT_REPOSITORY=$IMAGEJ_THIRDPARTY_REPOSITORY;;
+		ALT_REPOSITORY=$SCIJAVA_THIRDPARTY_REPOSITORY;;
 	--alt-repository=*|--alt-deployment-repository=*)
 		ALT_REPOSITORY="${1#--*=}";;
 	--thirdparty=imagej)
 		BATCH_MODE=
 		SKIP_PUSH=t
-		ALT_REPOSITORY=$IMAGEJ_THIRDPARTY_REPOSITORY;;
+		ALT_REPOSITORY=$SCIJAVA_THIRDPARTY_REPOSITORY;;
 	--skip-gpg)
 		SKIP_GPG=t
 		EXTRA_ARGS="$EXTRA_ARGS -Dgpg.skip=true";;
