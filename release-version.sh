@@ -34,6 +34,7 @@ SCIJAVA_RELEASES_REPOSITORY=$SCIJAVA_BASE_REPOSITORY/releases
 SCIJAVA_THIRDPARTY_REPOSITORY=$SCIJAVA_BASE_REPOSITORY/thirdparty
 
 BATCH_MODE=--batch-mode
+SKIP_VERSION_CHECK=
 SKIP_PUSH=
 SKIP_GPG=
 TAG=
@@ -47,6 +48,7 @@ do
 	case "$1" in
 	--dry-run) DRY_RUN=echo;;
 	--no-batch-mode) BATCH_MODE=;;
+	--skip-version-check) SKIP_VERSION_CHECK=t;;
 	--skip-push) SKIP_PUSH=t;;
 	--tag=*)
 		! git rev-parse --quiet --verify refs/tags/"${1#--*=}" ||
@@ -100,7 +102,8 @@ case "$VERSION" in
 *)
 	die "Version '$VERSION' does not start with a digit!"
 esac
-valid_semver_bump "$pomVersion" "$VERSION"
+test "$SKIP_VERSION_CHECK" ||
+	valid_semver_bump "$pomVersion" "$VERSION"
 
 # defaults
 
