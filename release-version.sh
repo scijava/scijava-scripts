@@ -79,7 +79,7 @@ done
 
 verify_git_settings
 
-devVersion=$(mvn -Dexec.executable='echo' -Dexec.args='${project.version}' exec:exec -q)
+devVersion=$(mvn -N -Dexec.executable='echo' -Dexec.args='${project.version}' exec:exec -q)
 pomVersion=${devVersion%-SNAPSHOT}
 test $# = 1 || test ! -t 0 || {
 	version=$pomVersion
