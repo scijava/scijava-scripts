@@ -132,9 +132,12 @@ $DRY_RUN mvn $BATCH_MODE release:prepare -DpushChanges=false -Dresume=false $TAG
 
 # Squash the two commits on the current branch produced by the
 # maven-release-plugin into one
-test "[maven-release-plugin] prepare for next development iteration" = \
-	"$(git show -s --format=%s HEAD)" ||
-die "maven-release-plugin's commits are unexpectedly missing!"
+if test -z "$DRY_RUN"
+then
+	test "[maven-release-plugin] prepare for next development iteration" = \
+		"$(git show -s --format=%s HEAD)" ||
+	die "maven-release-plugin's commits are unexpectedly missing!"
+fi
 $DRY_RUN git reset --soft HEAD^^ &&
 if ! git diff-index --cached --quiet --ignore-submodules HEAD --
 then
@@ -157,8 +160,8 @@ test -n "$tag" &&
 # which we would rather Travis not need. So we replace the scm.url in the
 # release.properties file to use the read-only (git://github.com/...) URL.
 # This is OK, since release:perform does not need write access to the repo.
-sed -i.bak -e 's|^scm.url=scm\\:git\\:git@github.com\\:|scm.url=scm\\:git\\:git\\://github.com/|' release.properties &&
-rm release.properties.bak &&
+$DRY_RUN sed -i.bak -e 's|^scm.url=scm\\:git\\:git@github.com\\:|scm.url=scm\\:git\\:git\\://github.com/|' release.properties &&
+$DRY_RUN rm release.properties.bak &&
 $DRY_RUN git checkout "$tag" &&
 $DRY_RUN git add -f release.properties &&
 $DRY_RUN git commit --amend --no-edit &&
