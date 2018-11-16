@@ -91,7 +91,7 @@ EOL
 	# Install GPG on OSX/macOS
 	if [ "$TRAVIS_OS_NAME" = osx ]
 	then
-		brew install gnupg2
+		HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg2
 	fi
 
 	# Import the GPG signing key.
