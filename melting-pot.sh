@@ -124,19 +124,19 @@ parseArguments() {
 				shift
 				;;
 			-c|--changes)
-				changes="$2"
+				test "$changes" && changes="$changes,$2" || changes="$2"
 				shift
 				;;
 			-i|--includes)
-				includes="$2"
+				test "$includes" && includes="$includes,$2" || includes="$2"
 				shift
 				;;
 			-e|--excludes)
-				excludes="$2"
+				test "$excludes" && excludes="$excludes,$2" || excludes="$2"
 				shift
 				;;
 			-r|--remoteRepos)
-				remoteRepos="$2"
+				test "$remoteRepos" && remoteRepos="$remoteRepos,$2" || remoteRepos="$2"
 				shift
 				;;
 			-l|--localRepo)
