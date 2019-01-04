@@ -149,7 +149,8 @@ then
 	echo "= Conda setup ="
 
 	condaDir=$HOME/miniconda
-	if [ ! -f "$condaDir/bin/conda" ]; then
+	condaSh=$condaDir/etc/profile.d/conda.sh
+	if [ ! -f "$condaSh" ]; then
 		echo
 		echo "== Installing conda =="
 		if [ "$TRAVIS_PYTHON_VERSION" = "2.7" ]; then
@@ -164,17 +165,18 @@ then
 
 	echo
 	echo "== Updating conda =="
-	$condaDir/bin/conda config --set always_yes yes --set changeps1 no &&
-	$condaDir/bin/conda update -q conda &&
-	$condaDir/bin/conda info -a
+	. "$condaSh" &&
+	conda config --set always_yes yes --set changeps1 no &&
+	conda update -q conda &&
+	conda info -a
 	checkSuccess $?
 
 	echo
 	echo "== Configuring environment =="
 	condaEnv=travis-scijava
 	test -d "$condaDir/envs/$condaEnv" && condaAction=update || condaAction=create
-	$condaDir/bin/conda env "$condaAction" -n "$condaEnv" -f environment.yml &&
-	$condaDir/bin/conda activate "$condaEnv"
+	conda env "$condaAction" -n "$condaEnv" -f environment.yml &&
+	conda activate "$condaEnv"
 	checkSuccess $?
 
 	echo travis_fold:end:scijava-conda
