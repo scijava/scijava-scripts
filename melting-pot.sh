@@ -564,7 +564,7 @@ meltDown() {
 		local gav="$g:$a:$v"
 
 		test -z "$(isChanged "$gav")" &&
-			args="$args -D$a.version=$v"
+			args="$args \\\\\n  -D$a.version=$v"
 
 		if [ "$(isIncluded "$gav")" ]
 		then
@@ -581,7 +581,7 @@ meltDown() {
 	do
 		local a="$(artifactId "$gav")"
 		local v="$(version "$gav")"
-		args="$args -D$a.version=$v"
+		args="$args \\\\\n  -D$a.version=$v"
 	done
 	unset TLS
 
@@ -593,7 +593,7 @@ meltDown() {
 	generatePOM
 
 	# Build everything.
-	echo "mvn $args test \$@" > build.sh
+	echo "mvn $args \\\\\n  test \$@" > build.sh
 	if [ "$skipBuild" ]
 	then
 		info "Skipping the build; run build.sh to do it."
@@ -601,7 +601,7 @@ meltDown() {
 		info "Building the project!"
 		# NB: All code is fresh; no need to clean.
 		debug "mvn $args test"
-		mvn $args test
+		sh build.sh
 	fi
 
 	info "$1: complete"
