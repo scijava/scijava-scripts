@@ -115,7 +115,7 @@ process() {
 	# Add/update the Travis configuration file.
 	cat >"$tmpFile" <<EOL
 language: java
-jdk: oraclejdk8
+jdk: openjdk8
 branches:
   only:
   - master
