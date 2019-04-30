@@ -39,12 +39,12 @@ then
 <settings>
 	<servers>
 		<server>
-			<id>imagej.releases</id>
+			<id>scijava.releases</id>
 			<username>travis</username>
 			<password>\${env.MAVEN_PASS}</password>
 		</server>
 		<server>
-			<id>imagej.snapshots</id>
+			<id>scijava.snapshots</id>
 			<username>travis</username>
 			<password>\${env.MAVEN_PASS}</password>
 		</server>
@@ -55,16 +55,16 @@ then
 		</server>
 	</servers>
 EOL
-		# NB: Use maven.imagej.net as sole mirror if defined in <repositories>.
+		# NB: Use maven.scijava.org as sole mirror if defined in <repositories>.
 		# This hopefully avoids intermittent "ReasonPhrase:Forbidden" errors
 		# when the Travis build pings Maven Central; see travis-ci/travis-ci#6593.
-		grep -A 2 '<repository>' pom.xml | grep -q 'maven.imagej.net' &&
+		grep -A 2 '<repository>' pom.xml | grep -q 'maven.scijava.org' &&
 		cat >>"$settingsFile" <<EOL
 	<mirrors>
 		<mirror>
-			<id>imagej-mirror</id>
-			<name>ImageJ mirror</name>
-			<url>https://maven.imagej.net/content/groups/public/</url>
+			<id>scijava-mirror</id>
+			<name>SciJava mirror</name>
+			<url>https://maven.scijava.org/content/groups/public/</url>
 			<mirrorOf>*</mirrorOf>
 		</mirror>
 	</mirrors>
@@ -123,7 +123,7 @@ EOL
 	then
 		echo
 		echo "== Building and deploying master SNAPSHOT =="
-		mvn -B -Pdeploy-to-imagej deploy
+		mvn -B -Pdeploy-to-scijava deploy
 		checkSuccess $?
 	elif [ "$TRAVIS_SECURE_ENV_VARS" = true \
 		-a "$TRAVIS_PULL_REQUEST" = false \
