@@ -1,6 +1,6 @@
 Test that recursive SCM retrieval and multi-module projects work:
 
-  $ sh "$TESTDIR/../melting-pot.sh" sc.fiji:TrakEM2_:1.0f -r http://maven.imagej.net/content/groups/public -i 'sc.fiji:TrakEM2_' -v -s -d -f
+  $ sh "$TESTDIR/../melting-pot.sh" sc.fiji:TrakEM2_:1.0f -r https://maven.scijava.org/content/groups/public -i 'sc.fiji:TrakEM2_' -v -s -d -f
   [INFO] sc.fiji:TrakEM2_:1.0f: fetching project source
   \+ xmllint --xpath ".*'project'.*'scm'.*'connection'.*" ".*/sc/fiji/TrakEM2_/1.0f/TrakEM2_-1.0f.pom" (re)
   \+ xmllint --xpath ".*'project'.*'parent'.*'groupId'.*" ".*/sc/fiji/TrakEM2_/1.0f/TrakEM2_-1.0f.pom" (re)

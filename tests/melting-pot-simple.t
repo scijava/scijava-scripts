@@ -1,6 +1,6 @@
 Down-the-middle test of a relatively simply project:
 
-  $ sh "$TESTDIR/../melting-pot.sh" net.imagej:imagej-common:0.15.1 -r http://maven.imagej.net/content/groups/public -c org.scijava:scijava-common:2.44.2 -i 'org.scijava:*,net.imagej:*,net.imglib2:*,io.scif:*' -e net.imglib2:imglib2-roi -v -f -s
+  $ sh "$TESTDIR/../melting-pot.sh" net.imagej:imagej-common:0.15.1 -r https://maven.scijava.org/content/groups/public -c org.scijava:scijava-common:2.44.2 -i 'org.scijava:*,net.imagej:*,net.imglib2:*,io.scif:*' -e net.imglib2:imglib2-roi -v -f -s
   [INFO] net.imagej:imagej-common:0.15.1: fetching project source
   [INFO] net.imagej:imagej-common:0.15.1: determining project dependencies
   [INFO] net.imagej:imagej-common:0.15.1: processing project dependencies

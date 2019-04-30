@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# This script uses the ImageJ Maven repository at http://maven.imagej.net/
+# This script uses the SciJava Maven repository at https://maven.scijava.org/
 # to fetch an artifact, or to determine the state of it.
 
 # error out whenever a command fails
@@ -8,15 +8,15 @@ set -e
 
 root_url () {
 	test snapshots != "$2" || {
-		if curl -fs http://maven.imagej.net/service/local/repositories/sonatype-snapshots/content/"$1"/maven-metadata.xml > /dev/null 2>&1
+		if curl -fs https://maven.scijava.org/service/local/repositories/sonatype-snapshots/content/"$1"/maven-metadata.xml > /dev/null 2>&1
 		then
-			echo http://maven.imagej.net/service/local/repositories/sonatype-snapshots/content
+			echo https://maven.scijava.org/service/local/repositories/sonatype-snapshots/content
 		else
-			echo http://maven.imagej.net/content/repositories/snapshots
+			echo https://maven.scijava.org/content/repositories/snapshots
 		fi
 		return
 	}
-	echo http://maven.imagej.net/service/local/repo_groups/public/content
+	echo https://maven.scijava.org/service/local/repo_groups/public/content
 }
 
 die () {
@@ -232,10 +232,10 @@ latest_version () {
 	echo "$latest"
 }
 
-# Given a GA parameter, invalidate the cache in ImageJ's Nexus' group/public
+# Given a GA parameter, invalidate the cache in SciJava's Nexus' group/public
 
-SONATYPE_DATA_CACHE_URL=http://maven.imagej.net/service/local/data_cache/repositories/sonatype/content
-SONATYPE_SNAPSHOTS_DATA_CACHE_URL=http://maven.imagej.net/service/local/data_cache/repositories/sonatype-snapshots/content
+SONATYPE_DATA_CACHE_URL=https://maven.scijava.org/service/local/data_cache/repositories/sonatype/content
+SONATYPE_SNAPSHOTS_DATA_CACHE_URL=https://maven.scijava.org/service/local/data_cache/repositories/sonatype-snapshots/content
 invalidate_cache () {
 	ga="$1"
 	artifactId="$(artifactId "$ga")"
@@ -531,9 +531,9 @@ latest-version <groupId>:<artifactId>[:<version>]
 	than the release one).
 
 invalidate-cache <groupId>:<artifactId>
-	Invalidates the version cached in the ImageJ Nexus from OSS Sonatype,
+	Invalidates the version cached in the SciJava Nexus from OSS Sonatype,
 	e.g. after releasing a new version to Sonatype. Requires appropriate
-	credentials in $HOME/.netrc for http://maven.imagej.net/.
+	credentials in $HOME/.netrc for https://maven.scijava.org/.
 
 parent-gav <groupId>:<artifactId>[:<version>]
 	Prints the GAV parameter of the parent project of the given artifact.

@@ -53,17 +53,17 @@ then
 	then
 		cp "$customSettings" "$settingsFile"
 	else
-		# NB: Use maven.imagej.net as sole mirror if defined in <repositories>.
+		# NB: Use maven.scijava.org as sole mirror if defined in <repositories>.
 		# This hopefully avoids intermittent "ReasonPhrase:Forbidden" errors
 		# when the Travis build pings Maven Central; see travis-ci/travis-ci#6593.
-		test -f pom.xml && grep -A 2 '<repository>' pom.xml | grep -q 'maven.imagej.net' &&
+		test -f pom.xml && grep -A 2 '<repository>' pom.xml | grep -q 'maven.scijava.org' &&
 			cat >"$settingsFile" <<EOL
 <settings>
 	<mirrors>
 		<mirror>
-			<id>imagej-mirror</id>
-			<name>ImageJ mirror</name>
-			<url>https://maven.imagej.net/content/groups/public/</url>
+			<id>scijava-mirror</id>
+			<name>SciJava mirror</name>
+			<url>https://maven.scijava.org/content/groups/public/</url>
 			<mirrorOf>*</mirrorOf>
 		</mirror>
 	</mirrors>

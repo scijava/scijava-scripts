@@ -145,7 +145,7 @@ EOL
 	fi
 	if [ -f "$travisNotifyScript" ]
 	then
-		info "Removing obsolete $travisNotifyScript (ImageJ Jenkins is going away)"
+		info "Removing obsolete $travisNotifyScript (ImageJ Jenkins is dead)"
 		$EXEC git rm -f "$travisNotifyScript"
 	fi
 	$EXEC git diff-index --quiet HEAD -- || $EXEC git ci -m "Travis: remove obsolete files"
@@ -169,13 +169,13 @@ EOL
 	releaseProfile=$(grep '<releaseProfiles>' pom.xml 2>/dev/null | sed 's/[^>]*>//' | sed 's/<.*//')
 	if [ "$releaseProfile" ]
 	then
-		test "$releaseProfile" = 'deploy-to-imagej' ||
+		test "$releaseProfile" = 'deploy-to-scijava' ||
 			warn "Unknown release profile: $releaseProfile"
 	else
 		info 'Adding <releaseProfiles> property'
 		cp pom.xml "$tmpFile"
-		perl -0777 -i -pe 's/(\n\t<\/properties>\n)/\n\n\t\t<!-- NB: Deploy releases to the ImageJ Maven repository. -->\n\t\t<releaseProfiles>deploy-to-imagej<\/releaseProfiles>\1/igs' "$tmpFile"
-		update pom.xml 'POM: deploy releases to the ImageJ repository'
+		perl -0777 -i -pe 's/(\n\t<\/properties>\n)/\n\n\t\t<!-- NB: Deploy releases to the SciJava Maven repository. -->\n\t\t<releaseProfiles>deploy-to-scijava<\/releaseProfiles>\1/igs' "$tmpFile"
+		update pom.xml 'POM: deploy releases to the SciJava repository'
 	fi
 
 	# update the README

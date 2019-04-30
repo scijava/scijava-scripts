@@ -222,14 +222,14 @@ parseArguments() {
 --== Example ==--
 
     sh melting-pot.sh net.imagej:imagej-common:0.15.1 \\
-        -r http://maven.imagej.net/content/groups/public \\
+        -r https://maven.scijava.org/content/groups/public \\
         -c org.scijava:scijava-common:2.44.2 \\
         -i 'org.scijava:*,net.imagej:*,net.imglib2:*,io.scif:*' \\
         -e net.imglib2:imglib2-roi \\
         -v -f -s
 
 This command tests net.imagej:imagej-common:0.15.1 along with all of its
-dependencies, pulled from its usual ImageJ Maven repository location.
+dependencies, pulled from its usual SciJava Maven repository location.
 
 The -c flag is used to override the org.scijava:scijava-common
 dependency to use version 2.44.2 instead of its declared version 2.42.0.

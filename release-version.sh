@@ -29,7 +29,7 @@ verify_git_settings () {
 	fi
 }
 
-SCIJAVA_BASE_REPOSITORY=-DaltDeploymentRepository=imagej.releases::default::dav:https://maven.imagej.net/content/repositories
+SCIJAVA_BASE_REPOSITORY=-DaltDeploymentRepository=scijava.releases::default::dav:https://maven.scijava.org/content/repositories
 SCIJAVA_RELEASES_REPOSITORY=$SCIJAVA_BASE_REPOSITORY/releases
 SCIJAVA_THIRDPARTY_REPOSITORY=$SCIJAVA_BASE_REPOSITORY/thirdparty
 
@@ -41,7 +41,7 @@ TAG=
 DEV_VERSION=
 EXTRA_ARGS=
 ALT_REPOSITORY=
-PROFILE=-Pdeploy-to-imagej
+PROFILE=-Pdeploy-to-scijava
 DRY_RUN=
 while test $# -gt 0
 do
@@ -58,13 +58,13 @@ do
 		DEV_VERSION="-DdevelopmentVersion=${1#--*=}";;
 	--extra-arg=*|--extra-args=*)
 		EXTRA_ARGS="$EXTRA_ARGS ${1#--*=}";;
-	--alt-repository=imagej-releases)
+	--alt-repository=scijava-releases)
 		ALT_REPOSITORY=$SCIJAVA_RELEASES_REPOSITORY;;
-	--alt-repository=imagej-thirdparty)
+	--alt-repository=scijava-thirdparty)
 		ALT_REPOSITORY=$SCIJAVA_THIRDPARTY_REPOSITORY;;
 	--alt-repository=*|--alt-deployment-repository=*)
 		ALT_REPOSITORY="${1#--*=}";;
-	--thirdparty=imagej)
+	--thirdparty=scijava)
 		BATCH_MODE=
 		SKIP_PUSH=t
 		ALT_REPOSITORY=$SCIJAVA_THIRDPARTY_REPOSITORY;;
@@ -90,7 +90,7 @@ test $# = 1 || test ! -t 0 || {
 }
 
 test $# = 1 && test "a$1" = "a${1#-}" ||
-die "Usage: $0 [--no-batch-mode] [--skip-push] [--alt-repository=<repository>] [--thirdparty=imagej] [--skip-gpg] [--extra-arg=<args>] <release-version>"
+die "Usage: $0 [--no-batch-mode] [--skip-push] [--alt-repository=<repository>] [--thirdparty=scijava] [--skip-gpg] [--extra-arg=<args>] <release-version>"
 
 VERSION="$1"
 REMOTE="${REMOTE:-origin}"

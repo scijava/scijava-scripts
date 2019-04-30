@@ -9,7 +9,7 @@
 version="$1"
 diff="$2"
 
-repo="http://maven.imagej.net/content/groups/public"
+repo="https://maven.scijava.org/content/groups/public"
 
 props() {
 	if [ -e "$1" ]
