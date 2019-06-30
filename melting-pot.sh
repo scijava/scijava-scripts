@@ -592,16 +592,28 @@ meltDown() {
 	info "Generating aggregator POM"
 	generatePOM
 
-	# Build everything.
+	# Generate build scripts.
 	echo "mvn $args \\\\\n  test \$@" > build.sh
+	echo '#!/bin/sh
+trap "exit" INT
+echo "Melting the pot..."
+dir=$(pwd)
+for f in */*
+do (
+  cd "$f"
+  sh "$dir/build.sh" > build.log 2>&1 &&
+    echo "[SUCCESS] $f" ||
+    echo "[FAILURE] $f"
+) done' > melt.sh
+
+	# Build everything.
 	if [ "$skipBuild" ]
 	then
-		info "Skipping the build; run build.sh to do it."
+		info "Skipping the build; run melt.sh to do it."
 	else
 		info "Building the project!"
 		# NB: All code is fresh; no need to clean.
-		debug "mvn $args test"
-		sh build.sh
+		sh melt.sh
 	fi
 
 	info "$1: complete"
