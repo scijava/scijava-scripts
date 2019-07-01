@@ -384,7 +384,15 @@ scmURL() {
 
 # Gets the SCM tag for the given GAV.
 scmTag() {
-	echo "$(artifactId "$1")-$(version "$1")"
+	local tag=$(pomValue "$1" project scm tag)
+	if [ -z "$tag" -o "$tag" = "HEAD" ]
+	then
+		# The <scm><tag> value was not set properly,
+		# so we guess at the tag naming scheme.
+		echo "$(artifactId "$1")-$(version "$1")"
+	else
+		echo "$tag"
+	fi
 }
 
 # Fetches the source code for the given GAV. Returns the directory.
@@ -395,7 +403,8 @@ retrieveSource() {
 	test "$2" && scmBranch="$2" || scmBranch="$(scmTag "$1")"
 	local dir="$(groupId "$1")/$(artifactId "$1")"
 	debug "git clone \"$scmURL\" --branch \"$scmBranch\" --depth 1 \"$dir\""
-	git clone "$scmURL" --branch "$scmBranch" --depth 1 "$dir" 2> /dev/null
+	git clone "$scmURL" --branch "$scmBranch" --depth 1 "$dir" 2> /dev/null ||
+		die "Could not fetch project source for $1" 3
 	echo "$dir"
 }
 
@@ -542,8 +551,7 @@ meltDown() {
 	else
 		# Treat specified project as a GAV.
 		info "$1: fetching project source"
-		local dir="$(retrieveSource "$1" "$branch")"
-		test -d "$dir" || die "Could not fetch project source" 3
+		retrieveSource "$1" "$branch"
 	fi
 
 	# Get the project dependencies.
