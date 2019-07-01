@@ -533,6 +533,35 @@ generatePOM() {
 	echo '</project>' >> pom.xml
 }
 
+# Generates melt.sh script for all modules in the current directory.
+generateScript() {
+	echo '#!/bin/sh' > melt.sh
+	echo 'trap "exit" INT' >> melt.sh
+	echo 'echo "Melting the pot..."' >> melt.sh
+	echo 'dir=$(pwd)' >> melt.sh
+	echo 'for f in \' >> melt.sh
+	local dir
+	for dir in */*
+	do
+		if [ "$(isProject "$dir")" ]
+		then
+			echo "	$dir \\" >> melt.sh
+		else
+			# Check for a child component of a multi-module project.
+			local childDir="$dir/$(basename "$dir")"
+			test "$(isProject "$childDir")" &&
+				echo "	$childDir \\" >> melt.sh
+		fi
+	done
+	echo >> melt.sh
+	echo 'do (' >> melt.sh
+  echo '	cd "$f"' >> melt.sh
+  echo '	sh "$dir/build.sh" > build.log 2>&1 &&' >> melt.sh
+  echo '		echo "[SUCCESS] $f" ||' >> melt.sh
+  echo '		echo "[FAILURE] $f"' >> melt.sh
+	echo ') done' >> melt.sh
+}
+
 # Creates and tests an appropriate multi-module reactor for the given project.
 # All relevant dependencies which match the inclusion criteria are linked into
 # the multi-module build, with each changed GAV overridding the originally
@@ -596,23 +625,11 @@ meltDown() {
 	# Prune the build, if applicable.
 	test "$prune" && pruneReactor
 
-	# Generate the aggregator POM.
-	info "Generating aggregator POM"
-	generatePOM
-
 	# Generate build scripts.
+	info "Generating build scripts"
+	generatePOM
 	echo "mvn $args \\\\\n  test \$@" > build.sh
-	echo '#!/bin/sh
-trap "exit" INT
-echo "Melting the pot..."
-dir=$(pwd)
-for f in */*
-do (
-  cd "$f"
-  sh "$dir/build.sh" > build.log 2>&1 &&
-    echo "[SUCCESS] $f" ||
-    echo "[FAILURE] $f"
-) done' > melt.sh
+	generateScript
 
 	# Build everything.
 	if [ "$skipBuild" ]
