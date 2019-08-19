@@ -88,6 +88,27 @@ EOL
 EOL
 	fi
 
+	# Determine whether deploying will be possible.
+	ciURL=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${project.ciManagement.url}' --non-recursive validate exec:exec 2>/dev/null)
+	ciRepo=${ciURL##*/}
+	ciPrefix=${ciURL%/*}
+	ciOrg=${ciPrefix##*/}
+	deployOK=
+	if [ "$TRAVIS_SECURE_ENV_VARS" != true ]
+	then
+		echo "No deploy -- secure environment variables not available"
+	elif [ "$TRAVIS_PULL_REQUEST" != false ]
+	then
+		echo "No deploy -- pull request detected"
+	elif [ "$TRAVIS_REPO_SLUG" != "$ciOrg/$ciRepo" ]
+	then
+		echo "No deploy -- repository fork: $TRAVIS_REPO_SLUG != $ciOrg/$ciRepo"
+	# TODO: Detect travis-ci.org versus travis-ci.com?
+	else
+		echo "All checks passed for artifact deployment"
+		deployOK=1
+	fi
+
 	# Install GPG on OSX/macOS
 	if [ "$TRAVIS_OS_NAME" = osx ]
 	then
@@ -106,9 +127,7 @@ EOL
 		openssl aes-256-cbc -K "$key" -iv "$iv" -in "$keyFile.enc" -out "$keyFile" -d
 		checkSuccess $?
 	fi
-	if [ "$TRAVIS_SECURE_ENV_VARS" = true \
-		-a "$TRAVIS_PULL_REQUEST" = false \
-		-a -f "$keyFile" ]
+	if [ "$deployOK" -a -f "$keyFile" ]
 	then
 		echo
 		echo "== Importing GPG keypair =="
@@ -117,17 +136,13 @@ EOL
 	fi
 
 	# Run the build.
-	if [ "$TRAVIS_SECURE_ENV_VARS" = true \
-		-a "$TRAVIS_PULL_REQUEST" = false \
-		-a "$TRAVIS_BRANCH" = master ]
+	if [ "$deployOK" -a "$TRAVIS_BRANCH" = master ]
 	then
 		echo
 		echo "== Building and deploying master SNAPSHOT =="
 		mvn -B -Pdeploy-to-scijava deploy
 		checkSuccess $?
-	elif [ "$TRAVIS_SECURE_ENV_VARS" = true \
-		-a "$TRAVIS_PULL_REQUEST" = false \
-		-a -f release.properties ]
+	elif [ "$deployOK" -a -f release.properties ]
 	then
 		echo
 		echo "== Cutting and deploying release version =="
