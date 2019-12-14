@@ -412,7 +412,7 @@ retrieveSource() {
 deps() {
 	cd "$1"
 	debug "mvn dependency:list"
-	local depList="$(mvn -B dependency:list)" ||
+	local depList="$(mvn -DincludeScope=runtime -B dependency:list)" ||
 		die "Problem fetching dependencies!" 5
 	echo "$depList" | grep '^\[INFO\]    [^ ]' |
 		sed 's/\[INFO\]    //' | sed 's/  *(optional) *$//' | sort
