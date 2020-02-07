@@ -20,9 +20,9 @@ do
   start=$(date +%s)
   mvn clean verify > "$filename" 2>&1 && result=SUCCESS || result=FAILURE
   end=$(date +%s)
-  let time="end-start"
+  time=$(expr "$end" - "$start")
   echo "$prefix $commit $result $time"
-  let count="count+1"
+  count=$(expr "$count" + 1)
 done
 
 git checkout "$branch" > /dev/null 2>&1
