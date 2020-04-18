@@ -55,7 +55,7 @@ then
 		</server>
 	</servers>
 EOL
-		# NB: Use maven.scijava.org as sole mirror if defined in <repositories>.
+		# NB: Use maven.scijava.org instead of Central if defined in repositories.
 		# This hopefully avoids intermittent "ReasonPhrase:Forbidden" errors
 		# when the Travis build pings Maven Central; see travis-ci/travis-ci#6593.
 		grep -A 2 '<repository>' pom.xml | grep -q 'maven.scijava.org' &&
@@ -65,7 +65,7 @@ EOL
 			<id>scijava-mirror</id>
 			<name>SciJava mirror</name>
 			<url>https://maven.scijava.org/content/groups/public/</url>
-			<mirrorOf>*</mirrorOf>
+			<mirrorOf>central</mirrorOf>
 		</mirror>
 	</mirrors>
 EOL
