@@ -295,6 +295,34 @@ version() {
 	esac
 }
 
+classifier() {
+	local result="${1#*:}" # strip groupId
+	case "$result" in
+		*:*)
+			result="${result#*:}" # strip artifactId
+			case "$result" in
+				*:*:*:*)
+					# G:A:P:C:V:S
+					result="${result#*:}" # strip packaging
+					;;
+				*:*:*)
+					# G:A:P:V:S
+					result=""
+					;;
+				*:*)
+					# G:A:V:C
+					result="${result#*:}" # strip version
+					;;
+				*)
+					# G:A:V
+					result=""
+					;;
+			esac
+			echo "${result%%:*}"
+			;;
+	esac
+}
+
 # Converts the given GAV into a path in the local repository cache.
 repoPath() {
 	local gPath="$(echo "$(groupId "$1")" | tr :. /)"
@@ -598,6 +626,8 @@ meltDown() {
 		local g="$(groupId "$dep")"
 		local a="$(artifactId "$dep")"
 		local v="$(version "$dep")"
+		local c="$(classifier "$dep")"
+		test -z "$c" || continue # skip secondary artifacts
 		local gav="$g:$a:$v"
 
 		test -z "$(isChanged "$gav")" &&
