@@ -567,6 +567,7 @@ generateScript() {
 	echo 'trap "exit" INT' >> melt.sh
 	echo 'echo "Melting the pot..."' >> melt.sh
 	echo 'dir=$(pwd)' >> melt.sh
+	echo 'failCount=0' >> melt.sh
 	echo 'for f in \' >> melt.sh
 	local dir
 	for dir in */*
@@ -582,7 +583,6 @@ generateScript() {
 		fi
 	done
 	echo >> melt.sh
-	echo 'local failCount=0'
 	echo 'do (' >> melt.sh
 	echo '	cd "$f"' >> melt.sh
 	echo '	sh "$dir/build.sh" > build.log 2>&1 &&' >> melt.sh
