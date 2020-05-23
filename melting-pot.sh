@@ -86,6 +86,10 @@ info() {
 		stderr "[INFO] $@"
 }
 
+warn() {
+	stderr "[WARNING] $@"
+}
+
 error() {
 	stderr "[ERROR] $@"
 }
@@ -416,8 +420,22 @@ scmTag() {
 	if [ -z "$tag" -o "$tag" = "HEAD" ]
 	then
 		# The <scm><tag> value was not set properly,
-		# so we guess at the tag naming scheme.
-		echo "$(artifactId "$1")-$(version "$1")"
+		# so we try to guess the tag naming scheme. :-/
+		warn "$1: improper scm tag value; scanning remote tags..."
+		local a=$(artifactId "$1")
+		local v=$(version "$1")
+		local scmURL="$(scmURL "$1")"
+		local allTags=$(git ls-remote --tags "$scmURL" | sed 's/.*refs\/tags\///' ||
+			error "$1: Invalid scm url: $scmURL")
+		for tag in "$a-$v" "$v" "v$v"
+		do
+			echo "$allTags" | grep -q "^$tag$" && {
+				info "$1: inferred tag: $tag"
+				echo "$tag"
+				return
+			}
+		done
+		error "$1: inscrutable tag scheme"
 	else
 		echo "$tag"
 	fi
