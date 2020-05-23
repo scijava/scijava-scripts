@@ -606,25 +606,25 @@ meltDown() {
 		# Use local directory for the specified project.
 		test -d "$1" || die "No such directory: $1" 11
 		test -f "$1/pom.xml" || die "Not a Maven project: $1" 12
-		info "$1: local Maven project"
+		info "Local Maven project: $1"
 		mkdir -p "LOCAL"
 		local dir="LOCAL/PROJECT"
 		ln -s "$1" "$dir"
 	else
 		# Treat specified project as a GAV.
-		info "$1: fetching project source"
+		info "Fetching project source"
 		retrieveSource "$1" "$branch"
 	fi
 
 	# Get the project dependencies.
-	info "$1: determining project dependencies"
+	info "Determining project dependencies"
 	local deps="$(deps "$dir")"
 	test "$deps" || die "Cannot glean project dependencies" 7
 
 	local args="-Denforcer.skip"
 
 	# Process the dependencies.
-	info "$1: processing project dependencies"
+	info "Processing project dependencies"
 	local dep
 	for dep in $deps
 	do
@@ -640,13 +640,13 @@ meltDown() {
 
 		if [ "$(isIncluded "$gav")" ]
 		then
-			info "$1: $a: fetching component source"
+			info "$a: fetching component source"
 			dir="$(retrieveSource "$gav")"
 		fi
 	done
 
 	# Override versions of changed GAVs.
-	info "$1: processing changed components"
+	info "Processing changed components"
 	local TLS=,
 	local gav
 	for gav in $changes
@@ -676,7 +676,7 @@ meltDown() {
 		sh melt.sh || die "Melt failed" 13
 	fi
 
-	info "$1: complete"
+	info "Melt complete: $1"
 }
 
 # -- Main --
