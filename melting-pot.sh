@@ -451,6 +451,13 @@ retrieveSource() {
 	debug "git clone \"$scmURL\" --branch \"$scmBranch\" --depth 1 \"$dir\""
 	git clone "$scmURL" --branch "$scmBranch" --depth 1 "$dir" 2> /dev/null ||
 		die "Could not fetch project source for $1" 3
+
+	# Now verify that the cloned pom.xml contains the expected version!
+	local expectedVersion=$(version "$1")
+	local actualVersion=$(xpath "$dir/pom.xml" project version)
+	test "$expectedVersion" = "$actualVersion" ||
+		die "POM for $1 contains wrong version: $actualVersion" 14
+
 	echo "$dir"
 }
 
