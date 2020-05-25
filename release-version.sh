@@ -100,6 +100,12 @@ Options include:
   --skip-gpg              - Do not perform GPG signing of artifacts.
 "
 
+# -- Extract project details --
+
+projectDetails=$(mvn -N -Dexec.executable='echo' -Dexec.args='${project.version}::${project.parent.groupId}:${project.parent.artifactId}:${project.parent.version}' exec:exec -q)
+parentGAV=${projectDetails#*::}
+currentVersion=${projectDetails%::*}
+
 # -- Sanity checks --
 
 # Check that we have push rights to the repository.
@@ -111,7 +117,6 @@ then
 fi
 
 # Discern the version to release.
-currentVersion=$(mvn -N -Dexec.executable='echo' -Dexec.args='${project.version}' exec:exec -q)
 pomVersion=${currentVersion%-SNAPSHOT}
 test "$VERSION" || test ! -t 0 || {
 	printf 'Version? [%s]: ' "$pomVersion"
@@ -134,6 +139,17 @@ test -f "$VALID_SEMVER_BUMP" ||
 	die "Missing helper script at '$VALID_SEMVER_BUMP'"
 test "$SKIP_VERSION_CHECK" || {
 	sh -$- "$VALID_SEMVER_BUMP" "$pomVersion" "$VERSION" || die
+}
+
+# Check that the project extends the latest version of pom-scijava.
+MAVEN_HELPER="$(cd "$(dirname "$0")" && pwd)/maven-helper.sh"
+test -f "$MAVEN_HELPER" ||
+	die "Missing helper script at '$MAVEN_HELPER'"
+test "$SKIP_VERSION_CHECKS" || {
+	latestParentVersion=$(sh -$- "$MAVEN_HELPER" latest-version "$parentGAV")
+	currentParentVersion=${parentGAV##*:}
+	test "$currentParentVersion" = "$latestParentVersion" ||
+		die "Newer version of parent '${parentGAV%:*}' is available: $latestParentVersion"
 }
 
 # Check that the working copy is clean.
