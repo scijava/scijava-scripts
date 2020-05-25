@@ -15,6 +15,12 @@ die () {
 	exit 1
 }
 
+no_changes_pending() {
+	git update-index -q --refresh &&
+	git diff-files --quiet --ignore-submodules &&
+	git diff-index --cached --quiet --ignore-submodules HEAD --
+}
+
 # -- Constants and settings --
 
 SCIJAVA_BASE_REPOSITORY=-DaltDeploymentRepository=scijava.releases::default::dav:https://maven.scijava.org/content/repositories
@@ -113,9 +119,6 @@ test "$VERSION" || test ! -t 0 || {
 	test "$VERSION" || VERSION=$pomVersion
 }
 
-# If REMOTE is unset, use origin by default.
-REMOTE="${REMOTE:-origin}"
-
 # Check that the release version number starts with a digit.
 test "$VERSION" || die 'Please specify the version to release!'
 case "$VERSION" in
@@ -134,14 +137,14 @@ test "$SKIP_VERSION_CHECK" || {
 }
 
 # Check that the working copy is clean.
-git update-index -q --refresh &&
-git diff-files --quiet --ignore-submodules &&
-git diff-index --cached --quiet --ignore-submodules HEAD -- ||
-die "There are uncommitted changes!"
+no_changes_pending || die 'There are uncommitted changes!'
 
 # Check that we are on the master branch.
 test refs/heads/master = "$(git rev-parse --symbolic-full-name HEAD)" ||
-die "Not on 'master' branch"
+	die "Not on 'master' branch"
+
+# If REMOTE is unset, use origin by default.
+REMOTE="${REMOTE:-origin}"
 
 # Check that the master branch isn't behind the upstream branch.
 HEAD="$(git rev-parse HEAD)" &&
@@ -149,7 +152,8 @@ git fetch "$REMOTE" master &&
 FETCH_HEAD="$(git rev-parse FETCH_HEAD)" &&
 test "$FETCH_HEAD" = HEAD ||
 test "$FETCH_HEAD" = "$(git merge-base $FETCH_HEAD $HEAD)" ||
-die "'master' is not up-to-date"
+	die "'master' is not up-to-date"
+
 
 # Prepare new release without pushing (requires the release plugin >= 2.1).
 $DRY_RUN mvn $BATCH_MODE release:prepare -DpushChanges=false -Dresume=false $TAG \
@@ -161,7 +165,7 @@ if test -z "$DRY_RUN"
 then
 	test "[maven-release-plugin] prepare for next development iteration" = \
 		"$(git show -s --format=%s HEAD)" ||
-	die "maven-release-plugin's commits are unexpectedly missing!"
+		die "maven-release-plugin's commits are unexpectedly missing!"
 fi
 $DRY_RUN git reset --soft HEAD^^ &&
 if ! git diff-index --cached --quiet --ignore-submodules HEAD --
