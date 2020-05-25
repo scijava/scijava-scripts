@@ -170,6 +170,12 @@ test "$FETCH_HEAD" = HEAD ||
 test "$FETCH_HEAD" = "$(git merge-base $FETCH_HEAD $HEAD)" ||
 	die "'master' is not up-to-date"
 
+# Ensure license headers are up-to-date.
+mvn license:update-project-license license:update-file-header &&
+git add LICENSE.txt ||
+	die 'Failed to update copyright blurbs'
+no_changes_pending ||
+	die 'Copyright blurbs needed an update -- commit changes and try again'
 
 # Prepare new release without pushing (requires the release plugin >= 2.1).
 $DRY_RUN mvn $BATCH_MODE release:prepare -DpushChanges=false -Dresume=false $TAG \
