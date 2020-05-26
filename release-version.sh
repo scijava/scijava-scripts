@@ -145,7 +145,7 @@ test "$SKIP_VERSION_CHECK" || {
 MAVEN_HELPER="$(cd "$(dirname "$0")" && pwd)/maven-helper.sh"
 test -f "$MAVEN_HELPER" ||
 	die "Missing helper script at '$MAVEN_HELPER'"
-test "$SKIP_VERSION_CHECK" || {
+test "$SKIP_VERSION_CHECK" -o "$parentGAV" != "${parentGAV#$}" || {
 	latestParentVersion=$(sh -$- "$MAVEN_HELPER" latest-version "$parentGAV")
 	currentParentVersion=${parentGAV##*:}
 	test "$currentParentVersion" = "$latestParentVersion" ||
