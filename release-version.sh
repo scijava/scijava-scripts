@@ -91,7 +91,7 @@ Where <version> is the version to release. If omitted, it will prompt you.
 
 Options include:
   --dry-run               - Simulate the release without actually doing it.
-  --skip-version-check    - Violate SemVer version numbering intentionally.
+  --skip-version-check    - Skips the SemVer and parent pom version checks.
   --skip-license-update   - Skips update of the copyright blurbs.
   --skip-push             - Do not push to the remote git repository.
   --dev-version=<x.y.z>   - Specify next development version explicitly;
@@ -154,7 +154,9 @@ test "$SKIP_VERSION_CHECK" -o "$parentGAV" != "${parentGAV#$}" || {
 	latestParentVersion=$(sh -$- "$MAVEN_HELPER" latest-version "$parentGAV")
 	currentParentVersion=${parentGAV##*:}
 	test "$currentParentVersion" = "$latestParentVersion" ||
-		die "Newer version of parent '${parentGAV%:*}' is available: $latestParentVersion"
+		die "Newer version of parent '${parentGAV%:*}' is available: $latestParentVersion.
+I recommend you update it before releasing.
+Or if you know better, try again with --skip-version-check flag."
 }
 
 # Check that the working copy is clean.
