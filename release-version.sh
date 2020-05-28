@@ -30,6 +30,7 @@ SCIJAVA_THIRDPARTY_REPOSITORY=$SCIJAVA_BASE_REPOSITORY/thirdparty
 # Parse command line options.
 BATCH_MODE=--batch-mode
 SKIP_VERSION_CHECK=
+SKIP_LICENSE_UPDATE=
 SKIP_PUSH=
 SKIP_GPG=
 TAG=
@@ -46,6 +47,7 @@ do
 	--dry-run) DRY_RUN=echo;;
 	--no-batch-mode) BATCH_MODE=;;
 	--skip-version-check) SKIP_VERSION_CHECK=t;;
+	--skip-license-update) SKIP_LICENSE_UPDATE=t;;
 	--skip-push) SKIP_PUSH=t;;
 	--tag=*)
 		! git rev-parse --quiet --verify refs/tags/"${1#--*=}" ||
@@ -90,6 +92,7 @@ Where <version> is the version to release. If omitted, it will prompt you.
 Options include:
   --dry-run               - Simulate the release without actually doing it.
   --skip-version-check    - Violate SemVer version numbering intentionally.
+  --skip-license-update   - Skips update of the copyright blurbs.
   --skip-push             - Do not push to the remote git repository.
   --dev-version=<x.y.z>   - Specify next development version explicitly;
                             e.g.: if you release 2.0.0-beta-1, by default
@@ -173,12 +176,17 @@ test "$FETCH_HEAD" = "$(git merge-base $FETCH_HEAD $HEAD)" ||
 	die "'master' is not up-to-date"
 
 # Ensure license headers are up-to-date.
-test -z "$licenseName" -o "$licenseName" = "N/A" || {
+test "$SKIP_LICENSE_UPDATE" -o -z "$licenseName" -o "$licenseName" = "N/A" || {
 	mvn license:update-project-license license:update-file-header &&
 	git add LICENSE.txt ||
 		die 'Failed to update copyright blurbs'
 	no_changes_pending ||
-		die 'Copyright blurbs needed an update -- commit changes and try again'
+		die 'Copyright blurbs needed an update -- commit changes and try again.
+Or if the license headers are being added erroneously to certain files,
+exclude them by setting license.excludes in your POM; e.g.:
+
+   <license.excludes>**/script_templates/**</license.excludes>
+'
 }
 
 # Prepare new release without pushing (requires the release plugin >= 2.1).
