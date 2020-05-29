@@ -141,15 +141,18 @@ esac
 # Check that the release version number conforms to SemVer.
 VALID_SEMVER_BUMP="$(cd "$(dirname "$0")" && pwd)/valid-semver-bump.sh"
 test -f "$VALID_SEMVER_BUMP" ||
-	die "Missing helper script at '$VALID_SEMVER_BUMP'"
+	die "Missing helper script at '$VALID_SEMVER_BUMP'
+Do you have a full clone of git://github.com/scijava/scijava-scripts?"
 test "$SKIP_VERSION_CHECK" || {
-	sh -$- "$VALID_SEMVER_BUMP" "$pomVersion" "$VERSION" || die
+	sh -$- "$VALID_SEMVER_BUMP" "$pomVersion" "$VERSION" ||
+		die "If you are sure, try again with --skip-version-check flag."
 }
 
 # Check that the project extends the latest version of pom-scijava.
 MAVEN_HELPER="$(cd "$(dirname "$0")" && pwd)/maven-helper.sh"
 test -f "$MAVEN_HELPER" ||
-	die "Missing helper script at '$MAVEN_HELPER'"
+	die "Missing helper script at '$MAVEN_HELPER'
+Do you have a full clone of git://github.com/scijava/scijava-scripts?"
 test "$SKIP_VERSION_CHECK" -o "$parentGAV" != "${parentGAV#$}" || {
 	latestParentVersion=$(sh -$- "$MAVEN_HELPER" latest-version "$parentGAV")
 	currentParentVersion=${parentGAV##*:}
