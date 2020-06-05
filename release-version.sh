@@ -105,11 +105,11 @@ Options include:
 
 # -- Extract project details --
 
-projectDetails=$(mvn -N -Dexec.executable='echo' -Dexec.args='${project.version}/${license.licenseName}/${project.parent.groupId}:${project.parent.artifactId}:${project.parent.version}' exec:exec -q)
-currentVersion=${projectDetails%%/*}
-projectDetails=${projectDetails#*/}
-licenseName=${projectDetails%%/*}
-parentGAV=${projectDetails#*/}
+projectDetails=$(mvn -N -Dexec.executable='echo' -Dexec.args='${project.version}:${license.licenseName}:${project.parent.groupId}:${project.parent.artifactId}:${project.parent.version}' exec:exec -q)
+currentVersion=${projectDetails%%:*}
+projectDetails=${projectDetails#*:}
+licenseName=${projectDetails%%:*}
+parentGAV=${projectDetails#*:}
 
 # -- Sanity checks --
 
