@@ -136,22 +136,23 @@ EOL
 	fi
 
 	# Run the build.
+	BUILD_ARGS='-B -Djdk.tls.client.protocols="TLSv1,TLSv1.1,TLSv1.2"'
 	if [ "$deployOK" -a "$TRAVIS_BRANCH" = master ]
 	then
 		echo
 		echo "== Building and deploying master SNAPSHOT =="
-		mvn -B -Pdeploy-to-scijava deploy
+		mvn -Pdeploy-to-scijava $BUILD_ARGS deploy
 		checkSuccess $?
 	elif [ "$deployOK" -a -f release.properties ]
 	then
 		echo
 		echo "== Cutting and deploying release version =="
-		mvn -B release:perform
+		mvn -B $BUILD_ARGS release:perform
 		checkSuccess $?
 	else
 		echo
 		echo "== Building the artifact locally only =="
-		mvn -B install javadoc:javadoc
+		mvn $BUILD_ARGS install javadoc:javadoc
 		checkSuccess $?
 	fi
 	echo travis_fold:end:scijava-maven
