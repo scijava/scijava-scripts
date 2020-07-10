@@ -89,24 +89,31 @@ EOL
 	fi
 
 	# Determine whether deploying will be possible.
-	ciURL=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${project.ciManagement.url}' --non-recursive validate exec:exec 2>/dev/null)
-	ciRepo=${ciURL##*/}
-	ciPrefix=${ciURL%/*}
-	ciOrg=${ciPrefix##*/}
 	deployOK=
-	if [ "$TRAVIS_SECURE_ENV_VARS" != true ]
+	ciURL=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${project.ciManagement.url}' --non-recursive validate exec:exec 2>&1)
+	if [ $? -ne 0 ]
 	then
-		echo "No deploy -- secure environment variables not available"
-	elif [ "$TRAVIS_PULL_REQUEST" != false ]
-	then
-		echo "No deploy -- pull request detected"
-	elif [ "$TRAVIS_REPO_SLUG" != "$ciOrg/$ciRepo" ]
-	then
-		echo "No deploy -- repository fork: $TRAVIS_REPO_SLUG != $ciOrg/$ciRepo"
-	# TODO: Detect travis-ci.org versus travis-ci.com?
+		echo "No deploy -- could not extract ciManagement URL"
+		echo "Output of failed attempt follows:"
+		echo "$ciURL"
 	else
-		echo "All checks passed for artifact deployment"
-		deployOK=1
+		ciRepo=${ciURL##*/}
+		ciPrefix=${ciURL%/*}
+		ciOrg=${ciPrefix##*/}
+		if [ "$TRAVIS_SECURE_ENV_VARS" != true ]
+		then
+			echo "No deploy -- secure environment variables not available"
+		elif [ "$TRAVIS_PULL_REQUEST" != false ]
+		then
+			echo "No deploy -- pull request detected"
+		elif [ "$TRAVIS_REPO_SLUG" != "$ciOrg/$ciRepo" ]
+		then
+			echo "No deploy -- repository fork: $TRAVIS_REPO_SLUG != $ciOrg/$ciRepo"
+		# TODO: Detect travis-ci.org versus travis-ci.com?
+		else
+			echo "All checks passed for artifact deployment"
+			deployOK=1
+		fi
 	fi
 
 	# Install GPG on OSX/macOS
