@@ -164,6 +164,8 @@ Or if you know better, try again with --skip-version-check flag."
 
 # Check that the working copy is clean.
 no_changes_pending || die 'There are uncommitted changes!'
+test -z "$(git ls-files -o --exclude-standard)" ||
+	die 'There are untracked files! Please stash them before releasing.'
 
 # Check that we are on the master branch.
 test refs/heads/master = "$(git rev-parse --symbolic-full-name HEAD)" ||
