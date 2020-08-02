@@ -160,6 +160,7 @@ EOL
 		curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/maven-helper.sh &&
 		gav=$(sh maven-helper.sh gav-from-pom pom.xml) &&
 		ga=${gav%:*} &&
+		echo "--> Artifact to invalidate = $ga" &&
 		echo "machine maven.scijava.org" > "$HOME/.netrc" &&
 		echo "        login travis" >> "$HOME/.netrc" &&
 		echo "        password $MAVEN_PASS" >> "$HOME/.netrc" &&
