@@ -156,6 +156,15 @@ EOL
 		echo "== Cutting and deploying release version =="
 		mvn -B $BUILD_ARGS release:perform
 		checkSuccess $?
+		echo "== Invalidating SciJava Maven repository cache =="
+		curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/maven-helper.sh &&
+		gav=$(sh maven-helper.sh gav-from-pom pom.xml) &&
+		ga=${gav%:*} &&
+		echo "machine maven.scijava.org" > "$HOME/.netrc" &&
+		echo "        login travis" >> "$HOME/.netrc" &&
+		echo "        password $MAVEN_PASS" >> "$HOME/.netrc" &&
+		sh maven-helper.sh invalidate-cache "$ga"
+		checkSuccess $?
 	else
 		echo
 		echo "== Building the artifact locally only =="
