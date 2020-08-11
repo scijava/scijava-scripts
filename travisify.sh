@@ -41,6 +41,7 @@ var() {
 update() {
 	file=$1
 	msg=$2
+	exe=$3
 	test "$msg" || msg="Travis: update $file"
 	if [ -e "$file" ]
 	then
@@ -59,6 +60,11 @@ update() {
 	fi
 	rm -rf "$tmpFile"
 	$EXEC git add "$file"
+	if [ -n "$exe" ]
+	then
+		info "Adding execute permission to $file"
+		$EXEC git update-index --chmod=+x "$file"
+	fi
 	$EXEC git diff-index --quiet HEAD -- || $EXEC git commit -m "$msg"
 }
 
@@ -135,7 +141,7 @@ curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/trav
 sh travis-build.sh
 EOL
 	chmod +x "$tmpFile"
-	update "$travisBuildScript"
+	update "$travisBuildScript" "Travis: add executable script $travisBuildScript" "true"
 
 	# Remove obsolete Travis-related files.
 	if [ -f "$travisSettingsFile" ]
