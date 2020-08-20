@@ -199,7 +199,9 @@ exclude them by setting license.excludes in your POM; e.g.:
 # Prepare new release without pushing (requires the release plugin >= 2.1).
 $DRY_RUN mvn $BATCH_MODE release:prepare -DpushChanges=false -Dresume=false $TAG \
         $PROFILE $DEV_VERSION -DreleaseVersion="$VERSION" \
-	"-Darguments=-Dgpg.skip=true ${EXTRA_ARGS# }" &&
+	"-Darguments=-Dgpg.skip=true ${EXTRA_ARGS# }" ||
+	die 'The release preparation step failed -- look above for errors and fix them.
+Use "mvn javadoc:javadoc | grep error" to check for javadoc syntax errors.'
 
 # Squash the maven-release-plugin's two commits into one.
 if test -z "$DRY_RUN"
