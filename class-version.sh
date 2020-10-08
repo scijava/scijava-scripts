@@ -2,19 +2,9 @@
 
 # class-version.sh - find the Java version which wrote a JAR file
 
-for jar in "$@"
-do
-  # find the first class of the JAR
-  class="$(jar tf "$jar" | grep '\.class' | head -n 1 | sed 's/\//./g' | sed 's/\.class$//')"
-
-  if [ -z "$class" ]
-  then
-    echo "$jar: No classes"
-    continue
-  fi
-
+class_version() {
   # extract bytes 4-7
-  info="$(unzip -p "$jar" "$(jar tf "$jar" | grep \.class$ | head -n 1)" | head -c 8 | hexdump -s 4 -e '4/1 "%d\n" "\n"')"
+  info=$(head -c 8 | hexdump -s 4 -e '4/1 "%d\n" "\n"')
   minor1="$(echo "$info" | sed -n 1p)"
   minor2="$(echo "$info" | sed -n 2p)"
   major1="$(echo "$info" | sed -n 3p)"
@@ -55,5 +45,33 @@ do
   esac
 
   # report the results
-  echo "$jar: $version ($major.$minor)"
+  echo "$version ($major.$minor)"
+}
+
+first_class() {
+  jar tf "$1" | grep '\.class' | head -n 1
+}
+
+for file in "$@"
+do
+  case "$file" in
+    *.class)
+      version=$(cat "$file" | class_version)
+      ;;
+    *.jar)
+      class=$(first_class "$file")
+      if [ -z "$class" ]
+      then
+        echo "$file: No classes"
+        continue
+      fi
+      version=$(unzip -p "$file" "$class" | class_version)
+      ;;
+    *)
+      >&2 echo "Unsupported file: $file"
+      continue
+  esac
+
+  # report the results
+  echo "$file: $version"
 done
