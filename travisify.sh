@@ -82,8 +82,9 @@ process() {
 	esac
 	git fetch >/dev/null
 	git diff-index --quiet HEAD -- || die "Dirty working copy"
-	branch=$(git rev-parse --abbrev-ref HEAD)
-	test "$branch" = "master" || die "Non-master branch: $branch"
+	currentBranch=$(git rev-parse --abbrev-ref HEAD)
+	defaultBranch=$(git remote show origin | grep "HEAD branch" | sed 's/.*: //')
+	test "$currentBranch" = "$defaultBranch" || die "Non-default branch: $currentBranch"
 	git merge --ff --ff-only 'HEAD@{u}' >/dev/null ||
 		die "Cannot fast forward (local diverging?)"
 #	test "$(git rev-parse HEAD)" = "$(git rev-parse 'HEAD@{u}')" ||
@@ -124,7 +125,7 @@ language: java
 jdk: openjdk8
 branches:
   only:
-  - master
+  - $defaultBranch
   - "/.*-[0-9]+\\\\..*/"
 install: true
 script: "$travisBuildScript"
