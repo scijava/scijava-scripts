@@ -83,7 +83,9 @@ process() {
 	git fetch >/dev/null
 	git diff-index --quiet HEAD -- || die "Dirty working copy"
 	currentBranch=$(git rev-parse --abbrev-ref HEAD)
-	defaultBranch=$(git remote show origin | grep "HEAD branch" | sed 's/.*: //')
+	upstreamBranch=$(git rev-parse --abbrev-ref --symbolic-full-name @{u})
+	remote=${upstreamBranch%/*}
+	defaultBranch=$(git remote show "$remote" | grep "HEAD branch" | sed 's/.*: //')
 	test "$currentBranch" = "$defaultBranch" || die "Non-default branch: $currentBranch"
 	git merge --ff --ff-only 'HEAD@{u}' >/dev/null ||
 		die "Cannot fast forward (local diverging?)"
