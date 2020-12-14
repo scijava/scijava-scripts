@@ -172,20 +172,25 @@ no_changes_pending || die 'There are uncommitted changes!'
 test -z "$(git ls-files -o --exclude-standard)" ||
 	die 'There are untracked files! Please stash them before releasing.'
 
-# Check that we are on the master branch.
-test refs/heads/master = "$(git rev-parse --symbolic-full-name HEAD)" ||
-	die "Not on 'master' branch"
+# Discern default branch.
+currentBranch=$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)
+upstreamBranch=$(git rev-parse --abbrev-ref --symbolic-full-name @{u})
+remote=${upstreamBranch%/*}
+defaultBranch=$(git remote show "$remote" | grep "HEAD branch" | sed 's/.*: //')
 
-# If REMOTE is unset, use origin by default.
-REMOTE="${REMOTE:-origin}"
+# Check that we are on the main branch.
+test "$currentBranch" = "$defaultBranch" || die "Non-default branch: $currentBranch"
 
-# Check that the master branch isn't behind the upstream branch.
+# If REMOTE is unset, use branch's upstream remote by default.
+REMOTE="${REMOTE:-$remote}"
+
+# Check that the main branch isn't behind the upstream branch.
 HEAD="$(git rev-parse HEAD)" &&
-git fetch "$REMOTE" master &&
+git fetch "$REMOTE" "$defaultBranch" &&
 FETCH_HEAD="$(git rev-parse FETCH_HEAD)" &&
 test "$FETCH_HEAD" = HEAD ||
 test "$FETCH_HEAD" = "$(git merge-base $FETCH_HEAD $HEAD)" ||
-	die "'master' is not up-to-date"
+	die "'$defaultBranch' is not up-to-date"
 
 # Ensure license headers are up-to-date.
 test "$SKIP_LICENSE_UPDATE" -o -z "$licenseName" -o "$licenseName" = "N/A" || {
