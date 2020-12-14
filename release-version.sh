@@ -133,12 +133,15 @@ test "$VERSION" || test ! -t 0 || {
 
 # Check that the release version number starts with a digit.
 test "$VERSION" || die 'Please specify the version to release!'
-case "$VERSION" in
-[0-9]*)
-	;;
-*)
-	die "Version '$VERSION' does not start with a digit!"
-esac
+test "$SKIP_VERSION_CHECK" || {
+	case "$VERSION" in
+	[0-9]*)
+		;;
+	*)
+		die "Version '$VERSION' does not start with a digit!
+If you are sure, try again with --skip-version-check flag."
+	esac
+}
 
 # Check that the release version number conforms to SemVer.
 VALID_SEMVER_BUMP="$(cd "$(dirname "$0")" && pwd)/valid-semver-bump.sh"
