@@ -202,15 +202,16 @@ test "$FETCH_HEAD" = "$(git merge-base $FETCH_HEAD $HEAD)" ||
 # Ensure license headers are up-to-date.
 test "$SKIP_LICENSE_UPDATE" -o -z "$licenseName" -o "$licenseName" = "N/A" || {
 	mvn license:update-project-license license:update-file-header &&
-	git add LICENSE.txt ||
-		die 'Failed to update copyright blurbs'
+	git add LICENSE.txt || die 'Failed to update copyright blurbs.
+You can skip the license update using the --skip-license-update flag.'
 	no_changes_pending ||
 		die 'Copyright blurbs needed an update -- commit changes and try again.
 Or if the license headers are being added erroneously to certain files,
 exclude them by setting license.excludes in your POM; e.g.:
 
    <license.excludes>**/script_templates/**</license.excludes>
-'
+
+Alternately, try again with the --skip-license-update flag.'
 }
 
 # Prepare new release without pushing (requires the release plugin >= 2.1).
