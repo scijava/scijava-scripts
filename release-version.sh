@@ -30,6 +30,7 @@ SCIJAVA_THIRDPARTY_REPOSITORY=$SCIJAVA_BASE_REPOSITORY/thirdparty
 # Parse command line options.
 BATCH_MODE=--batch-mode
 SKIP_VERSION_CHECK=
+SKIP_BRANCH_CHECK=
 SKIP_LICENSE_UPDATE=
 SKIP_PUSH=
 SKIP_GPG=
@@ -47,6 +48,7 @@ do
 	--dry-run) DRY_RUN=echo;;
 	--no-batch-mode) BATCH_MODE=;;
 	--skip-version-check) SKIP_VERSION_CHECK=t;;
+	--skip-branch-check) SKIP_BRANCH_CHECK=t;;
 	--skip-license-update) SKIP_LICENSE_UPDATE=t;;
 	--skip-push) SKIP_PUSH=t;;
 	--tag=*)
@@ -92,6 +94,7 @@ Where <version> is the version to release. If omitted, it will prompt you.
 Options include:
   --dry-run               - Simulate the release without actually doing it.
   --skip-version-check    - Skips the SemVer and parent pom version checks.
+  --skip-branch-check     - Skips the default branch check.
   --skip-license-update   - Skips update of the copyright blurbs.
   --skip-push             - Do not push to the remote git repository.
   --dev-version=<x.y.z>   - Specify next development version explicitly;
@@ -179,7 +182,11 @@ remote=${upstreamBranch%/*}
 defaultBranch=$(git remote show "$remote" | grep "HEAD branch" | sed 's/.*: //')
 
 # Check that we are on the main branch.
-test "$currentBranch" = "$defaultBranch" || die "Non-default branch: $currentBranch"
+test "$SKIP_BRANCH_CHECK" || {
+	test "$currentBranch" = "$defaultBranch" || die "Non-default branch: $currentBranch.
+If you are certain you want to release from this branch,
+try again with --skip-branch-check flag."
+}
 
 # If REMOTE is unset, use branch's upstream remote by default.
 REMOTE="${REMOTE:-$remote}"
