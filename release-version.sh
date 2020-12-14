@@ -117,8 +117,10 @@ parentGAV=${projectDetails#*:}
 if [ ! "$SKIP_PUSH" ]
 then
 	push=$(git remote -v | grep origin | grep '(push)')
-	test "$push" || die 'No push URL found for remote origin'
-	echo "$push" | grep -q 'git:/' && die 'Remote origin is read-only'
+	test "$push" || die 'No push URL found for remote origin.
+Please use "git remote -v" to double check your remote settings.'
+	echo "$push" | grep -q 'git:/' && die 'Remote origin is read-only.
+Please use "git remote set-url origin ..." to change it.'
 fi
 
 # Discern the version to release.
