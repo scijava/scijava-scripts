@@ -31,16 +31,16 @@ jobs:
           sh ./travis-build.sh
           echo Finished running travis-build.sh
           
-      # Build by running travisify.sh
-      - name: travisify
-        run: |
-          echo Running travisify.sh
-          sh ./travisify.sh
-          echo Finished running travisify.sh
+#       # Build by running travisify.sh
+#       - name: travisify
+#         run: |
+#           echo Running travisify.sh
+#           sh ./travisify.sh
+#           echo Finished running travisify.sh
 
-      # Build by running travis-javadoc.sh
-      - name: travis-javadoc
-        run: |
-          echo Running travis-javadoc.sh
-          sh ./travis-javadoc.sh
-          echo Finished running travis-javadoc.sh
+#       # Build by running travis-javadoc.sh
+#       - name: travis-javadoc
+#         run: |
+#           echo Running travis-javadoc.sh
+#           sh ./travis-javadoc.sh
+#           echo Finished running travis-javadoc.sh
