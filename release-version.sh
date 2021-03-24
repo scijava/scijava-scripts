@@ -8,6 +8,10 @@
 # Authors: Johannes Schindelin & Curtis Rueden
 # ============================================================================
 
+# -- Avoid localized output that might confuse the script --
+
+export LC_ALL=C
+
 # -- Functions --
 
 die () {
