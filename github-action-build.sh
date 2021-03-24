@@ -16,8 +16,7 @@ checkSuccess() {
 }
 
 # Build Maven projects.
-if [ -f pom.xml ]
-then
+if [ -f pom.xml ]; then
 	echo travis_fold:start:scijava-maven
 	echo "= Maven build ="
 	echo
@@ -25,16 +24,16 @@ then
 
 	# NB: Suppress "Downloading/Downloaded" messages.
 	# See: https://stackoverflow.com/a/35653426/1207769
-	export MAVEN_OPTS="$MAVEN_OPTS -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn" 
+	export MAVEN_OPTS="$MAVEN_OPTS -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
 
 	# Populate the settings.xml configuration.
 	mkdir -p "$HOME/.m2"
 	settingsFile="$HOME/.m2/settings.xml"
 	customSettings=.travis/settings.xml
-	if [ -f "$customSettings" ]
-	then
+	# Since Travis files will be deleted, just manually set $settingsFile
+	if [ -f "$customSettings" ]; then
 		cp "$customSettings" "$settingsFile"
-	else
+	else # Might need to change <username>travis</username>
 		cat >"$settingsFile" <<EOL
 <settings>
 	<servers>
@@ -59,7 +58,7 @@ EOL
 		# This hopefully avoids intermittent "ReasonPhrase:Forbidden" errors
 		# when the Travis build pings Maven Central; see travis-ci/travis-ci#6593.
 		grep -A 2 '<repository>' pom.xml | grep -q 'maven.scijava.org' &&
-		cat >>"$settingsFile" <<EOL
+			cat >>"$settingsFile" <<EOL
 	<mirrors>
 		<mirror>
 			<id>scijava-mirror</id>
@@ -91,25 +90,25 @@ EOL
 	# Determine whether deploying will be possible.
 	deployOK=
 	ciURL=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${project.ciManagement.url}' --non-recursive validate exec:exec 2>&1)
-	if [ $? -ne 0 ]
-	then
+	if [ $? -ne 0 ]; then
 		echo "No deploy -- could not extract ciManagement URL"
 		echo "Output of failed attempt follows:"
 		echo "$ciURL"
 	else
+		# https://developer.okta.com/blog/2020/05/18/travis-ci-to-github-actions
+		# This website specifies Travis environment variables with their
+		# equivalent GitHub Actions environment variables
 		ciRepo=${ciURL##*/}
 		ciPrefix=${ciURL%/*}
 		ciOrg=${ciPrefix##*/}
-		if [ "$TRAVIS_SECURE_ENV_VARS" != true ]
-		then
+		if [ "$TRAVIS_SECURE_ENV_VARS" != true ]; then # haven't found equivalent env var
 			echo "No deploy -- secure environment variables not available"
-		elif [ "$TRAVIS_PULL_REQUEST" != false ]
-		then
+		elif [ "$TRAVIS_PULL_REQUEST" != false ]; then # ${{ github.event.number }}
 			echo "No deploy -- pull request detected"
-		elif [ "$TRAVIS_REPO_SLUG" != "$ciOrg/$ciRepo" ]
-		then
+		elif [ "$TRAVIS_REPO_SLUG" != "$ciOrg/$ciRepo" ]; then # ${{ github.repository }}
 			echo "No deploy -- repository fork: $TRAVIS_REPO_SLUG != $ciOrg/$ciRepo"
 		# TODO: Detect travis-ci.org versus travis-ci.com?
+		# Maybe above is not needed
 		else
 			echo "All checks passed for artifact deployment"
 			deployOK=1
@@ -117,8 +116,7 @@ EOL
 	fi
 
 	# Install GPG on OSX/macOS
-	if [ "$TRAVIS_OS_NAME" = osx ]
-	then
+	if [ "$TRAVIS_OS_NAME" = osx ]; then # $RUNNER_OS == 'macOS' ?
 		HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg2
 	fi
 
@@ -126,16 +124,14 @@ EOL
 	keyFile=.travis/signingkey.asc
 	key=$1
 	iv=$2
-	if [ "$key" -a "$iv" -a -f "$keyFile.enc" ]
-	then
+	if [ "$key" -a "$iv" -a -f "$keyFile.enc" ]; then
 		# NB: Key and iv values were given as arguments.
 		echo
 		echo "== Decrypting GPG keypair =="
 		openssl aes-256-cbc -K "$key" -iv "$iv" -in "$keyFile.enc" -out "$keyFile" -d
 		checkSuccess $?
 	fi
-	if [ "$deployOK" -a -f "$keyFile" ]
-	then
+	if [ "$deployOK" -a -f "$keyFile" ]; then
 		echo
 		echo "== Importing GPG keypair =="
 		gpg --batch --fast-import "$keyFile"
@@ -144,27 +140,25 @@ EOL
 
 	# Run the build.
 	BUILD_ARGS='-B -Djdk.tls.client.protocols="TLSv1,TLSv1.1,TLSv1.2"'
-	if [ "$deployOK" -a "$TRAVIS_BRANCH" = master ]
-	then
+	if [ "$deployOK" -a "$TRAVIS_BRANCH" = master ]; then # on push event, so need further info
 		echo
 		echo "== Building and deploying master SNAPSHOT =="
 		mvn -Pdeploy-to-scijava $BUILD_ARGS deploy
 		checkSuccess $?
-	elif [ "$deployOK" -a -f release.properties ]
-	then
+	elif [ "$deployOK" -a -f release.properties ]; then
 		echo
 		echo "== Cutting and deploying release version =="
 		mvn -B $BUILD_ARGS release:perform
 		checkSuccess $?
 		echo "== Invalidating SciJava Maven repository cache =="
 		curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/maven-helper.sh &&
-		gav=$(sh maven-helper.sh gav-from-pom pom.xml) &&
-		ga=${gav%:*} &&
-		echo "--> Artifact to invalidate = $ga" &&
-		echo "machine maven.scijava.org" > "$HOME/.netrc" &&
-		echo "        login travis" >> "$HOME/.netrc" &&
-		echo "        password $MAVEN_PASS" >> "$HOME/.netrc" &&
-		sh maven-helper.sh invalidate-cache "$ga"
+			gav=$(sh maven-helper.sh gav-from-pom pom.xml) &&
+			ga=${gav%:*} &&
+			echo "--> Artifact to invalidate = $ga" &&
+			echo "machine maven.scijava.org" >"$HOME/.netrc" &&
+			echo "        login travis" >>"$HOME/.netrc" &&
+			echo "        password $MAVEN_PASS" >>"$HOME/.netrc" &&
+			sh maven-helper.sh invalidate-cache "$ga"
 		checkSuccess $?
 	else
 		echo
@@ -176,8 +170,7 @@ EOL
 fi
 
 # Configure conda environment, if one is needed.
-if [ -f environment.yml ]
-then
+if [ -f environment.yml ]; then
 	echo travis_fold:start:scijava-conda
 	echo "= Conda setup ="
 
@@ -186,7 +179,7 @@ then
 	if [ ! -f "$condaSh" ]; then
 		echo
 		echo "== Installing conda =="
-		if [ "$TRAVIS_PYTHON_VERSION" = "2.7" ]; then
+		if [ "$TRAVIS_PYTHON_VERSION" = "2.7" ]; then # ${{ matrix.python-version }}
 			wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh
 		else
 			wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
@@ -199,9 +192,9 @@ then
 	echo
 	echo "== Updating conda =="
 	. "$condaSh" &&
-	conda config --set always_yes yes --set changeps1 no &&
-	conda update -q conda &&
-	conda info -a
+		conda config --set always_yes yes --set changeps1 no &&
+		conda update -q conda &&
+		conda info -a
 	checkSuccess $?
 
 	echo
@@ -209,15 +202,14 @@ then
 	condaEnv=travis-scijava
 	test -d "$condaDir/envs/$condaEnv" && condaAction=update || condaAction=create
 	conda env "$condaAction" -n "$condaEnv" -f environment.yml &&
-	conda activate "$condaEnv"
+		conda activate "$condaEnv"
 	checkSuccess $?
 
 	echo travis_fold:end:scijava-conda
 fi
 
 # Execute Jupyter notebooks.
-if which jupyter >/dev/null 2>/dev/null
-then
+if which jupyter >/dev/null 2>/dev/null; then
 	echo travis_fold:start:scijava-jupyter
 	echo "= Jupyter notebooks ="
 	# NB: This part is fiddly. We want to loop over files even with spaces,
@@ -228,8 +220,7 @@ then
 	# the final value of success upon completion, and then capture the
 	# echoed value back into the parent shell's success variable.
 	success=$(find . -name '*.ipynb' -print0 | {
-		while read -d $'\0' nbf
-		do
+		while read -d $'\0' nbf; do
 			echo 1>&2
 			echo "== $nbf ==" 1>&2
 			jupyter nbconvert --execute --stdout "$nbf" >/dev/null
