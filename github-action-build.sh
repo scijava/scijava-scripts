@@ -29,11 +29,8 @@ if [ -f pom.xml ]; then
 	# Populate the settings.xml configuration.
 	mkdir -p "$HOME/.m2"
 	settingsFile="$HOME/.m2/settings.xml"
-	customSettings=.travis/settings.xml
 	# Since Travis files will be deleted, just manually set $settingsFile
-	if [ -f "$customSettings" ]; then
-		cp "$customSettings" "$settingsFile"
-	else # Might need to change <username>travis</username>
+	# Might need to change <username>travis</username>
 		cat >"$settingsFile" <<EOL
 <settings>
 	<servers>
@@ -103,10 +100,10 @@ EOL
 		ciOrg=${ciPrefix##*/}
 		if [ "$TRAVIS_SECURE_ENV_VARS" != true ]; then # haven't found equivalent env var
 			echo "No deploy -- secure environment variables not available"
-		elif [ "$TRAVIS_PULL_REQUEST" != false ]; then # ${{ github.event.number }}
+		elif [ ${github.event.number} != false ]; then
 			echo "No deploy -- pull request detected"
-		elif [ "$TRAVIS_REPO_SLUG" != "$ciOrg/$ciRepo" ]; then # ${{ github.repository }}
-			echo "No deploy -- repository fork: $TRAVIS_REPO_SLUG != $ciOrg/$ciRepo"
+		elif [ ${ github.repository } != "$ciOrg/$ciRepo" ]; then
+			echo "No deploy -- repository fork: ${ github.repository } != $ciOrg/$ciRepo"
 		# TODO: Detect travis-ci.org versus travis-ci.com?
 		# Maybe above is not needed
 		else
@@ -116,11 +113,12 @@ EOL
 	fi
 
 	# Install GPG on OSX/macOS
-	if [ "$TRAVIS_OS_NAME" = osx ]; then # $RUNNER_OS == 'macOS' ?
+	if [ "$RUNNER_OS" == 'macOS' ]; then
 		HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg2
 	fi
 
 	# Import the GPG signing key.
+	# Do we still need this one?
 	keyFile=.travis/signingkey.asc
 	key=$1
 	iv=$2
@@ -140,7 +138,7 @@ EOL
 
 	# Run the build.
 	BUILD_ARGS='-B -Djdk.tls.client.protocols="TLSv1,TLSv1.1,TLSv1.2"'
-	if [ "$deployOK" -a "$TRAVIS_BRANCH" = master ]; then # on push event, so need further info
+	if [ "$deployOK" -a "$TRAVIS_BRANCH" = master ]; then # TODO: on push event, so need further info
 		echo
 		echo "== Building and deploying master SNAPSHOT =="
 		mvn -Pdeploy-to-scijava $BUILD_ARGS deploy
@@ -179,7 +177,7 @@ if [ -f environment.yml ]; then
 	if [ ! -f "$condaSh" ]; then
 		echo
 		echo "== Installing conda =="
-		if [ "$TRAVIS_PYTHON_VERSION" = "2.7" ]; then # ${{ matrix.python-version }}
+		if [ ${ matrix.python-version } = "2.7" ]; then
 			wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh
 		else
 			wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
