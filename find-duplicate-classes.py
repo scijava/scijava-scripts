@@ -7,16 +7,17 @@ def extract_classes(f):
     result = set()
     for line in lines:
         v = line.decode('utf-8').strip()
-        if v.endswith('.class'):
+        if v.endswith('.class') and not v.endswith('module-info.class'):
             result.add(v)
     return result
 
 print('Reading JAR files... ', end='', flush=True)
 paths = []
-for root, dirs, files in os.walk("."):
+for root, dirs, files in os.walk('.'):
    for name in files:
        if not name.lower().endswith('.jar'): continue
        paths.append(os.path.join(root, name))
+paths.sort()
 
 classes = {}
 count = 0
@@ -25,18 +26,22 @@ for path in paths:
     count += 1
     classes[path] = extract_classes(path)
     print('\b' * len(perc), end='')
-    perc = str(round(100 * count / len(paths))) + '%    '
+    perc = str(round(100 * count / len(paths))) + '% '
     print(perc, end='', flush=True)
 
-exceptions = ['module-info.class']
-print('Scanning for duplicate classes..')
-for jar1 in classes:
-    for jar2 in classes:
-        if jar1 == jar2: continue
-        dups = classes[jar1].intersection(classes[jar2])
-        for exc in exceptions:
-            if exc in dups: dups.remove(exc)
+print()
+print('Scanning for duplicate classes...')
+for i1 in range(len(paths)):
+    p1 = paths[i1]
+    duplist = []
+    for i2 in range(i1 + 1, len(paths)):
+        p2 = paths[i2]
+        dups = classes[p1].intersection(classes[p2])
         if len(dups) > 0:
-            print(f'==> {jar1} and {jar2} have duplicates! E.g. {next(iter(dups))}')
+            duplist.append(f'==> {p2} (e.g. {next(iter(dups))})')
+    if len(duplist) > 0:
+        print(p1)
+        for line in duplist:
+            print(line)
 
 print('Done!')
