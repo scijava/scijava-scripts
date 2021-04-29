@@ -18,7 +18,7 @@ checkSuccess() {
 
 # Build Maven projects.
 if [ -f pom.xml ]; then
-	echo ::group::"= Maven build =" # beginning of travis_fold (scijava-maven)
+	echo ::group::"= Maven build ="
 	echo
 	echo "== Configuring Maven =="
 
@@ -30,21 +30,20 @@ if [ -f pom.xml ]; then
 	mkdir -p "$HOME/.m2"
 	settingsFile="$HOME/.m2/settings.xml"
 	customSettings=.gh-action/settings.xml
-	# Since Travis files will be deleted, just manually set $settingsFile
 	if [ -f "$customSettings" ]; then
 		cp "$customSettings" "$settingsFile"
-	else # Might need to change <username>travis</username>
+	else
 		cat >"$settingsFile" <<EOL
 <settings>
 	<servers>
 		<server>
 			<id>scijava.releases</id>
-			<username>travis</username>
+			<username>scijava-ci</username>
 			<password>\${env.MAVEN_PASS}</password>
 		</server>
 		<server>
 			<id>scijava.snapshots</id>
-			<username>travis</username>
+			<username>scijava-ci</username>
 			<password>\${env.MAVEN_PASS}</password>
 		</server>
 		<server>
@@ -139,7 +138,7 @@ EOL
 
 	# Run the build.
 	BUILD_ARGS='-B -Djdk.tls.client.protocols="TLSv1,TLSv1.1,TLSv1.2"'
-	if [ "$deployOK" -a "${github.head_ref}" = master ]; then # on push event, so need further info
+	if [ "$deployOK" -a "${github.head_ref}" = master ]; then
 		echo
 		echo "== Building and deploying master SNAPSHOT =="
 		mvn -Pdeploy-to-scijava $BUILD_ARGS deploy
@@ -155,7 +154,7 @@ EOL
 			ga=${gav%:*} &&
 			echo "--> Artifact to invalidate = $ga" &&
 			echo "machine maven.scijava.org" >"$HOME/.netrc" &&
-			echo "        login travis" >>"$HOME/.netrc" &&
+			echo "        login scijava-ci" >>"$HOME/.netrc" &&
 			echo "        password $MAVEN_PASS" >>"$HOME/.netrc" &&
 			sh maven-helper.sh invalidate-cache "$ga"
 		checkSuccess $?
@@ -165,12 +164,12 @@ EOL
 		mvn $BUILD_ARGS install javadoc:javadoc
 		checkSuccess $?
 	fi
-	echo ::endgroup:: # end of travis_fold (scijava-maven)
+	echo ::endgroup::
 fi
 
 # Configure conda environment, if one is needed.
 if [ -f environment.yml ]; then
-	echo ::group::"= Conda setup =" # beginning of travis_fold (scijava-conda)
+	echo ::group::"= Conda setup ="
 
 	condaDir=$HOME/miniconda
 	condaSh=$condaDir/etc/profile.d/conda.sh
@@ -197,18 +196,18 @@ if [ -f environment.yml ]; then
 
 	echo
 	echo "== Configuring environment =="
-	condaEnv=travis-scijava
+	condaEnv=github-scijava
 	test -d "$condaDir/envs/$condaEnv" && condaAction=update || condaAction=create
 	conda env "$condaAction" -n "$condaEnv" -f environment.yml &&
 		conda activate "$condaEnv"
 	checkSuccess $?
 
-	echo ::endgroup:: # end of scijava-conda
+	echo ::endgroup::
 fi
 
 # Execute Jupyter notebooks.
 if which jupyter >/dev/null 2>/dev/null; then
-	echo ::group::"= Jupyter notebooks =" # beginning of travis_fold (scijava-jupyter)
+	echo ::group::"= Jupyter notebooks ="
 	# NB: This part is fiddly. We want to loop over files even with spaces,
 	# so we use the "find ... -print0 | while read $'\0' ..." idiom.
 	# However, that runs the piped expression in a subshell, which means
@@ -225,7 +224,7 @@ if which jupyter >/dev/null 2>/dev/null; then
 		done
 		echo $success
 	})
-	echo ::endgroup:: # end of travis_fold (scijava-jupyter)
+	echo ::endgroup::
 fi
 
 exit $success
