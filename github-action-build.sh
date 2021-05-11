@@ -100,16 +100,13 @@ EOL
 		ciRepo=${ciURL##*/}
 		ciPrefix=${ciURL%/*}
 		ciOrg=${ciPrefix##*/}
-		if [ "${test_var}" = true ]; then
-			echo "----TEST COMPLETE----"
-		fi
 		# TODO: try ${ secret.GITHUB_TOKEN } / double braces?
-		if [ "${github.secret.github_token}" != true ]; then
+		if [ "${secure_env}" != true ]; then
 			echo "No deploy -- secure environment variables not available"
-		elif [ "${github.event.number}" != false ]; then
+		elif [ "${pull_request}" != false ]; then
 			echo "No deploy -- pull request detected"
-		elif [ "${github.repository}" != "$ciOrg/$ciRepo" ]; then
-			echo "No deploy -- repository fork: ${github.repository} != $ciOrg/$ciRepo"
+		elif [ "${repo_fork}" != "$ciOrg/$ciRepo" ]; then
+			echo "No deploy -- repository fork: ${repo_fork}} != $ciOrg/$ciRepo"
 		# TODO: Detect travis-ci.org versus travis-ci.com?
 		else
 			echo "All checks passed for artifact deployment"
@@ -118,7 +115,7 @@ EOL
 	fi
 
 	# Install GPG on OSX/macOS
-	if [ "${runner.os}" = 'macOS' ]; then
+	if [ "${runner_os}" = 'macOS' ]; then
 		HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg2
 	fi
 
@@ -142,7 +139,7 @@ EOL
 
 	# Run the build.
 	BUILD_ARGS='-B -Djdk.tls.client.protocols="TLSv1,TLSv1.1,TLSv1.2"'
-	if [ "$deployOK" -a "${github.head_ref}" = master ]; then
+	if [ "$deployOK" -a "${git_branch}" = master ]; then
 		echo
 		echo "== Building and deploying master SNAPSHOT =="
 		mvn -Pdeploy-to-scijava $BUILD_ARGS deploy
@@ -180,7 +177,7 @@ if [ -f environment.yml ]; then
 	if [ ! -f "$condaSh" ]; then
 		echo
 		echo "== Installing conda =="
-		if [ "${matrix.python-version}" = "2.7" ]; then
+		if [ "${python_version}" = "2.7" ]; then
 			wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh
 		else
 			wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
