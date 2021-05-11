@@ -143,7 +143,7 @@ EOL
 
 	# Run the build.
 	BUILD_ARGS='-B -Djdk.tls.client.protocols="TLSv1,TLSv1.1,TLSv1.2"'
-	if [ "$deployOK" -a "${github.head_ref}"" = master ]; then
+	if [ "$deployOK" -a "${github.head_ref}" = master ]; then
 		echo
 		echo "== Building and deploying master SNAPSHOT =="
 		mvn -Pdeploy-to-scijava $BUILD_ARGS deploy
