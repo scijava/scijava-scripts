@@ -2,23 +2,23 @@
 
 # travisify.sh
 #
-# Script for enabling or updating Travis CI builds for a given repository.
+# Script for enabling or updating GitHub Action builds for a given repository.
 
 #set -e
 
 dir="$(dirname "$0")"
 
-travisDir=.travis
-travisConfig=.travis.yml
-travisBuildScript=$travisDir/build.sh
-travisSettingsFile=$travisDir/settings.xml
-travisNotifyScript=$travisDir/notify.sh
+gitactionDir=.github
+gitactionConfig=.gitaction.yml
+gitactionBuildScript=$gitactionDir/build.sh
+gitactionSettingsFile=$gitactionDir/settings.xml
+gitactionNotifyScript=$gitactionDir/notify.sh
 credentialsDir=$HOME/.scijava/credentials
 varsFile=$credentialsDir/vars
 signingKeySourceFile=$credentialsDir/scijava-ci-signing.asc
-signingKeyDestFile=$travisDir/signingkey.asc
+signingKeyDestFile=$gitactionDir/signingkey.asc
 pomMinVersion='17.1.1'
-tmpFile=travisify.tmp
+tmpFile=gitaction.tmp
 
 info() { echo "- $@"; }
 warn() { echo "[WARNING] $@" 1>&2; }
@@ -42,7 +42,7 @@ update() {
 	file=$1
 	msg=$2
 	exe=$3
-	test "$msg" || msg="Travis: update $file"
+	test "$msg" || msg="GitHub Action: update $file"
 	if [ -e "$file" ]
 	then
 		if diff -q "$file" "$tmpFile" >/dev/null
@@ -71,7 +71,7 @@ update() {
 process() {
 	cd "$1"
 
-	# -- Git sanity checks --
+	# -- GitHub Action sanity checks --
 
 	repoSlug=$(xmllint --xpath '//*[local-name()="project"]/*[local-name()="scm"]/*[local-name()="connection"]' pom.xml|sed 's_.*github.com[:/]\(.*\)<.*_\1_')
 	test "$repoSlug" && info "Repository = $repoSlug" || die 'Could not determine GitHub repository slug'
@@ -112,16 +112,16 @@ process() {
 		*) die "Unsupported domain: $domain";;
 	esac
 
-	# -- Travis sanity checks --
+	# -- GitHub Action sanity checks --
 
-	test -e "$travisDir" -a ! -d "$travisDir" && die "$travisDir is not a directory"
-	test -e "$travisConfig" -a ! -f "$travisConfig" && die "$travisConfig is not a regular file"
-	test -e "$travisConfig" && warn "$travisConfig already exists"
-	test -e "$travisBuildScript" && warn "$travisBuildScript already exists"
+	test -e "$gitactionDir" -a ! -d "$gitactionDir" && die "$gitactionDir is not a directory"
+	test -e "$gitactionConfig" -a ! -f "$gitactionConfig" && die "$gitactionConfig is not a regular file"
+	test -e "$gitactionConfig" && warn "$gitactionConfig already exists"
+	test -e "$gitactionBuildScript" && warn "$gitactionBuildScript already exists"
 
 	# -- Do things --
 
-	# Add/update the Travis configuration file.
+	# Add/update the GitHun Actions configuration file.
 	cat >"$tmpFile" <<EOL
 language: java
 jdk: openjdk8
@@ -130,34 +130,34 @@ branches:
   - $defaultBranch
   - "/.*-[0-9]+\\\\..*/"
 install: true
-script: "$travisBuildScript"
+script: "$gitactionBuildScript"
 cache:
   directories:
   - "~/.m2/repository"
 EOL
-	update "$travisConfig"
+	update "$gitactionConfig"
 
-	# Add/update the Travis build script.
+	# Add/update the GitHub Action build script.
 	cat >"$tmpFile" <<EOL
 #!/bin/sh
-curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/travis-build.sh
-sh travis-build.sh
+curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/githun-action-build.sh
+sh githun-action-build.sh
 EOL
 	chmod +x "$tmpFile"
-	update "$travisBuildScript" "Travis: add executable script $travisBuildScript" "true"
+	update "$githactionBuildScript" "GitHub Action: add executable script $gitactionBuildScript" "true"
 
-	# Remove obsolete Travis-related files.
-	if [ -f "$travisSettingsFile" ]
+	# Remove obsolete GitHub-Actions-related files.
+	if [ -f "$gitactionSettingsFile" ]
 	then
-		info "Removing obsolete $travisSettingsFile (travis-build.sh generates it now)"
-		$EXEC git rm -f "$travisSettingsFile"
+		info "Removing obsolete $gitactionSettingsFile (github-action-build.sh generates it now)"
+		$EXEC git rm -f "$gitactionSettingsFile"
 	fi
-	if [ -f "$travisNotifyScript" ]
+	if [ -f "$gitactionNotifyScript" ]
 	then
-		info "Removing obsolete $travisNotifyScript (ImageJ Jenkins is dead)"
-		$EXEC git rm -f "$travisNotifyScript"
+		info "Removing obsolete $gitactionNotifyScript (ImageJ Jenkins is dead)"
+		$EXEC git rm -f "$gitactionNotifyScript"
 	fi
-	$EXEC git diff-index --quiet HEAD -- || $EXEC git ci -m "Travis: remove obsolete files"
+	$EXEC git diff-index --quiet HEAD -- || $EXEC git ci -m "GitHub Action: remove obsolete files"
 
 	# Upgrade version of pom-scijava.
 	if [ -z "$SKIP_PARENT_CHECK" ]
@@ -213,9 +213,9 @@ EOL
 			yes | $EXEC travis encrypt --$mode "$p" --add env.global --repo "$repoSlug"
 			test $? -eq 0 || die "Failed to encrypt variable '$p'"
 		done <"$varsFile"
-		$EXEC git commit "$travisConfig" -m "Travis: add encrypted environment variables"
+		$EXEC git commit "$gitactionConfig" -m "GitHub Action: add encrypted environment variables"
 	else
-		warn "No $varsFile found. Travis will not have any environment variables set!"
+		warn "No $varsFile found. GitHub Action will not have any environment variables set!"
 	fi
 
 	# encrypt GPG keypair
@@ -234,10 +234,10 @@ EOL
 			sed -i.bak "s/\(sh travis-build.sh\)/\1 $key $iv/" "$travisBuildScript"
 			rm -f "$travisBuildScript.bak"
 			git add "$travisBuildScript" "$signingKeyDestFile.enc"
-			git commit -m "Travis: add encrypted GPG signing keypair"
+			git commit -m "GitHub Action: add encrypted GPG signing keypair"
 		fi
 	else
-		warn "No $signingKeySourceFile found. Travis will not be able to do GPG signing!"
+		warn "No $signingKeySourceFile found. GitHub Action will not be able to do GPG signing!"
 	fi
 }
 

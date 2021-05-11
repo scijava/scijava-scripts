@@ -53,20 +53,20 @@ if [ -f pom.xml ]; then
 		</server>
 	</servers>
 EOL
-		# NB: Use maven.scijava.org instead of Central if defined in repositories.
-		# This hopefully avoids intermittent "ReasonPhrase:Forbidden" errors
-		# when the Travis build pings Maven Central; see travis-ci/travis-ci#6593.
-		grep -A 2 '<repository>' pom.xml | grep -q 'maven.scijava.org' &&
-			cat >>"$settingsFile" <<EOL
-	<mirrors>
-		<mirror>
-			<id>scijava-mirror</id>
-			<name>SciJava mirror</name>
-			<url>https://maven.scijava.org/content/groups/public/</url>
-			<mirrorOf>central</mirrorOf>
-		</mirror>
-	</mirrors>
-EOL
+# 		# NB: Use maven.scijava.org instead of Central if defined in repositories.
+# 		# This hopefully avoids intermittent "ReasonPhrase:Forbidden" errors
+# 		# when the Travis build pings Maven Central; see travis-ci/travis-ci#6593.
+# 		grep -A 2 '<repository>' pom.xml | grep -q 'maven.scijava.org' &&
+# 			cat >>"$settingsFile" <<EOL
+# 	<mirrors>
+# 		<mirror>
+# 			<id>scijava-mirror</id>
+# 			<name>SciJava mirror</name>
+# 			<url>https://maven.scijava.org/content/groups/public/</url>
+# 			<mirrorOf>central</mirrorOf>
+# 		</mirror>
+# 	</mirrors>
+# EOL
 		cat >>"$settingsFile" <<EOL
 	<profiles>
 		<profile>
@@ -103,9 +103,11 @@ EOL
 		# TODO: try ${ secret.GITHUB_TOKEN } / double braces?
 		if [ "${secure_env}" != true ]; then
 			echo "No deploy -- secure environment variables not available"
-		elif [ "${pull_request}" != false ]; then
+		fi
+		if [ "${pull_request}" != false ]; then
 			echo "No deploy -- pull request detected"
-		elif [ "${repo_fork}" != "$ciOrg/$ciRepo" ]; then
+		fi
+		if [ "${repo_fork}" != "$ciOrg/$ciRepo" ]; then
 			echo "No deploy -- repository fork: ${repo_fork}} != $ciOrg/$ciRepo"
 		# TODO: Detect travis-ci.org versus travis-ci.com?
 		else
