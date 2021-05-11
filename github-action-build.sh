@@ -102,6 +102,7 @@ EOL
 		ciOrg=${ciPrefix##*/}
 		if [ "${test_var}" == true ]; then
 			echo "----TEST COMPLETE----"
+		fi
 		# TODO: try ${ secret.GITHUB_TOKEN } / double braces?
 		if [ "${github.secret.github_token}" != true ]; then
 			echo "No deploy -- secure environment variables not available"
