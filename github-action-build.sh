@@ -56,7 +56,6 @@ EOL
 		# NB: Use maven.scijava.org instead of Central if defined in repositories.
 		# This hopefully avoids intermittent "ReasonPhrase:Forbidden" errors
 		# when the Travis build pings Maven Central; see travis-ci/travis-ci#6593.
-		# TODO: Try removing and see if error comes up
 		grep -A 2 '<repository>' pom.xml | grep -q 'maven.scijava.org' &&
 			cat >>"$settingsFile" <<EOL
 	<mirrors>
@@ -101,16 +100,12 @@ EOL
 		ciRepo=${ciURL##*/}
 		ciPrefix=${ciURL%/*}
 		ciOrg=${ciPrefix##*/}
-		if [ "${test_var}" != false ]; then
-			echo "----TEST COMPLETE----"
-		fi
-		# TODO: try ${ secret.GITHUB_TOKEN } / double braces?
-		if [ "${secret.GITHUB_TOKEN}" != true ]; then
+		if [ "${github.secret.github_token}" != true ]; then
 			echo "No deploy -- secure environment variables not available"
 		elif [ "${github.event.number}" != false ]; then
 			echo "No deploy -- pull request detected"
 		elif [ "${github.repository}" != "$ciOrg/$ciRepo" ]; then
-			echo "No deploy -- repository fork: "${github.repository}" != $ciOrg/$ciRepo"
+			echo "No deploy -- repository fork: ${github.repository} != $ciOrg/$ciRepo"
 		# TODO: Detect travis-ci.org versus travis-ci.com?
 		else
 			echo "All checks passed for artifact deployment"
