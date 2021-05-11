@@ -106,10 +106,10 @@ EOL
 		# TODO: try ${ secret.GITHUB_TOKEN } / double braces?
 		if [ "${ github.secret.github_token}" != true ]; then
 			echo "No deploy -- secure environment variables not available"
-		elif [ ${{github.event.number}} != false ]; then
+		elif [ ${github.event.number} != false ]; then
 			echo "No deploy -- pull request detected"
-		elif [ ${{github.repository}} != "$ciOrg/$ciRepo" ]; then
-			echo "No deploy -- repository fork: ${{github.repository}} != $ciOrg/$ciRepo"
+		elif [ ${github.repository} != "$ciOrg/$ciRepo" ]; then
+			echo "No deploy -- repository fork: ${github.repository} != $ciOrg/$ciRepo"
 		# TODO: Detect travis-ci.org versus travis-ci.com?
 		else
 			echo "All checks passed for artifact deployment"
@@ -142,7 +142,7 @@ EOL
 
 	# Run the build.
 	BUILD_ARGS='-B -Djdk.tls.client.protocols="TLSv1,TLSv1.1,TLSv1.2"'
-	if [ "$deployOK" -a ${{github.head_ref}} = master ]; then
+	if [ "$deployOK" -a ${github.head_ref} = master ]; then
 		echo
 		echo "== Building and deploying master SNAPSHOT =="
 		mvn -Pdeploy-to-scijava $BUILD_ARGS deploy
