@@ -110,7 +110,7 @@ EOL
 		elif [ "${github.event.number}" != false ]; then
 			echo "No deploy -- pull request detected"
 		elif [ "${github.repository}" != "$ciOrg/$ciRepo" ]; then
-			echo "No deploy -- repository fork: "${github.repository}"" != $ciOrg/$ciRepo"
+			echo "No deploy -- repository fork: "${github.repository}" != $ciOrg/$ciRepo"
 		# TODO: Detect travis-ci.org versus travis-ci.com?
 		else
 			echo "All checks passed for artifact deployment"
