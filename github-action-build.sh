@@ -108,12 +108,13 @@ EOL
 			echo ${git_branch}
 			echo ${python_version}
 			echo ${repo_fork}
+			echo ${runner_os}
 		fi
 		if [ "${pull_request}" != false ]; then
 			echo "No deploy -- pull request detected"
 		fi
 		if [ "${repo_fork}" != "$ciOrg/$ciRepo" ]; then
-			echo "No deploy -- repository fork: ${repo_fork}} != $ciOrg/$ciRepo"
+			echo "No deploy -- repository fork: ${repo_fork} != $ciOrg/$ciRepo"
 		else
 			echo "All checks passed for artifact deployment"
 			deployOK=1
