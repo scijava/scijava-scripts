@@ -103,10 +103,10 @@ EOL
 		# https://docs.github.com/en/actions/reference/encrypted-secrets
 		if [ "${secure_env}" != true ]; then
 			echo "No deploy -- secure environment variables not available"
-			echo ${secure_env}
+			echo "${secure_env}"
 			echo ${pull_request}
-			echo ${repo_fork}
-			echo ${runner_os}
+			echo "${repo_fork}"
+			echo $runner_os
 			echo ${git_branch}
 			echo ${python_version}
 		fi
