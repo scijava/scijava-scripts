@@ -106,9 +106,12 @@ EOL
 			echo ${secure_env}
 			echo ${pull_request}
 			echo ${repo_fork}
-			echo $runner_os
+			echo ${runner_os}
 			echo ${git_branch}
 			echo ${python_version}
+			echo ${ciRepo}
+			echo ${ciPrefix}
+			echo ${ciOrg}
 		fi
 		if [ "${pull_request}" != false ]; then
 			echo "No deploy -- pull request detected"

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# travis-javadoc.sh - A script to build the javadocs of a SciJava-based project.
+# github-javadoc.sh - A script to build the javadocs of a SciJava-based project.
 #
 
 # The following repositories are known to use this script:
