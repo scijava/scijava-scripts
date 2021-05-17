@@ -100,16 +100,21 @@ EOL
 		ciRepo=${ciURL##*/}
 		ciPrefix=${ciURL%/*}
 		ciOrg=${ciPrefix##*/}
-		# TODO: try ${ secret.GITHUB_TOKEN } / double braces?
+		# https://docs.github.com/en/actions/reference/encrypted-secrets
 		if [ "${secure_env}" != true ]; then
 			echo "No deploy -- secure environment variables not available"
+			echo ${secure_env}
+			echo ${pull_request}
+			echo ${repo_fork}
+			echo ${runner_os}
+			echo ${git_branch}
+			echo ${python_version}
 		fi
 		if [ "${pull_request}" != false ]; then
 			echo "No deploy -- pull request detected"
 		fi
 		if [ "${repo_fork}" != "$ciOrg/$ciRepo" ]; then
 			echo "No deploy -- repository fork: ${repo_fork}} != $ciOrg/$ciRepo"
-		# TODO: Detect travis-ci.org versus travis-ci.com?
 		else
 			echo "All checks passed for artifact deployment"
 			deployOK=1

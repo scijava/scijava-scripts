@@ -101,6 +101,7 @@ process() {
 			die "Not pom-scijava parent: $parent. Run with -p flag to skip this check."
 	fi
 
+	# https://docs.github.com/en/actions/managing-workflow-runs/adding-a-workflow-status-badge
 	domain=$(grep "travis-ci\.[a-z]*/$repoSlug" pom.xml 2>/dev/null | sed 's/.*\(travis-ci\.[a-z]*\).*/\1/')
 	test "$domain" &&
 		info "Detected domain from pom.xml: $domain" ||
