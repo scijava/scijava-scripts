@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# travisify.sh
+# github-actionify.sh
 #
 # Script for enabling or updating GitHub Action builds for a given repository.
 
@@ -95,6 +95,7 @@ process() {
 	# -- POM sanity checks --
 
 	parent=$(xmllint --xpath '//*[local-name()="project"]/*[local-name()="parent"]/*[local-name()="artifactId"]' pom.xml|sed 's/[^>]*>//'|sed 's/<.*//')
+	echo $parent ##########################################
 	if [ -z "$SKIP_PARENT_CHECK" ]
 	then
 		test "$parent" = "pom-scijava" ||
@@ -103,6 +104,7 @@ process() {
 
 	# https://docs.github.com/en/actions/managing-workflow-runs/adding-a-workflow-status-badge
 	domain=$(grep "travis-ci\.[a-z]*/$repoSlug" pom.xml 2>/dev/null | sed 's/.*\(travis-ci\.[a-z]*\).*/\1/')
+	echo $domain ##################################################
 	test "$domain" &&
 		info "Detected domain from pom.xml: $domain" ||
 		die "No valid ciManagement section in pom.xml. Please add one, then try again."

@@ -85,11 +85,9 @@ EOL
 		ciOrg=${ciPrefix##*/}
 		if [ ${secure_env} != true ]; then
 			echo "No deploy -- secure environment variables not available"
-		fi
-		if [ ${pull_request} != false ]; then
+		elif [ ${pull_request} != false ]; then
 			echo "No deploy -- pull request detected"
-		fi
-		if [ ${repo_fork} != "$ciOrg/$ciRepo" ]; then
+		elif [ ${repo_fork} != "$ciOrg/$ciRepo" ]; then
 			echo "No deploy -- repository fork: ${repo_fork} != $ciOrg/$ciRepo"
 		else
 			echo "All checks passed for artifact deployment"
