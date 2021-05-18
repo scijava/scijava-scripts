@@ -83,9 +83,10 @@ EOL
 		ciRepo=${ciURL##*/}
 		ciPrefix=${ciURL%/*}
 		ciOrg=${ciPrefix##*/}
-		if [ ${secure_env} != true ]; then
-			echo "No deploy -- secure environment variables not available"
-		elif [ ${pull_request} != false ]; then
+		curl -o pull-request.txt https://api.github.com/repos/$ciOrg/$ciRepo/pulls
+		# if [ ${secure_env} != true ]; then
+		# 	echo "No deploy -- secure environment variables not available"
+		if [ grep -q "url" pull-request.txt ]; then
 			echo "No deploy -- pull request detected"
 		elif [ ${repo_fork} != "$ciOrg/$ciRepo" ]; then
 			echo "No deploy -- repository fork: ${repo_fork} != $ciOrg/$ciRepo"
@@ -93,6 +94,7 @@ EOL
 			echo "All checks passed for artifact deployment"
 			deployOK=1
 		fi
+		rm pull-request.txt # delete created txt file
 	fi
 
 	# Install GPG on OSX/macOS
