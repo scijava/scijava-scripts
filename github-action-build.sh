@@ -53,20 +53,6 @@ if [ -f pom.xml ]; then
 		</server>
 	</servers>
 EOL
-# 		# NB: Use maven.scijava.org instead of Central if defined in repositories.
-# 		# This hopefully avoids intermittent "ReasonPhrase:Forbidden" errors
-# 		# when the Travis build pings Maven Central; see travis-ci/travis-ci#6593.
-# 		grep -A 2 '<repository>' pom.xml | grep -q 'maven.scijava.org' &&
-# 			cat >>"$settingsFile" <<EOL
-# 	<mirrors>
-# 		<mirror>
-# 			<id>scijava-mirror</id>
-# 			<name>SciJava mirror</name>
-# 			<url>https://maven.scijava.org/content/groups/public/</url>
-# 			<mirrorOf>central</mirrorOf>
-# 		</mirror>
-# 	</mirrors>
-# EOL
 		cat >>"$settingsFile" <<EOL
 	<profiles>
 		<profile>
@@ -94,9 +80,6 @@ EOL
 		echo "Output of failed attempt follows:"
 		echo "$ciURL"
 	else
-		# https://developer.okta.com/blog/2020/05/18/travis-ci-to-github-actions
-		# This website specifies Travis environment variables with their
-		# equivalent GitHub Actions environment variables
 		ciRepo=${ciURL##*/}
 		ciPrefix=${ciURL%/*}
 		ciOrg=${ciPrefix##*/}
