@@ -100,12 +100,8 @@ EOL
 		ciRepo=${ciURL##*/}
 		ciPrefix=${ciURL%/*}
 		ciOrg=${ciPrefix##*/}
-		# https://docs.github.com/en/actions/reference/encrypted-secrets
 		if [ ${secure_env} != true ]; then
 			echo "No deploy -- secure environment variables not available"
-			echo ${secure_env}
-			echo ${pull_request}
-			echo ${git_branch}
 		fi
 		if [ ${pull_request} != false ]; then
 			echo "No deploy -- pull request detected"
