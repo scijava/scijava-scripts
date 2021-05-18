@@ -101,7 +101,7 @@ EOL
 		ciPrefix=${ciURL%/*}
 		ciOrg=${ciPrefix##*/}
 		# https://docs.github.com/en/actions/reference/encrypted-secrets
-		if [ "${secure_env}" != true ]; then
+		if [ ${secure_env} != true ]; then
 			echo "No deploy -- secure environment variables not available"
 			echo ${secure_env}
 			echo ${pull_request}
@@ -110,10 +110,10 @@ EOL
 			echo ${repo_fork}
 			echo ${runner_os}
 		fi
-		if [ "${pull_request}" != false ]; then
+		if [ ${pull_request} != false ]; then
 			echo "No deploy -- pull request detected"
 		fi
-		if [ "${repo_fork}" != "$ciOrg/$ciRepo" ]; then
+		if [ ${repo_fork} != "$ciOrg/$ciRepo" ]; then
 			echo "No deploy -- repository fork: ${repo_fork} != $ciOrg/$ciRepo"
 		else
 			echo "All checks passed for artifact deployment"
@@ -122,7 +122,7 @@ EOL
 	fi
 
 	# Install GPG on OSX/macOS
-	if [ "${runner_os}" = 'macOS' ]; then
+	if [ ${runner_os} = 'macOS' ]; then
 		HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg2
 	fi
 
@@ -184,6 +184,8 @@ if [ -f environment.yml ]; then
 	if [ ! -f "$condaSh" ]; then
 		echo
 		echo "== Installing conda =="
+		python_version=${python -V}
+		python_version=${python_version:7:3} # get python version in the format like '2.7'
 		if [ "${python_version}" = "2.7" ]; then
 			wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh
 		else
