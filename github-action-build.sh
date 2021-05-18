@@ -106,9 +106,6 @@ EOL
 			echo ${secure_env}
 			echo ${pull_request}
 			echo ${git_branch}
-			echo ${python_version}
-			echo ${repo_fork}
-			echo ${runner_os}
 		fi
 		if [ ${pull_request} != false ]; then
 			echo "No deploy -- pull request detected"
@@ -146,6 +143,7 @@ EOL
 
 	# Run the build.
 	BUILD_ARGS='-B -Djdk.tls.client.protocols="TLSv1,TLSv1.1,TLSv1.2"'
+	# git_branch=${git_branch##*/} # extract branch name
 	if [ "$deployOK" -a "${git_branch}" = master ]; then
 		echo
 		echo "== Building and deploying master SNAPSHOT =="
