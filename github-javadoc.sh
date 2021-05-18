@@ -37,6 +37,7 @@ keep_alive() {
 	wait "$pid"
 }
 
+######################## TODO ########################
 if [ "$TRAVIS_SECURE_ENV_VARS" = true \
 	-a "$TRAVIS_PULL_REQUEST" = false \
 	-a "$TRAVIS_BRANCH" = master ]
@@ -48,7 +49,7 @@ then
 	# Populate the settings.xml configuration.
 	mkdir -p "$HOME/.m2"
 	settingsFile="$HOME/.m2/settings.xml"
-	customSettings=.travis/settings.xml
+	customSettings=.github/settings.xml
 	if [ -f "$customSettings" ]
 	then
 		cp "$customSettings" "$settingsFile"
@@ -90,13 +91,14 @@ EOL
 	echo &&
 	echo "== Configuring environment ==" &&
 
-	# Configure SSH. The file .travis/javadoc.scijava.org.enc must contain
+	# Configure SSH. The file .github/javadoc.scijava.org.enc must contain
 	# an encrypted private RSA key for communicating with the git remote.
 	mkdir -p "$HOME/.ssh" &&
-	openssl aes-256-cbc -K "$openssl_key" -iv "$openssl_iv" -in '.travis/javadoc.scijava.org.enc' -out "$HOME/.ssh/id_rsa" -d &&
+	openssl aes-256-cbc -K "$openssl_key" -iv "$openssl_iv" -in '.github/javadoc.scijava.org.enc' -out "$HOME/.ssh/id_rsa" -d &&
 	chmod 400 "$HOME/.ssh/id_rsa" &&
 
 	# Configure git settings.
+	######################## TODO ########################
 	git config --global user.email "travis@travis-ci.com" &&
 	git config --global user.name "Travis CI" &&
 
@@ -117,6 +119,7 @@ EOL
 
 	test "$success" || exit 1
 
+	######################## TODO ########################
 	git commit -m "Update $project javadocs (Travis build $TRAVIS_BUILD_NUMBER)"
 	git pull --rebase &&
 	git push -q origin gh-pages > /dev/null || exit 2

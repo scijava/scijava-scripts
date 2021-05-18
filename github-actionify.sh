@@ -71,7 +71,7 @@ update() {
 process() {
 	cd "$1"
 
-	# -- GitHub Action sanity checks --
+	# -- Git sanity checks --
 
 	repoSlug=$(xmllint --xpath '//*[local-name()="project"]/*[local-name()="scm"]/*[local-name()="connection"]' pom.xml|sed 's_.*github.com[:/]\(.*\)<.*_\1_')
 	test "$repoSlug" && info "Repository = $repoSlug" || die 'Could not determine GitHub repository slug'
@@ -95,16 +95,14 @@ process() {
 	# -- POM sanity checks --
 
 	parent=$(xmllint --xpath '//*[local-name()="project"]/*[local-name()="parent"]/*[local-name()="artifactId"]' pom.xml|sed 's/[^>]*>//'|sed 's/<.*//')
-	echo $parent ##########################################
 	if [ -z "$SKIP_PARENT_CHECK" ]
 	then
 		test "$parent" = "pom-scijava" ||
 			die "Not pom-scijava parent: $parent. Run with -p flag to skip this check."
 	fi
 
-	# https://docs.github.com/en/actions/managing-workflow-runs/adding-a-workflow-status-badge
+	######################### CHANGE POM.XML??? #########################
 	domain=$(grep "travis-ci\.[a-z]*/$repoSlug" pom.xml 2>/dev/null | sed 's/.*\(travis-ci\.[a-z]*\).*/\1/')
-	echo $domain ##################################################
 	test "$domain" &&
 		info "Detected domain from pom.xml: $domain" ||
 		die "No valid ciManagement section in pom.xml. Please add one, then try again."
@@ -191,17 +189,18 @@ EOL
 	fi
 
 	# update the README
-	if grep -q "travis-ci\.[a-zA-Z0-9/_-]*\.svg" README.md >/dev/null 2>&1
+	# https://docs.github.com/en/actions/managing-workflow-runs/adding-a-workflow-status-badge
+	if grep -q "github\.com\/[a-zA-Z0-9/_-]*\/actions/workflow/main.yml/badge.svg" README.md >/dev/null 2>&1
 	then
-		info "Updating README.md Travis badge"
-		sed "s|travis-ci\.[a-zA-Z0-9/_-]*|$domain/$repoSlug|g" README.md >"$tmpFile"
-		update README.md 'Travis: fix README.md badge link'
+		info "Updating README.md GitHub Action badge"
+		sed "s|github\.com\/[a-zA-Z0-9/_-]*|$domain/$repoSlug|g" README.md >"$tmpFile"
+		update README.md 'GitHub Action: fix README.md badge link'
 	else
-		info "Adding Travis badge to README.md"
+		info "Adding GitHub Action badge to README.md"
 		echo "[![](https://$domain/$repoSlug.svg?branch=$defaultBranch)](https://$domain/$repoSlug)" >"$tmpFile"
 		echo >>"$tmpFile"
 		test -f README.md && cat README.md >>"$tmpFile"
-		update README.md 'Travis: add badge to README.md'
+		update README.md 'GitHub Action: add badge to README.md'
 	fi
 
 	# encrypt key/value pairs in variables file
@@ -213,6 +212,7 @@ EOL
 				'#'*) continue;;
 			esac
 			info "Encrypting ${p%%=*}"
+			######################### TODO #########################
 			yes | $EXEC travis encrypt --$mode "$p" --add env.global --repo "$repoSlug"
 			test $? -eq 0 || die "Failed to encrypt variable '$p'"
 		done <"$varsFile"
@@ -228,15 +228,17 @@ EOL
 		if [ -z "$EXEC" ]
 		then
 			rm -f "$signingKeyDestFile.enc"
+			######################### TODO #########################
+			# https://docs.github.com/en/github/authenticating-to-github/generating-a-new-gpg-key
 			encryptOutput=$(travis encrypt-file --$mode "$signingKeySourceFile" "$signingKeyDestFile.enc" --repo "$repoSlug")
 			test $? -eq 0 || die "Failed to encrypt signing key."
 			encryptResult=$(echo "$encryptOutput" | grep openssl)
 			test "$encryptResult" || die "No openssl variables emitted."
 			key=$(echo "$encryptResult" | cut -d' ' -f4)
 			iv=$(echo "$encryptResult" | cut -d' ' -f6)
-			sed -i.bak "s/\(sh travis-build.sh\)/\1 $key $iv/" "$travisBuildScript"
-			rm -f "$travisBuildScript.bak"
-			git add "$travisBuildScript" "$signingKeyDestFile.enc"
+			sed -i.bak "s/\(sh github-action-build.sh\)/\1 $key $iv/" "$gitactionBuildScript"
+			rm -f "$gitactionBuildScript.bak"
+			git add "$gitactionBuildScript" "$signingKeyDestFile.enc"
 			git commit -m "GitHub Action: add encrypted GPG signing keypair"
 		fi
 	else
@@ -251,6 +253,7 @@ test -d "$credentialsDir" ||
 		"Please contact a SciJava administrator to receive a copy of this content."
 
 # check prerequisites
+######################### TODO #########################
 check git sed cut perl xmllint travis
 
 # parse arguments
