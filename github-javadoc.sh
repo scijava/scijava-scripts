@@ -37,9 +37,15 @@ keep_alive() {
 	wait "$pid"
 }
 
+ciURL=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${project.ciManagement.url}' --non-recursive validate exec:exec 2>&1)
+ciRepo=${ciURL##*/}
+ciPrefix=${ciURL%/*}
+ciOrg=${ciPrefix##*/}
+curl -o pull-request.txt https://api.github.com/repos/$ciOrg/$ciRepo/pulls >/dev/null 2>&1 # Check for pull requests
+curl -o secure-env.txt https://api.github.com/orgs/$ciOrg/$ciRepo/secrets >/dev/null 2>&1 # Check for secure env var
 ######################## TODO ########################
-if [ "$TRAVIS_SECURE_ENV_VARS" = true \
-	-a "$TRAVIS_PULL_REQUEST" = false \
+if [ grep -q "documentation_url" secure-env.txt \
+	-a ! grep -q "url" pull-request.txt \
 	-a "$TRAVIS_BRANCH" = master ]
 then
 	project=$1
@@ -98,9 +104,8 @@ EOL
 	chmod 400 "$HOME/.ssh/id_rsa" &&
 
 	# Configure git settings.
-	######################## TODO ########################
-	git config --global user.email "travis@travis-ci.com" &&
-	git config --global user.name "Travis CI" &&
+	git config --global user.email "ci@scijava.org" &&
+	git config --global user.name "SciJava CI" &&
 
 	echo &&
 	echo "== Updating javadoc.scijava.org repository ==" &&

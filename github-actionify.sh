@@ -102,6 +102,10 @@ process() {
 	fi
 
 	######################### CHANGE POM.XML??? #########################
+	# TODO:	2 sed statements to replace the system and the url under <ciManagement> in pom.xml
+	#		<system>GitHub Actions<\system>
+	#		<url>https://github.com/$repoSlug/actions<\url>
+	# domain: manually assign to github.com and delete the rest
 	domain=$(grep "travis-ci\.[a-z]*/$repoSlug" pom.xml 2>/dev/null | sed 's/.*\(travis-ci\.[a-z]*\).*/\1/')
 	test "$domain" &&
 		info "Detected domain from pom.xml: $domain" ||
@@ -190,7 +194,7 @@ EOL
 
 	# update the README
 	# https://docs.github.com/en/actions/managing-workflow-runs/adding-a-workflow-status-badge
-	if grep -q "github\.com\/[a-zA-Z0-9/_-]*\/actions/workflow/main.yml/badge.svg" README.md >/dev/null 2>&1
+	if grep -q "github\.com/[a-zA-Z0-9/_-]*/actions/workflow/main.yml/badge.svg" README.md >/dev/null 2>&1
 	then
 		info "Updating README.md GitHub Action badge"
 		sed "s|github\.com\/[a-zA-Z0-9/_-]*|$domain/$repoSlug|g" README.md >"$tmpFile"
