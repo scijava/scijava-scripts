@@ -41,12 +41,12 @@ ciURL=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${projec
 ciRepo=${ciURL##*/}
 ciPrefix=${ciURL%/*}
 ciOrg=${ciPrefix##*/}
+gitBranch=$(git branch --show-current) # get current branch name
 curl -o pull-request.txt https://api.github.com/repos/$ciOrg/$ciRepo/pulls >/dev/null 2>&1 # Check for pull requests
 curl -o secure-env.txt https://api.github.com/orgs/$ciOrg/$ciRepo/secrets >/dev/null 2>&1 # Check for secure env var
-######################## TODO ########################
 if [ grep -q "documentation_url" secure-env.txt \
 	-a ! grep -q "url" pull-request.txt \
-	-a "$TRAVIS_BRANCH" = master ]
+	-a "$gitBranch" = master ]
 then
 	project=$1
 	openssl_key=$2
@@ -61,8 +61,6 @@ then
 		cp "$customSettings" "$settingsFile"
 	else
 		# NB: Use maven.scijava.org as sole mirror if defined in <repositories>.
-		# This hopefully avoids intermittent "ReasonPhrase:Forbidden" errors
-		# when the Travis build pings Maven Central; see travis-ci/travis-ci#6593.
 		test -f pom.xml && grep -A 2 '<repository>' pom.xml | grep -q 'maven.scijava.org' &&
 			cat >"$settingsFile" <<EOL
 <settings>
@@ -124,12 +122,11 @@ EOL
 
 	test "$success" || exit 1
 
-	######################## TODO ########################
-	git commit -m "Update $project javadocs (Travis build $TRAVIS_BUILD_NUMBER)"
+	git commit -m "Update $project javadocs (GitHub Actions build $WORKFLOW_RUN_NUMBER)" # Env var defined in GitHub Actions yml file
 	git pull --rebase &&
 	git push -q origin gh-pages > /dev/null || exit 2
 
 	echo "Update complete."
 else
-	echo "Skipping non-canonical branch $TRAVIS_BRANCH"
+	echo "Skipping non-canonical branch $gitBranch"
 fi

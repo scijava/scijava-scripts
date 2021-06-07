@@ -83,7 +83,7 @@ EOL
 		ciRepo=${ciURL##*/}
 		ciPrefix=${ciURL%/*}
 		ciOrg=${ciPrefix##*/}
-		git config --get remote.origin.url ################
+		git config --get remote.origin.url
 		curl -o pull-request.txt https://api.github.com/repos/$ciOrg/$ciRepo/pulls >/dev/null 2>&1 # Check for pull requests
 		curl -o secure-env.txt https://api.github.com/orgs/$ciOrg/$ciRepo/secrets >/dev/null 2>&1 # Check for secure env var
 		if [ ! grep -q "documentation_url" secure-env.txt ]; then

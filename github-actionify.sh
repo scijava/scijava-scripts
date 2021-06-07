@@ -4,6 +4,11 @@
 #
 # Script for enabling or updating GitHub Action builds for a given repository.
 
+# Environment variables:
+# 	$EXEC - an optional prefix for bash commands (for example, if $EXEC=sudo, then the commands will be run as super user access)
+# 	$@ - all positional parameters
+# 	$0, $1, ... - specific positional parameters for each method
+
 #set -e
 
 dir="$(dirname "$0")"
@@ -101,21 +106,11 @@ process() {
 			die "Not pom-scijava parent: $parent. Run with -p flag to skip this check."
 	fi
 
-	######################### CHANGE POM.XML??? #########################
-	# TODO:	2 sed statements to replace the system and the url under <ciManagement> in pom.xml
-	#		<system>GitHub Actions<\system>
-	#		<url>https://github.com/$repoSlug/actions<\url>
-	# domain: manually assign to github.com and delete the rest
+	# Change pom.xml from Travis CI to GitHub Actions
+	domain="github.com"
 	domain=$(grep "travis-ci\.[a-z]*/$repoSlug" pom.xml 2>/dev/null | sed 's/.*\(travis-ci\.[a-z]*\).*/\1/')
-	test "$domain" &&
-		info "Detected domain from pom.xml: $domain" ||
-		die "No valid ciManagement section in pom.xml. Please add one, then try again."
-
-	case $domain in
-		travis-ci.com) mode=pro;;
-		travis-ci.org) mode=org;;
-		*) die "Unsupported domain: $domain";;
-	esac
+	grep "Travis CI" pom.xml 2>/dev/null | sed 's/Travis CI/GitHub Actions/'
+	grep "travis-ci\.[a-z]*/$repoSlug" pom.xml | sed '/travis-ci/c\<url>https://github.com/$repoSlug/actions<\/url>'	
 
 	# -- GitHub Action sanity checks --
 
@@ -145,8 +140,8 @@ EOL
 	# Add/update the GitHub Action build script.
 	cat >"$tmpFile" <<EOL
 #!/bin/sh
-curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/githun-action-build.sh
-sh githun-action-build.sh
+curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/github-action-build.sh
+sh github-action-build.sh
 EOL
 	chmod +x "$tmpFile"
 	update "$githactionBuildScript" "GitHub Action: add executable script $gitactionBuildScript" "true"
