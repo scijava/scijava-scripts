@@ -106,7 +106,7 @@ process() {
 			die "Not pom-scijava parent: $parent. Run with -p flag to skip this check."
 	fi
 
-	# Change pom.xml from Travis CI to GitHub Actions
+	# Change pom.xml from Travis CI to GitHub Action
 	domain="github.com"
 	domain=$(grep "travis-ci\.[a-z]*/$repoSlug" pom.xml 2>/dev/null | sed 's/.*\(travis-ci\.[a-z]*\).*/\1/')
 	grep "Travis CI" pom.xml 2>/dev/null | sed 's/Travis CI/GitHub Actions/'
@@ -212,6 +212,23 @@ EOL
 			esac
 			info "Encrypting ${p%%=*}"
 			######################### TODO #########################
+			yes | $EXEC travis encrypt --$mode "$p" --add env.global --repo "$repoSlug"
+			test $? -eq 0 || die "Failed to encrypt variable '$p'"
+		done <"$varsFile"
+		$EXEC git commit "$gitactionConfig" -m "GitHub Action: add encrypted environment variables"
+	else
+		warn "No $varsFile found. GitHub Action will not have any environment variables set!"
+	fi
+
+	# add key/value pairs as env vars to yml file
+	if [ -f "$varsFile" ]
+	then
+		while read p; do
+			# Skip comments. (Cannot use ${p:0:1} because it's bash-specific.)
+			case "$p" in
+				'#'*) continue;;
+			esac
+			info "Encrypting ${p%%=*}"
 			yes | $EXEC travis encrypt --$mode "$p" --add env.global --repo "$repoSlug"
 			test $? -eq 0 || die "Failed to encrypt variable '$p'"
 		done <"$varsFile"
