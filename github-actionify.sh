@@ -202,40 +202,41 @@ EOL
 		update README.md 'GitHub Action: add badge to README.md'
 	fi
 
-	# encrypt key/value pairs in variables file
-	if [ -f "$varsFile" ]
-	then
-		while read p; do
-			# Skip comments. (Cannot use ${p:0:1} because it's bash-specific.)
-			case "$p" in
-				'#'*) continue;;
-			esac
-			info "Encrypting ${p%%=*}"
-			######################### TODO #########################
-			yes | $EXEC travis encrypt --$mode "$p" --add env.global --repo "$repoSlug"
-			test $? -eq 0 || die "Failed to encrypt variable '$p'"
-		done <"$varsFile"
-		$EXEC git commit "$gitactionConfig" -m "GitHub Action: add encrypted environment variables"
-	else
-		warn "No $varsFile found. GitHub Action will not have any environment variables set!"
-	fi
+	# # encrypt key/value pairs in variables file
+	# if [ -f "$varsFile" ]
+	# then
+	# 	while read p; do
+	# 		# Skip comments. (Cannot use ${p:0:1} because it's bash-specific.)
+	# 		case "$p" in
+	# 			'#'*) continue;;
+	# 		esac
+	# 		info "Encrypting ${p%%=*}"
+	# 		######################### TODO #########################
+	# 		yes | $EXEC travis encrypt --$mode "$p" --add env.global --repo "$repoSlug"
+	# 		test $? -eq 0 || die "Failed to encrypt variable '$p'"
+	# 	done <"$varsFile"
+	# 	$EXEC git commit "$gitactionConfig" -m "GitHub Action: add encrypted environment variables"
+	# else
+	# 	warn "No $varsFile found. GitHub Action will not have any environment variables set!"
+	# fi
 
-	# add key/value pairs as env vars to yml file
-	if [ -f "$varsFile" ]
-	then
-		while read p; do
-			# Skip comments. (Cannot use ${p:0:1} because it's bash-specific.)
-			case "$p" in
-				'#'*) continue;;
-			esac
-			info "Encrypting ${p%%=*}"
-			yes | $EXEC travis encrypt --$mode "$p" --add env.global --repo "$repoSlug"
-			test $? -eq 0 || die "Failed to encrypt variable '$p'"
-		done <"$varsFile"
-		$EXEC git commit "$gitactionConfig" -m "GitHub Action: add encrypted environment variables"
-	else
-		warn "No $varsFile found. GitHub Action will not have any environment variables set!"
-	fi
+	# # add key/value pairs as env vars to yml file
+	# if [ -f "$varsFile" ]
+	# then
+	# 	while read p; do
+	# 		# Skip comments. (Cannot use ${p:0:1} because it's bash-specific.)
+	# 		case "$p" in
+	# 			'#'*) continue;;
+	# 		esac
+	# 		key=${p%%=*}
+	# 		val=${p%%*=}
+	# 		info "Encrypting ${key}"
+			
+	# 	done <"$varsFile"
+	# 	$EXEC git commit "$gitactionConfig" -m "GitHub Action: add encrypted environment variables"
+	# else
+	# 	warn "No $varsFile found. GitHub Action will not have any environment variables set!"
+	# fi
 
 	# encrypt GPG keypair
 	if [ -f "$signingKeySourceFile" ]
@@ -268,9 +269,8 @@ test -d "$credentialsDir" ||
 		"and $signingKeySourceFile for signing of artifacts.\n" \
 		"Please contact a SciJava administrator to receive a copy of this content."
 
-# check prerequisites
-######################### TODO #########################
-check git sed cut perl xmllint travis
+# call check method to verify prerequisites
+check git sed cut perl xmllint
 
 # parse arguments
 EXEC=:
