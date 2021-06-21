@@ -14,7 +14,7 @@
 dir="$(dirname "$0")"
 
 gitactionDir=.github
-gitactionConfig=.gitaction.yml
+gitactionConfig=$gitactionDir/workflows/.gitaction.yml
 gitactionBuildScript=$gitactionDir/build.sh
 gitactionSettingsFile=$gitactionDir/settings.xml
 gitactionNotifyScript=$gitactionDir/notify.sh
@@ -123,17 +123,42 @@ process() {
 
 	# Add/update the GitHun Actions configuration file.
 	cat >"$tmpFile" <<EOL
-language: java
-jdk: openjdk8
-branches:
-  only:
-  - $defaultBranch
-  - "/.*-[0-9]+\\\\..*/"
-install: true
-script: "$gitactionBuildScript"
-cache:
-  directories:
-  - "~/.m2/repository"
+name: SciJava CI
+
+on:
+  push:
+    branches:
+      - $defaultBranch
+  pull_request:
+    branches:
+      - $defaultBranch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache m2 modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ~/.m2
+          key: \${{ runner.os }}-build-\${{ env.cache-name }}
+          restore-keys: |
+            \${{ runner.os }}-build-\${{ env.cache-name }}-
+            \${{ runner.os }}-build-
+            \${{ runner.os }}-
+            
+      - name: Set up JDK 8
+        uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'zulu'
+      - name: Build with Maven
+        run: ./$gitactionBuildScript
 EOL
 	update "$gitactionConfig"
 
