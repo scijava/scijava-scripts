@@ -20,7 +20,7 @@ gitactionSettingsFile=$gitactionDir/settings.xml
 gitactionNotifyScript=$gitactionDir/notify.sh
 credentialsDir=$HOME/.scijava/credentials
 varsFile=$credentialsDir/vars
-signingKeySourceFile=$credentialsDir/scijava-ci-signing.asc
+signingKeySourceFile=$credentialsDir/scijava-ci-signing.asc.enc
 signingKeyDestFile=$gitactionDir/signingkey.asc
 pomMinVersion='17.1.1'
 tmpFile=gitaction.tmp
@@ -141,10 +141,10 @@ EOL
 	cat >"$tmpFile" <<EOL
 #!/bin/sh
 curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/github-action-build.sh
-sh github-action-build.sh
+sh github-action-build.sh \$signingKeySecret \$signingIvSecret
 EOL
 	chmod +x "$tmpFile"
-	update "$githactionBuildScript" "GitHub Action: add executable script $gitactionBuildScript" "true"
+	update "$gitactionBuildScript" "GitHub Action: add executable script $gitactionBuildScript" "true"
 
 	# Remove obsolete GitHub-Actions-related files.
 	if [ -f "$gitactionSettingsFile" ]
@@ -202,60 +202,17 @@ EOL
 		update README.md 'GitHub Action: add badge to README.md'
 	fi
 
-	# # encrypt key/value pairs in variables file
-	# if [ -f "$varsFile" ]
-	# then
-	# 	while read p; do
-	# 		# Skip comments. (Cannot use ${p:0:1} because it's bash-specific.)
-	# 		case "$p" in
-	# 			'#'*) continue;;
-	# 		esac
-	# 		info "Encrypting ${p%%=*}"
-	# 		######################### TODO #########################
-	# 		yes | $EXEC travis encrypt --$mode "$p" --add env.global --repo "$repoSlug"
-	# 		test $? -eq 0 || die "Failed to encrypt variable '$p'"
-	# 	done <"$varsFile"
-	# 	$EXEC git commit "$gitactionConfig" -m "GitHub Action: add encrypted environment variables"
-	# else
-	# 	warn "No $varsFile found. GitHub Action will not have any environment variables set!"
-	# fi
-
-	# # add key/value pairs as env vars to yml file
-	# if [ -f "$varsFile" ]
-	# then
-	# 	while read p; do
-	# 		# Skip comments. (Cannot use ${p:0:1} because it's bash-specific.)
-	# 		case "$p" in
-	# 			'#'*) continue;;
-	# 		esac
-	# 		key=${p%%=*}
-	# 		val=${p%%*=}
-	# 		info "Encrypting ${key}"
-			
-	# 	done <"$varsFile"
-	# 	$EXEC git commit "$gitactionConfig" -m "GitHub Action: add encrypted environment variables"
-	# else
-	# 	warn "No $varsFile found. GitHub Action will not have any environment variables set!"
-	# fi
-
-	# encrypt GPG keypair
+	# copy the encrypted signing key
+	# This assumes you have the encrypted signing key locally and will set the encryption key and iv as encrypted
+	# environment variables in your repository or organization
 	if [ -f "$signingKeySourceFile" ]
 	then
-		info "Encrypting $signingKeyDestFile"
+		info "Copying $signingKeyDestFile"
 		if [ -z "$EXEC" ]
 		then
 			rm -f "$signingKeyDestFile.enc"
-			######################### TODO #########################
-			# https://docs.github.com/en/github/authenticating-to-github/generating-a-new-gpg-key
-			encryptOutput=$(travis encrypt-file --$mode "$signingKeySourceFile" "$signingKeyDestFile.enc" --repo "$repoSlug")
-			test $? -eq 0 || die "Failed to encrypt signing key."
-			encryptResult=$(echo "$encryptOutput" | grep openssl)
-			test "$encryptResult" || die "No openssl variables emitted."
-			key=$(echo "$encryptResult" | cut -d' ' -f4)
-			iv=$(echo "$encryptResult" | cut -d' ' -f6)
-			sed -i.bak "s/\(sh github-action-build.sh\)/\1 $key $iv/" "$gitactionBuildScript"
-			rm -f "$gitactionBuildScript.bak"
-			git add "$gitactionBuildScript" "$signingKeyDestFile.enc"
+			cp "$signingKeySourceFile" "$signingKeyDestFile.enc"
+			git add "$signingKeyDestFile.enc"
 			git commit -m "GitHub Action: add encrypted GPG signing keypair"
 		fi
 	else
