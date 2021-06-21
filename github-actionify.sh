@@ -14,7 +14,8 @@
 dir="$(dirname "$0")"
 
 gitactionDir=.github
-gitactionConfig=$gitactionDir/workflows/.gitaction.yml
+gitactionConfigRoot=/workflows/.gitaction.yml
+gitactionConfig=$gitactionDir$gitactionConfigRoot
 gitactionBuildScript=$gitactionDir/build.sh
 gitactionSettingsFile=$gitactionDir/settings.xml
 gitactionNotifyScript=$gitactionDir/notify.sh
@@ -108,9 +109,8 @@ process() {
 
 	# Change pom.xml from Travis CI to GitHub Action
 	domain="github.com"
-	domain=$(grep "travis-ci\.[a-z]*/$repoSlug" pom.xml 2>/dev/null | sed 's/.*\(travis-ci\.[a-z]*\).*/\1/')
-	grep "Travis CI" pom.xml 2>/dev/null | sed 's/Travis CI/GitHub Actions/'
-	grep "travis-ci\.[a-z]*/$repoSlug" pom.xml | sed '/travis-ci/c\<url>https://github.com/$repoSlug/actions<\/url>'	
+	sed -i 's/Travis CI/GitHub Actions/g' pom.xml
+	sed -i "s/travis-ci.*/github.com\/$repoSlug\/actions\/workflows\/\.gitaction\.yml<\/url>/g" pom.xml
 
 	# -- GitHub Action sanity checks --
 
@@ -214,14 +214,14 @@ EOL
 
 	# update the README
 	# https://docs.github.com/en/actions/managing-workflow-runs/adding-a-workflow-status-badge
-	if grep -q "github\.com/[a-zA-Z0-9/_-]*/actions/workflow/main.yml/badge.svg" README.md >/dev/null 2>&1
+	if grep -q "travis-ci.*svg" README.md >/dev/null 2>&1
 	then
 		info "Updating README.md GitHub Action badge"
-		sed "s|github\.com\/[a-zA-Z0-9/_-]*|$domain/$repoSlug|g" README.md >"$tmpFile"
+		sed "s/travis-ci.*/${domain//\//\\/}\/${repoSlug//\//\\/}\/actions${gitactionConfigRoot//\//\\/}\/badge\.svg\)\]\(https:\/\/$domain\/${repoSlug//\//\\/}\/actions${gitactionConfigRoot//\//\\/}\)/g" README.md >"$tmpFile"
 		update README.md 'GitHub Action: fix README.md badge link'
 	else
 		info "Adding GitHub Action badge to README.md"
-		echo "[![](https://$domain/$repoSlug.svg?branch=$defaultBranch)](https://$domain/$repoSlug)" >"$tmpFile"
+		echo "[![SciJava CI](https://$domain/$repoSlug/actions/$gitactionConfig/badge.svg)](https://$domain/$repoSlug/actions/$gitactionConfig)/g" README.md >"$tmpFile"
 		echo >>"$tmpFile"
 		test -f README.md && cat README.md >>"$tmpFile"
 		update README.md 'GitHub Action: add badge to README.md'
