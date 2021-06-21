@@ -182,7 +182,7 @@ EOL
 		info "Removing obsolete $gitactionNotifyScript (ImageJ Jenkins is dead)"
 		$EXEC git rm -f "$gitactionNotifyScript"
 	fi
-	$EXEC git diff-index --quiet HEAD -- || $EXEC git ci -m "GitHub Action: remove obsolete files"
+	$EXEC git diff-index --quiet HEAD -- || $EXEC git commit -m "GitHub Action: remove obsolete files"
 
 	# Upgrade version of pom-scijava.
 	if [ -z "$SKIP_PARENT_CHECK" ]
