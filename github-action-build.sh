@@ -83,8 +83,6 @@ EOL
 	else
 		if [ ! $GPG_KEY_NAME ] || [ ! $GPG_PASSPHRASE ] || [ ! $MAVEN_PASS ] || [ ! $OSSRH_PASS ]; then
 			echo "No deploy -- secure environment variables not available"
-		elif [ $FROM_PR ]; then
-			echo "No deploy -- pull request detected"
 		else
 			echo "All checks passed for artifact deployment"
 			deployOK=1

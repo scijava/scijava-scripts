@@ -158,6 +158,14 @@ jobs:
           distribution: 'zulu'
       - name: Build with Maven
         run: ./$gitactionBuildScript
+        env:
+          GPG_KEY_NAME: ${{ secrets.GPG_KEY_NAME }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
+          OSSRH_PASS: ${{ secrets.OSSRH_PASS }}
+          SIGNINGIVSECRET: ${{ secrets.SIGNINGIVSECRET }}
+          SIGNINGKEYSECRET: ${{ secrets.SIGNINGKEYSECRET }}
+
 EOL
 	update "$gitactionConfig"
 
@@ -196,8 +204,6 @@ jobs:
           distribution: 'zulu'
       - name: Build with Maven
         run: ./$gitactionBuildScript
-        env:
-          FROM_PR: true
 EOL
 	update "$gitactionPRConfig"
 
