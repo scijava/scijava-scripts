@@ -102,7 +102,7 @@ EOL
 		# NB: Key and iv values were given as arguments.
 		echo
 		echo "== Decrypting GPG keypair =="
-		openssl aes-256-cbc -pbkdf2 -K "$key" -iv "$iv" -in "$keyFile.enc" -out "$keyFile" -d
+		openssl enc -nosalt -aes-256-cbc -d -K "$key" -iv "$iv" -in "$keyFile.enc" -out "$keyFile"
 		checkSuccess $?
 	fi
 	if [ "$deployOK" -a -f "$keyFile" ]; then
