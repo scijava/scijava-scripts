@@ -75,30 +75,20 @@ EOL
 	# Determine whether deploying will be possible.
 	deployOK=
 	ciURL=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${project.ciManagement.url}' --non-recursive validate exec:exec 2>&1)
+
 	if [ $? -ne 0 ]; then
 		echo "No deploy -- could not extract ciManagement URL"
 		echo "Output of failed attempt follows:"
 		echo "$ciURL"
 	else
-		ciRepo=${ciURL##*/}
-		ciPrefix=${ciURL%/*}
-		ciOrg=${ciPrefix##*/}
-		git config --get remote.origin.url
-		curl -o pull-request.txt https://api.github.com/repos/$ciOrg/$ciRepo/pulls >/dev/null 2>&1 # Check for pull requests
-		curl -o secure-env.txt https://api.github.com/orgs/$ciOrg/$ciRepo/secrets >/dev/null 2>&1 # Check for secure env var
-		if ! grep -q "documentation_url" secure-env.txt; then
+		if [ ! $GPG_KEY_NAME ] || [ ! $GPG_PASSPHRASE ] || [ ! $MAVEN_PASS ] || [ ! $OSSRH_PASS ]; then
 			echo "No deploy -- secure environment variables not available"
-		elif grep -q "url" pull-request.txt; then
+		elif [ $FROM_PR ]; then
 			echo "No deploy -- pull request detected"
-		elif [ ${repo_fork} != "$ciOrg/$ciRepo" ]; then
-			echo "No deploy -- repository fork: ${repo_fork} != $ciOrg/$ciRepo"
 		else
 			echo "All checks passed for artifact deployment"
 			deployOK=1
 		fi
-		# Delete created txt file
-		rm pull-request.txt
-		rm secure-env.txt
 	fi
 
 	# Install GPG on OSX/macOS

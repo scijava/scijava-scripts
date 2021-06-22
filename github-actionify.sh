@@ -16,6 +16,7 @@ dir="$(dirname "$0")"
 gitactionDir=.github
 gitactionConfigRoot=/workflows/.gitaction.yml
 gitactionConfig=$gitactionDir$gitactionConfigRoot
+gitactionPRConfig=$gitactionDir/workflows/.gitaction-pr.yml
 gitactionBuildScript=$gitactionDir/build.sh
 gitactionSettingsFile=$gitactionDir/settings.xml
 gitactionNotifyScript=$gitactionDir/notify.sh
@@ -116,20 +117,18 @@ process() {
 
 	test -e "$gitactionDir" -a ! -d "$gitactionDir" && die "$gitactionDir is not a directory"
 	test -e "$gitactionConfig" -a ! -f "$gitactionConfig" && die "$gitactionConfig is not a regular file"
+	test -e "$gitactionPRConfig" -a ! -f "$gitactionPRConfig" && die "$gitactionPRConfig is not a regular file"
 	test -e "$gitactionConfig" && warn "$gitactionConfig already exists"
 	test -e "$gitactionBuildScript" && warn "$gitactionBuildScript already exists"
 
 	# -- Do things --
 
-	# Add/update the GitHun Actions configuration file.
+	# Add/update the main GitHun Actions configuration file.
 	cat >"$tmpFile" <<EOL
 name: SciJava CI
 
 on:
   push:
-    branches:
-      - $defaultBranch
-  pull_request:
     branches:
       - $defaultBranch
 
@@ -161,6 +160,46 @@ jobs:
         run: ./$gitactionBuildScript
 EOL
 	update "$gitactionConfig"
+
+	# Add/update the GitHun Actions PR configuration file.
+	cat >"$tmpFile" <<EOL
+name: SciJava PR CI
+
+on:
+  pull_request:
+    branches:
+      - $defaultBranch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache m2 modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ~/.m2
+          key: \${{ runner.os }}-build-\${{ env.cache-name }}
+          restore-keys: |
+            \${{ runner.os }}-build-\${{ env.cache-name }}-
+            \${{ runner.os }}-build-
+            \${{ runner.os }}-
+            
+      - name: Set up JDK 8
+        uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'zulu'
+      - name: Build with Maven
+        run: ./$gitactionBuildScript
+        env:
+          FROM_PR: true
+EOL
+	update "$gitactionPRConfig"
 
 	# Add/update the GitHub Action build script.
 	cat >"$tmpFile" <<EOL
