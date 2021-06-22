@@ -163,8 +163,8 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
           OSSRH_PASS: ${{ secrets.OSSRH_PASS }}
-          SIGNINGIVSECRET: ${{ secrets.SIGNINGIVSECRET }}
-          SIGNINGKEYSECRET: ${{ secrets.SIGNINGKEYSECRET }}
+          SIGNING_IV: ${{ secrets.SIGNING_IV }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
 
 EOL
 	update "$gitactionConfig"
@@ -211,7 +211,7 @@ EOL
 	cat >"$tmpFile" <<EOL
 #!/bin/sh
 curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/github-action-build.sh
-sh github-action-build.sh \$signingKeySecret \$signingIvSecret
+sh github-action-build.sh
 EOL
 	chmod +x "$tmpFile"
 	update "$gitactionBuildScript" "GitHub Action: add executable script $gitactionBuildScript" "true"

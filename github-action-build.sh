@@ -96,8 +96,8 @@ EOL
 
 	# Import the GPG signing key.
 	keyFile=.github/signingkey.asc
-	key=$1
-	iv=$2
+	key=$SIGNING_KEY
+	iv=$SIGNING_IV
 	if [ "$key" -a "$iv" -a -f "$keyFile.enc" ]; then
 		# NB: Key and iv values were given as arguments.
 		echo
