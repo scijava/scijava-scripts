@@ -95,7 +95,7 @@ EOL
 	fi
 
 	# Import the GPG signing key.
-	keyFile=.gh-action/signingkey.asc
+	keyFile=.github/signingkey.asc
 	key=$1
 	iv=$2
 	if [ "$key" -a "$iv" -a -f "$keyFile.enc" ]; then
