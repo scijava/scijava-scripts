@@ -102,7 +102,7 @@ EOL
 	fi
 
 	# Install GPG on OSX/macOS
-	if [ ${runner_os} = 'macOS' ]; then
+	if [ ${RUNNER_OS} = 'macOS' ]; then
 		HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg2
 	fi
 
