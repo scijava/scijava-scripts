@@ -86,9 +86,9 @@ EOL
 		git config --get remote.origin.url
 		curl -o pull-request.txt https://api.github.com/repos/$ciOrg/$ciRepo/pulls >/dev/null 2>&1 # Check for pull requests
 		curl -o secure-env.txt https://api.github.com/orgs/$ciOrg/$ciRepo/secrets >/dev/null 2>&1 # Check for secure env var
-		if [ ! grep -q "documentation_url" secure-env.txt ]; then
+		if ! grep -q "documentation_url" secure-env.txt; then
 			echo "No deploy -- secure environment variables not available"
-		elif [ grep -q "url" pull-request.txt ]; then
+		elif grep -q "url" pull-request.txt; then
 			echo "No deploy -- pull request detected"
 		elif [ ${repo_fork} != "$ciOrg/$ciRepo" ]; then
 			echo "No deploy -- repository fork: ${repo_fork} != $ciOrg/$ciRepo"
