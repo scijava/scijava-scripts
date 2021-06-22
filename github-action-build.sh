@@ -114,8 +114,7 @@ EOL
 
 	# Run the build.
 	BUILD_ARGS='-B -Djdk.tls.client.protocols="TLSv1,TLSv1.1,TLSv1.2"'
-	git_branch=${git_branch##*/} # extract branch name
-	if [ "$deployOK" -a "${git_branch}" = master ]; then
+	if [ "$deployOK" ]; then
 		echo
 		echo "== Building and deploying master SNAPSHOT =="
 		mvn -Pdeploy-to-scijava $BUILD_ARGS deploy
