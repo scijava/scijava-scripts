@@ -29,7 +29,7 @@ if [ -f pom.xml ]; then
 	# Populate the settings.xml configuration.
 	mkdir -p "$HOME/.m2"
 	settingsFile="$HOME/.m2/settings.xml"
-	customSettings=.gh-action/settings.xml
+	customSettings=.github/settings.xml
 	if [ -f "$customSettings" ]; then
 		cp "$customSettings" "$settingsFile"
 	else
