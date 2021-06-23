@@ -39,17 +39,17 @@ if [ -f pom.xml ]; then
 		<server>
 			<id>scijava.releases</id>
 			<username>scijava-ci</username>
-			<password>\${env.MAVEN_PASS}</password>
+			<password>\$MAVEN_PASS</password>
 		</server>
 		<server>
 			<id>scijava.snapshots</id>
 			<username>scijava-ci</username>
-			<password>\${env.MAVEN_PASS}</password>
+			<password>\$MAVEN_PASS</password>
 		</server>
 		<server>
 			<id>sonatype-nexus-releases</id>
 			<username>scijava-ci</username>
-			<password>\${env.OSSRH_PASS}</password>
+			<password>\$OSSRH_PASS</password>
 		</server>
 	</servers>
 EOL
@@ -59,12 +59,12 @@ EOL
 			<id>gpg</id>
 			<activation>
 				<file>
-					<exists>\${env.HOME}/.gnupg</exists>
+					<exists>\$HOME/.gnupg</exists>
 				</file>
 			</activation>
 			<properties>
-				<gpg.keyname>\${env.GPG_KEY_NAME}</gpg.keyname>
-				<gpg.passphrase>\${env.GPG_PASSPHRASE}</gpg.passphrase>
+				<gpg.keyname>\$GPG_KEY_NAME</gpg.keyname>
+				<gpg.passphrase>\$GPG_PASSPHRASE</gpg.passphrase>
 			</properties>
 		</profile>
 	</profiles>
