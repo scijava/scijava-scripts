@@ -81,8 +81,13 @@ EOL
 		echo "Output of failed attempt follows:"
 		echo "$ciURL"
 	else
+		ciRepo=${ciURL##*/}
+		ciPrefix=${ciURL%/*}
+		ciOrg=${ciPrefix##*/}
 		if [ ! "$SIGNING_ASC" ] || [ ! "$GPG_KEY_NAME" ] || [ ! "$GPG_PASSPHRASE" ] || [ ! "$MAVEN_PASS" ] || [ ! "$OSSRH_PASS" ]; then
 			echo "No deploy -- secure environment variables not available"
+		elif [ "${GITHUB_REPOSITORY}" != "$ciOrg/$ciRepo" ]; then
+			echo "No deploy -- repository fork: ${GITHUB_REPOSITORY} != $ciOrg/$ciRepo"
 		else
 			echo "All checks passed for artifact deployment"
 			deployOK=1
