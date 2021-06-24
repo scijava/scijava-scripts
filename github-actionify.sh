@@ -159,13 +159,12 @@ jobs:
       - name: Build with Maven
         run: ./$gitactionBuildScript
         env:
-          GPG_KEY_NAME: ${{ secrets.GPG_KEY_NAME }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
-          OSSRH_PASS: ${{ secrets.OSSRH_PASS }}
-          SIGNING_IV: ${{ secrets.SIGNING_IV }}
-          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-
+          GPG_KEY_NAME: \${{ secrets.GPG_KEY_NAME }}
+          GPG_PASSPHRASE: \${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_USER: \${{ secrets.MAVEN_USER }}
+          MAVEN_PASS: \${{ secrets.MAVEN_PASS }}
+          OSSRH_PASS: \${{ secrets.OSSRH_PASS }}
+          SIGNING_ASC: \${{ secrets.SIGNING_ASC }}
 EOL
 	update "$gitactionConfig"
 
