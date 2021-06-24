@@ -38,12 +38,12 @@ if [ -f pom.xml ]; then
 	<servers>
 		<server>
 			<id>scijava.releases</id>
-			<username>scijava-ci</username>
+			<username>\$MAVEN_USER</username>
 			<password>\$MAVEN_PASS</password>
 		</server>
 		<server>
 			<id>scijava.snapshots</id>
-			<username>scijava-ci</username>
+			<username>\$MAVEN_USER</username>
 			<password>\$MAVEN_PASS</password>
 		</server>
 		<server>
@@ -81,7 +81,7 @@ EOL
 		echo "Output of failed attempt follows:"
 		echo "$ciURL"
 	else
-		if [ ! $GPG_KEY_NAME ] || [ ! $GPG_PASSPHRASE ] || [ ! $MAVEN_PASS ] || [ ! $OSSRH_PASS ]; then
+		if [ ! "$SIGNING_ASC" ] || [ ! "$GPG_KEY_NAME" ] || [ ! "$GPG_PASSPHRASE" ] || [ ! "$MAVEN_PASS" ] || [ ! "$OSSRH_PASS" ]; then
 			echo "No deploy -- secure environment variables not available"
 		else
 			echo "All checks passed for artifact deployment"
@@ -96,18 +96,10 @@ EOL
 
 	# Import the GPG signing key.
 	keyFile=.github/signingkey.asc
-	key=$SIGNING_KEY
-	iv=$SIGNING_IV
-	if [ "$key" -a "$iv" -a -f "$keyFile.enc" ]; then
-		# NB: Key and iv values were given as arguments.
-		echo
-		echo "== Decrypting GPG keypair =="
-		openssl enc -nosalt -aes-256-cbc -d -K "$key" -iv "$iv" -in "$keyFile.enc" -out "$keyFile"
-		checkSuccess $?
-	fi
-	if [ "$deployOK" -a -f "$keyFile" ]; then
-		echo
+	if [ "$deployOK" ]; then
 		echo "== Importing GPG keypair =="
+		echo "$SIGNING_ASC" > "$keyFile"
+		ls -la "$keyFile"
 		gpg --batch --fast-import "$keyFile"
 		checkSuccess $?
 	fi
@@ -130,7 +122,7 @@ EOL
 			ga=${gav%:*} &&
 			echo "--> Artifact to invalidate = $ga" &&
 			echo "machine maven.scijava.org" >"$HOME/.netrc" &&
-			echo "        login scijava-ci" >>"$HOME/.netrc" &&
+			echo "        login $MAVEN_USER" >>"$HOME/.netrc" &&
 			echo "        password $MAVEN_PASS" >>"$HOME/.netrc" &&
 			sh maven-helper.sh invalidate-cache "$ga"
 		checkSuccess $?
