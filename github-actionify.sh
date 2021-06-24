@@ -22,8 +22,6 @@ gitactionSettingsFile=$gitactionDir/settings.xml
 gitactionNotifyScript=$gitactionDir/notify.sh
 credentialsDir=$HOME/.scijava/credentials
 varsFile=$credentialsDir/vars
-signingKeySourceFile=$credentialsDir/scijava-ci-signing.asc.enc
-signingKeyDestFile=$gitactionDir/signingkey.asc
 pomMinVersion='17.1.1'
 tmpFile=gitaction.tmp
 
@@ -270,30 +268,9 @@ EOL
 		test -f README.md && cat README.md >>"$tmpFile"
 		update README.md 'GitHub Action: add badge to README.md'
 	fi
-
-	# copy the encrypted signing key
-	# This assumes you have the encrypted signing key locally and will set the encryption key and iv as encrypted
-	# environment variables in your repository or organization
-	if [ -f "$signingKeySourceFile" ]
-	then
-		info "Copying $signingKeyDestFile"
-		if [ -z "$EXEC" ]
-		then
-			rm -f "$signingKeyDestFile.enc"
-			cp "$signingKeySourceFile" "$signingKeyDestFile.enc"
-			git add "$signingKeyDestFile.enc"
-			git commit -m "GitHub Action: add encrypted GPG signing keypair"
-		fi
-	else
-		warn "No $signingKeySourceFile found. GitHub Action will not be able to do GPG signing!"
-	fi
 }
 
-test -d "$credentialsDir" ||
-	die "This script requires configuration stored in $credentialsDir,\n" \
-		"including $varsFile for needed environment variables,\n" \
-		"and $signingKeySourceFile for signing of artifacts.\n" \
-		"Please contact a SciJava administrator to receive a copy of this content."
+echo "Note that CI deployment requires additional configuration. Please contact a SciJava administrator for more information."
 
 # call check method to verify prerequisites
 check git sed cut perl xmllint
