@@ -1,9 +1,13 @@
 #!/bin/bash
 
 #
-# github-action-build.sh - A script to build and/or release SciJava-based projects
-#                          automatically using GitHub Actions.
+# ci-build.sh - A script to build and/or release SciJava-based projects
+#                          automatically using a continuous integration
+#                          service.
 #
+# Required environment variables:
+#   BUILD_OS             - the operating system running the current build (e.g. macOS)
+#   BUILD_REPOSITORY     - the repository slug (org/repo) running the current build
 
 dir="$(dirname "$0")"
 
@@ -29,7 +33,7 @@ if [ -f pom.xml ]; then
 	# Populate the settings.xml configuration.
 	mkdir -p "$HOME/.m2"
 	settingsFile="$HOME/.m2/settings.xml"
-	customSettings=.github/settings.xml
+	customSettings=.ci/settings.xml
 	if [ -f "$customSettings" ]; then
 		cp "$customSettings" "$settingsFile"
 	else
@@ -86,8 +90,8 @@ EOL
 		ciOrg=${ciPrefix##*/}
 		if [ ! "$SIGNING_ASC" ] || [ ! "$GPG_KEY_NAME" ] || [ ! "$GPG_PASSPHRASE" ] || [ ! "$MAVEN_PASS" ] || [ ! "$OSSRH_PASS" ]; then
 			echo "No deploy -- secure environment variables not available"
-		elif [ "${GITHUB_REPOSITORY}" != "$ciOrg/$ciRepo" ]; then
-			echo "No deploy -- repository fork: ${GITHUB_REPOSITORY} != $ciOrg/$ciRepo"
+		elif [ "$BUILD_REPOSITORY" != "$ciOrg/$ciRepo" ]; then
+			echo "No deploy -- repository fork: $BUILD_REPOSITORY != $ciOrg/$ciRepo"
 		else
 			echo "All checks passed for artifact deployment"
 			deployOK=1
@@ -95,14 +99,15 @@ EOL
 	fi
 
 	# Install GPG on OSX/macOS
-	if [ ${RUNNER_OS} = 'macOS' ]; then
+	if [ $BUILD_OS = 'macOS' ]; then
 		HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg2
 	fi
 
 	# Import the GPG signing key.
-	keyFile=.github/signingkey.asc
+	keyFile=.ci/signingkey.asc
 	if [ "$deployOK" ]; then
 		echo "== Importing GPG keypair =="
+		mkdir -p .ci
 		echo "$SIGNING_ASC" > "$keyFile"
 		ls -la "$keyFile"
 		gpg --batch --fast-import "$keyFile"
@@ -171,7 +176,7 @@ if [ -f environment.yml ]; then
 
 	echo
 	echo "== Configuring environment =="
-	condaEnv=github-scijava
+	condaEnv=ci-scijava
 	test -d "$condaDir/envs/$condaEnv" && condaAction=update || condaAction=create
 	conda env "$condaAction" -n "$condaEnv" -f environment.yml &&
 		conda activate "$condaEnv"

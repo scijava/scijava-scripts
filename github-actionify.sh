@@ -17,6 +17,7 @@ gitactionDir=.github
 gitactionConfigRoot=/workflows/.gitaction.yml
 gitactionConfig=$gitactionDir$gitactionConfigRoot
 gitactionPRConfig=$gitactionDir/workflows/.gitaction-pr.yml
+gitactionSetupScript=$gitactionDir/setup.sh
 gitactionBuildScript=$gitactionDir/build.sh
 gitactionSettingsFile=$gitactionDir/settings.xml
 gitactionNotifyScript=$gitactionDir/notify.sh
@@ -118,6 +119,7 @@ process() {
 	test -e "$gitactionPRConfig" -a ! -f "$gitactionPRConfig" && die "$gitactionPRConfig is not a regular file"
 	test -e "$gitactionConfig" && warn "$gitactionConfig already exists"
 	test -e "$gitactionBuildScript" && warn "$gitactionBuildScript already exists"
+	test -e "$gitactionSetupScript" && warn "$gitactionSetupScript already exists"
 
 	# -- Do things --
 
@@ -154,6 +156,8 @@ jobs:
         with:
           java-version: '8'
           distribution: 'zulu'
+      - name: Set up CI environment
+        run: ./$gitactionSetupScript
       - name: Build with Maven
         run: ./$gitactionBuildScript
         env:
@@ -199,16 +203,27 @@ jobs:
         with:
           java-version: '8'
           distribution: 'zulu'
+      - name: Set up CI environment
+        run: ./$gitactionSetupScript
       - name: Build with Maven
         run: ./$gitactionBuildScript
 EOL
 	update "$gitactionPRConfig"
 
+	# Add/update the GitHub Action setup script.
+	cat >"$tmpFile" <<EOL
+#!/bin/sh
+curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/github-action-ci.sh
+sh github-action-ci.sh
+EOL
+	chmod +x "$tmpFile"
+	update "$gitactionSetupScript" "GitHub Action: add executable script $gitactionSetupScript" "true"
+
 	# Add/update the GitHub Action build script.
 	cat >"$tmpFile" <<EOL
 #!/bin/sh
-curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/github-action-build.sh
-sh github-action-build.sh
+curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/ci-build.sh
+sh ci-build.sh
 EOL
 	chmod +x "$tmpFile"
 	update "$gitactionBuildScript" "GitHub Action: add executable script $gitactionBuildScript" "true"
