@@ -123,7 +123,7 @@ process() {
 
 	# -- Do things --
 
-	# Add/update the main GitHun Actions configuration file.
+	# Add/update the main GitHub Actions configuration file.
 	cat >"$tmpFile" <<EOL
 name: SciJava CI
 
