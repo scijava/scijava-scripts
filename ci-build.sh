@@ -6,7 +6,6 @@
 #                          service.
 #
 # Required environment variables:
-#   BUILD_OS             - the operating system running the current build (e.g. macOS)
 #   BUILD_REPOSITORY     - the repository slug (org/repo) running the current build
 
 dir="$(dirname "$0")"
@@ -98,8 +97,8 @@ EOL
 		fi
 	fi
 
-	# Install GPG on OSX/macOS
-	if [ $BUILD_OS = 'macOS' ]; then
+	# Install GPG on macOS
+	if which brew >/dev/null 2>/dev/null; then
 		HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg2
 	fi
 
