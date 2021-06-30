@@ -107,11 +107,11 @@ process() {
 			die "Not pom-scijava parent: $parent. Run with -p flag to skip this check."
 	fi
 
-	# Change pom.xml from Travis CI to GitHub Action
+	# Change pom.xml from Travis CI to GitHub Actions
 	domain="github.com"
-	sed -i.bak 's/Travis CI/GitHub Actions/g' pom.xml
-	sed -i.bak "s;travis-ci.*;github.com/$repoSlug/actions/workflows/.gitaction.yml</url>;g" pom.xml
-	rm -f pom.xml.bak
+	sed 's/Travis CI/GitHub Actions/g' pom.xml >"$tmpFile"
+	sed "s;travis-ci.*;github.com/$repoSlug/actions/workflows/.gitaction.yml</url>;g" pom.xml >>"$tmpFile"
+	update pom.xml
 
 	# -- GitHub Action sanity checks --
 
