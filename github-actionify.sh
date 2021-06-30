@@ -109,8 +109,9 @@ process() {
 
 	# Change pom.xml from Travis CI to GitHub Action
 	domain="github.com"
-	sed -i 's/Travis CI/GitHub Actions/g' pom.xml
-	sed -i "s/travis-ci.*/github.com\/$repoSlug\/actions\/workflows\/\.gitaction\.yml<\/url>/g" pom.xml
+	sed -i.bak 's/Travis CI/GitHub Actions/g' pom.xml
+	sed -i.bak "s;travis-ci.*;github.com/$repoSlug/actions/workflows/.gitaction.yml</url>;g" pom.xml
+	rm -f pom.xml.bak
 
 	# -- GitHub Action sanity checks --
 
