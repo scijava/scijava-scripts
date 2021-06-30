@@ -279,7 +279,7 @@ EOL
 		update README.md 'GitHub Action: fix README.md badge link'
 	else
 		info "Adding GitHub Action badge to README.md"
-		echo "[![SciJava CI](https://$domain/$repoSlug/actions/$gitactionConfig/badge.svg)](https://$domain/$repoSlug/actions/$gitactionConfig)/g" README.md >"$tmpFile"
+		echo "[![SciJava CI](https://$domain/$repoSlug/actions/$gitactionConfigRoot/badge.svg)](https://$domain/$repoSlug/actions/$gitactionConfigRoot)" >"$tmpFile"
 		echo >>"$tmpFile"
 		test -f README.md && cat README.md >>"$tmpFile"
 		update README.md 'GitHub Action: add badge to README.md'
