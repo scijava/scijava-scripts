@@ -275,7 +275,7 @@ EOL
 	if grep -q "travis-ci.*svg" README.md >/dev/null 2>&1
 	then
 		info "Updating README.md GitHub Action badge"
-		sed "s/travis-ci.*/${domain//\//\\/}\/${repoSlug//\//\\/}\/actions${gitactionConfigRoot//\//\\/}\/badge\.svg\)\]\(https:\/\/$domain\/${repoSlug//\//\\/}\/actions${gitactionConfigRoot//\//\\/}\)/g" README.md >"$tmpFile"
+		sed "s;travis-ci.*;$domain/$repoSlug/actions/$gitactionConfigRoot/badge.svg)](https://$domain/$repoSlug/actions$gitactionConfigRoot);g" README.md >"$tmpFile"
 		update README.md 'GitHub Action: fix README.md badge link'
 	else
 		info "Adding GitHub Action badge to README.md"
