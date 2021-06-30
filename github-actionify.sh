@@ -25,6 +25,7 @@ credentialsDir=$HOME/.scijava/credentials
 varsFile=$credentialsDir/vars
 pomMinVersion='17.1.1'
 tmpFile=gitaction.tmp
+msgPrefix="CI: "
 
 info() { echo "- $@"; }
 warn() { echo "[WARNING] $@" 1>&2; }
@@ -48,7 +49,7 @@ update() {
 	file=$1
 	msg=$2
 	exe=$3
-	test "$msg" || msg="GitHub Action: update $file"
+	test "$msg" || msg="update $file"
 	if [ -e "$file" ]
 	then
 		if diff -q "$file" "$tmpFile" >/dev/null
@@ -71,7 +72,7 @@ update() {
 		info "Adding execute permission to $file"
 		$EXEC git update-index --chmod=+x "$file"
 	fi
-	$EXEC git diff-index --quiet HEAD -- || $EXEC git commit -m "$msg"
+	$EXEC git diff-index --quiet HEAD -- || $EXEC git commit -m "$msgPrefix$msg"
 }
 
 process() {
@@ -218,7 +219,7 @@ curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/gith
 sh github-action-ci.sh
 EOL
 	chmod +x "$tmpFile"
-	update "$gitactionSetupScript" "GitHub Action: add executable script $gitactionSetupScript" "true"
+	update "$gitactionSetupScript" "add executable script $gitactionSetupScript" "true"
 
 	# Add/update the GitHub Action build script.
 	cat >"$tmpFile" <<EOL
@@ -227,7 +228,7 @@ curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/ci-b
 sh ci-build.sh
 EOL
 	chmod +x "$tmpFile"
-	update "$gitactionBuildScript" "GitHub Action: add executable script $gitactionBuildScript" "true"
+	update "$gitactionBuildScript" "add executable script $gitactionBuildScript" "true"
 
 	# Remove obsolete GitHub-Actions-related files.
 	if [ -f "$gitactionSettingsFile" ]
@@ -240,7 +241,7 @@ EOL
 		info "Removing obsolete $gitactionNotifyScript (ImageJ Jenkins is dead)"
 		$EXEC git rm -f "$gitactionNotifyScript"
 	fi
-	$EXEC git diff-index --quiet HEAD -- || $EXEC git commit -m "GitHub Action: remove obsolete files"
+	$EXEC git diff-index --quiet HEAD -- || $EXEC git commit -m "${msgPrefix}remove obsolete files"
 
 	# Upgrade version of pom-scijava.
 	if [ -z "$SKIP_PARENT_CHECK" ]
@@ -251,7 +252,7 @@ EOL
 		then
 			info 'Upgrading pom-scijava version'
 			sed "s|^		<version>$version</version>$|		<version>$pomMinVersion</version>|" pom.xml >"$tmpFile"
-			update pom.xml "POM: update pom-scijava parent to $pomMinVersion"
+			update pom.xml "update pom-scijava parent to $pomMinVersion"
 		else
 			info "Version of pom-scijava ($version) is OK"
 		fi
@@ -267,7 +268,7 @@ EOL
 		info 'Adding <releaseProfiles> property'
 		cp pom.xml "$tmpFile"
 		perl -0777 -i -pe 's/(\n\t<\/properties>\n)/\n\n\t\t<!-- NB: Deploy releases to the SciJava Maven repository. -->\n\t\t<releaseProfiles>deploy-to-scijava<\/releaseProfiles>\1/igs' "$tmpFile"
-		update pom.xml 'POM: deploy releases to the SciJava repository'
+		update pom.xml 'deploy releases to the SciJava repository'
 	fi
 
 	# update the README
@@ -276,13 +277,13 @@ EOL
 	then
 		info "Updating README.md GitHub Action badge"
 		sed "s;travis-ci.*;$domain/$repoSlug/actions/$gitactionConfigRoot/badge.svg)](https://$domain/$repoSlug/actions$gitactionConfigRoot);g" README.md >"$tmpFile"
-		update README.md 'GitHub Action: fix README.md badge link'
+		update README.md 'update README.md badge link'
 	else
 		info "Adding GitHub Action badge to README.md"
 		echo "[![SciJava CI](https://$domain/$repoSlug/actions/$gitactionConfigRoot/badge.svg)](https://$domain/$repoSlug/actions/$gitactionConfigRoot)" >"$tmpFile"
 		echo >>"$tmpFile"
 		test -f README.md && cat README.md >>"$tmpFile"
-		update README.md 'GitHub Action: add badge to README.md'
+		update README.md 'add README.md badge link'
 	fi
 }
 
