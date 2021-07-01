@@ -133,7 +133,7 @@ jobs:
         env:
           cache-name: cache-m2
         with:
-          path: ~/.m2
+          path: ~/.m2/repository
           key: \${{ runner.os }}-build-\${{ env.cache-name }}
           restore-keys: |
             \${{ runner.os }}-build-\${{ env.cache-name }}-
@@ -180,7 +180,7 @@ jobs:
         env:
           cache-name: cache-m2
         with:
-          path: ~/.m2
+          path: ~/.m2/repository
           key: \${{ runner.os }}-build-\${{ env.cache-name }}
           restore-keys: |
             \${{ runner.os }}-build-\${{ env.cache-name }}-
