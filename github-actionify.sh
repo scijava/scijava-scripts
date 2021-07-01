@@ -159,7 +159,7 @@ jobs:
           distribution: 'zulu'
       - name: Set up CI environment
         run: $ciSetupScript
-      - name: Build with Maven
+      - name: Execute the build
         run: $ciBuildScript
         env:
           GPG_KEY_NAME: \${{ secrets.GPG_KEY_NAME }}
@@ -206,7 +206,7 @@ jobs:
           distribution: 'zulu'
       - name: Set up CI environment
         run: $ciSetupScript
-      - name: Build with Maven
+      - name: Execute the build
         run: $ciBuildScript
 EOL
 	update "$ciConfigBuildPR" "add/update PR build action"
