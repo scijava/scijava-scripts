@@ -127,7 +127,7 @@ process() {
 
 	# Add/update the main GitHub Actions configuration file.
 	cat >"$tmpFile" <<EOL
-name: SciJava CI
+name: build
 
 on:
   push:
@@ -174,7 +174,7 @@ EOL
 
 	# Add/update the GitHun Actions PR configuration file.
 	cat >"$tmpFile" <<EOL
-name: SciJava PR CI
+name: build PR
 
 on:
   pull_request:
