@@ -288,7 +288,17 @@ EOL
 	fi
 }
 
-echo "Note that CI deployment requires additional configuration. Please contact a SciJava administrator for more information."
+cat <<EOL
+---------------------------------------------------------------------
+This script sets up continuous integration (CI) using GitHub Actions.
+It will add CI configuration if none is present, or update it to the
+latest best practices otherwise. Note that for your project to deploy
+build artifacts to maven.scijava.org or oss.sonatype.org, deployment
+credentials must be available during the CI build; contact a SciJava
+administrator via https://forum.image.sc/ to request them be added as
+secrets to your GitHub organization if they aren't already present.
+---------------------------------------------------------------------
+EOL
 
 # call check method to verify prerequisites
 check git sed cut perl xmllint
