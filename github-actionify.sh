@@ -13,14 +13,14 @@
 
 dir="$(dirname "$0")"
 
-gitactionDir=.github
-gitactionConfigRoot=/workflows/.gitaction.yml
-gitactionConfig=$gitactionDir$gitactionConfigRoot
-gitactionPRConfig=$gitactionDir/workflows/.gitaction-pr.yml
-gitactionSetupScript=$gitactionDir/setup.sh
-gitactionBuildScript=$gitactionDir/build.sh
-gitactionSettingsFile=$gitactionDir/settings.xml
-gitactionNotifyScript=$gitactionDir/notify.sh
+ciDir=.github
+ciConfigRoot=/workflows/.gitaction.yml
+ciConfig=$ciDir$ciConfigRoot
+ciPRConfig=$ciDir/workflows/.gitaction-pr.yml
+ciSetupScript=$ciDir/setup.sh
+ciBuildScript=$ciDir/build.sh
+ciSettingsFile=$ciDir/settings.xml
+ciNotifyScript=$ciDir/notify.sh
 credentialsDir=$HOME/.scijava/credentials
 varsFile=$credentialsDir/vars
 pomMinVersion='17.1.1'
@@ -116,12 +116,12 @@ process() {
 
 	# -- GitHub Action sanity checks --
 
-	test -e "$gitactionDir" -a ! -d "$gitactionDir" && die "$gitactionDir is not a directory"
-	test -e "$gitactionConfig" -a ! -f "$gitactionConfig" && die "$gitactionConfig is not a regular file"
-	test -e "$gitactionPRConfig" -a ! -f "$gitactionPRConfig" && die "$gitactionPRConfig is not a regular file"
-	test -e "$gitactionConfig" && warn "$gitactionConfig already exists"
-	test -e "$gitactionBuildScript" && warn "$gitactionBuildScript already exists"
-	test -e "$gitactionSetupScript" && warn "$gitactionSetupScript already exists"
+	test -e "$ciDir" -a ! -d "$ciDir" && die "$ciDir is not a directory"
+	test -e "$ciConfig" -a ! -f "$ciConfig" && die "$ciConfig is not a regular file"
+	test -e "$ciPRConfig" -a ! -f "$ciPRConfig" && die "$ciPRConfig is not a regular file"
+	test -e "$ciConfig" && warn "$ciConfig already exists"
+	test -e "$ciBuildScript" && warn "$ciBuildScript already exists"
+	test -e "$ciSetupScript" && warn "$ciSetupScript already exists"
 
 	# -- Do things --
 
@@ -159,9 +159,9 @@ jobs:
           java-version: '8'
           distribution: 'zulu'
       - name: Set up CI environment
-        run: ./$gitactionSetupScript
+        run: ./$ciSetupScript
       - name: Build with Maven
-        run: ./$gitactionBuildScript
+        run: ./$ciBuildScript
         env:
           GPG_KEY_NAME: \${{ secrets.GPG_KEY_NAME }}
           GPG_PASSPHRASE: \${{ secrets.GPG_PASSPHRASE }}
@@ -170,7 +170,7 @@ jobs:
           OSSRH_PASS: \${{ secrets.OSSRH_PASS }}
           SIGNING_ASC: \${{ secrets.SIGNING_ASC }}
 EOL
-	update "$gitactionConfig"
+	update "$ciConfig"
 
 	# Add/update the GitHun Actions PR configuration file.
 	cat >"$tmpFile" <<EOL
@@ -206,11 +206,11 @@ jobs:
           java-version: '8'
           distribution: 'zulu'
       - name: Set up CI environment
-        run: ./$gitactionSetupScript
+        run: ./$ciSetupScript
       - name: Build with Maven
-        run: ./$gitactionBuildScript
+        run: ./$ciBuildScript
 EOL
-	update "$gitactionPRConfig"
+	update "$ciPRConfig"
 
 	# Add/update the GitHub Action setup script.
 	cat >"$tmpFile" <<EOL
@@ -219,7 +219,7 @@ curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/gith
 sh github-action-ci.sh
 EOL
 	chmod +x "$tmpFile"
-	update "$gitactionSetupScript" "add executable script $gitactionSetupScript" "true"
+	update "$ciSetupScript" "add executable script $ciSetupScript" "true"
 
 	# Add/update the GitHub Action build script.
 	cat >"$tmpFile" <<EOL
@@ -228,18 +228,18 @@ curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/ci-b
 sh ci-build.sh
 EOL
 	chmod +x "$tmpFile"
-	update "$gitactionBuildScript" "add executable script $gitactionBuildScript" "true"
+	update "$ciBuildScript" "add executable script $ciBuildScript" "true"
 
 	# Remove obsolete GitHub-Actions-related files.
-	if [ -f "$gitactionSettingsFile" ]
+	if [ -f "$ciSettingsFile" ]
 	then
-		info "Removing obsolete $gitactionSettingsFile (github-action-build.sh generates it now)"
-		$EXEC git rm -f "$gitactionSettingsFile"
+		info "Removing obsolete $ciSettingsFile (github-action-build.sh generates it now)"
+		$EXEC git rm -f "$ciSettingsFile"
 	fi
-	if [ -f "$gitactionNotifyScript" ]
+	if [ -f "$ciNotifyScript" ]
 	then
-		info "Removing obsolete $gitactionNotifyScript (ImageJ Jenkins is dead)"
-		$EXEC git rm -f "$gitactionNotifyScript"
+		info "Removing obsolete $ciNotifyScript (ImageJ Jenkins is dead)"
+		$EXEC git rm -f "$ciNotifyScript"
 	fi
 	$EXEC git diff-index --quiet HEAD -- || $EXEC git commit -m "${msgPrefix}remove obsolete files"
 
@@ -276,11 +276,11 @@ EOL
 	if grep -q "travis-ci.*svg" README.md >/dev/null 2>&1
 	then
 		info "Updating README.md GitHub Action badge"
-		sed "s;travis-ci.*;$domain/$repoSlug/actions/$gitactionConfigRoot/badge.svg)](https://$domain/$repoSlug/actions$gitactionConfigRoot);g" README.md >"$tmpFile"
+		sed "s;travis-ci.*;$domain/$repoSlug/actions/$ciConfigRoot/badge.svg)](https://$domain/$repoSlug/actions$ciConfigRoot);g" README.md >"$tmpFile"
 		update README.md 'update README.md badge link'
 	else
 		info "Adding GitHub Action badge to README.md"
-		echo "[![SciJava CI](https://$domain/$repoSlug/actions/$gitactionConfigRoot/badge.svg)](https://$domain/$repoSlug/actions/$gitactionConfigRoot)" >"$tmpFile"
+		echo "[![SciJava CI](https://$domain/$repoSlug/actions/$ciConfigRoot/badge.svg)](https://$domain/$repoSlug/actions/$ciConfigRoot)" >"$tmpFile"
 		echo >>"$tmpFile"
 		test -f README.md && cat README.md >>"$tmpFile"
 		update README.md 'add README.md badge link'
