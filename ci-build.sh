@@ -88,11 +88,10 @@ EOL
 		echo "Output of failed attempt follows:"
 		echo "$scmURL"
 	else
-		scmRepo=${scmURL##*/}
 		if [ ! "$SIGNING_ASC" ] || [ ! "$GPG_KEY_NAME" ] || [ ! "$GPG_PASSPHRASE" ] || [ ! "$MAVEN_PASS" ] || [ ! "$OSSRH_PASS" ]; then
 			echo "No deploy -- secure environment variables not available"
-		elif [ "$BUILD_REPOSITORY" -a "$BUILD_REPOSITORY" != "$scmRepo" ]; then
-			echo "No deploy -- repository fork: $BUILD_REPOSITORY != $scmRepo"
+		elif [ "$BUILD_REPOSITORY" -a "$BUILD_REPOSITORY" != "$scmURL" ]; then
+			echo "No deploy -- repository fork: $BUILD_REPOSITORY != $scmURL"
 		else
 			echo "All checks passed for artifact deployment"
 			deployOK=1
