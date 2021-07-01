@@ -20,8 +20,6 @@ ciConfigBuildMain=$ciDir/$ciSlugBuildMain
 ciConfigBuildPR=$ciDir/$ciSlugBuildPR
 ciSetupScript=$ciDir/setup.sh
 ciBuildScript=$ciDir/build.sh
-ciSettingsFile=$ciDir/settings.xml
-ciNotifyScript=$ciDir/notify.sh
 credentialsDir=$HOME/.scijava/credentials
 varsFile=$credentialsDir/vars
 pomMinVersion='17.1.1'
@@ -230,19 +228,6 @@ sh ci-build.sh
 EOL
 	chmod +x "$tmpFile"
 	update "$ciBuildScript" "add executable script $ciBuildScript" "true"
-
-	# Remove obsolete GitHub-Actions-related files.
-	if [ -f "$ciSettingsFile" ]
-	then
-		info "Removing obsolete $ciSettingsFile (github-action-build.sh generates it now)"
-		$EXEC git rm -f "$ciSettingsFile"
-	fi
-	if [ -f "$ciNotifyScript" ]
-	then
-		info "Removing obsolete $ciNotifyScript (ImageJ Jenkins is dead)"
-		$EXEC git rm -f "$ciNotifyScript"
-	fi
-	$EXEC git diff-index --quiet HEAD -- || $EXEC git commit -m "${msgPrefix}remove obsolete files"
 
 	# Upgrade version of pom-scijava.
 	if [ -z "$SKIP_PARENT_CHECK" ]
