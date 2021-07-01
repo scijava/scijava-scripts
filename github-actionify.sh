@@ -15,8 +15,6 @@ ciConfigBuildMain=$ciDir/$ciSlugBuildMain
 ciConfigBuildPR=$ciDir/$ciSlugBuildPR
 ciSetupScript=$ciDir/setup.sh
 ciBuildScript=$ciDir/build.sh
-credentialsDir=$HOME/.scijava/credentials
-varsFile=$credentialsDir/vars
 pomMinVersion='17.1.1'
 tmpFile=github-actionify.tmp
 msgPrefix="CI: "
@@ -32,11 +30,6 @@ check() {
 		which "$tool" >/dev/null ||
 			die "The '$tool' utility is required but not found"
 	done
-}
-
-var() {
-	grep "^$1=" "$varsFile" ||
-		die "$1 not found in $varsFile"
 }
 
 update() {
