@@ -214,8 +214,8 @@ EOL
 	# Add/update the GitHub Action setup script.
 	cat >"$tmpFile" <<EOL
 #!/bin/sh
-curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/github-action-ci.sh
-sh github-action-ci.sh
+curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/ci-setup-github-actions.sh
+sh ci-setup-github-actions.sh
 EOL
 	chmod +x "$tmpFile"
 	update "$ciSetupScript" "add executable script $ciSetupScript" "true"

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# github-action-ci.sh - A script to set up ci-related environment variables from GitHub Actions
+# ci-setup-github-actions.sh - Set CI-related environment variables from GitHub Actions.
 #
 
 echo "BUILD_REPOSITORY=${GITHUB_REPOSITORY}"
