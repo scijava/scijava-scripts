@@ -10,7 +10,7 @@
 dir="$(dirname "$0")"
 
 MACOS=
-case "$(uname -s)"
+case "$(uname -s)" in
 	Darwin) MACOS=1;;
 esac
 
