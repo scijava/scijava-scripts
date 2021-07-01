@@ -2,11 +2,10 @@
 
 #
 # ci-build.sh - A script to build and/or release SciJava-based projects
-#                          automatically using a continuous integration
-#                          service.
+#               automatically using a continuous integration service.
 #
-# Required environment variables:
-#   BUILD_REPOSITORY     - the repository slug (org/repo) running the current build
+# Optional environment variables:
+#   BUILD_REPOSITORY - the repository URL running the current build
 
 dir="$(dirname "$0")"
 
@@ -77,20 +76,18 @@ EOL
 
 	# Determine whether deploying will be possible.
 	deployOK=
-	ciURL=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${project.ciManagement.url}' --non-recursive validate exec:exec 2>&1)
+	scmURL=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${project.scm.url}' --non-recursive validate exec:exec 2>&1)
 
 	if [ $? -ne 0 ]; then
 		echo "No deploy -- could not extract ciManagement URL"
 		echo "Output of failed attempt follows:"
-		echo "$ciURL"
+		echo "$scmURL"
 	else
-		ciRepo=${ciURL##*/}
-		ciPrefix=${ciURL%/*}
-		ciOrg=${ciPrefix##*/}
+		scmRepo=${scmURL##*/}
 		if [ ! "$SIGNING_ASC" ] || [ ! "$GPG_KEY_NAME" ] || [ ! "$GPG_PASSPHRASE" ] || [ ! "$MAVEN_PASS" ] || [ ! "$OSSRH_PASS" ]; then
 			echo "No deploy -- secure environment variables not available"
-		elif [ "$BUILD_REPOSITORY" != "$ciOrg/$ciRepo" ]; then
-			echo "No deploy -- repository fork: $BUILD_REPOSITORY != $ciOrg/$ciRepo"
+		elif [ "$BUILD_REPOSITORY" -a "$BUILD_REPOSITORY" != "$scmRepo" ]; then
+			echo "No deploy -- repository fork: $BUILD_REPOSITORY != $scmRepo"
 		else
 			echo "All checks passed for artifact deployment"
 			deployOK=1
