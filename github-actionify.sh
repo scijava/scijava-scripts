@@ -4,11 +4,6 @@
 #
 # Script for enabling or updating GitHub Action builds for a given repository.
 
-# Environment variables:
-# 	$EXEC - an optional prefix for bash commands (for example, if $EXEC=sudo, then the commands will be run as super user access)
-# 	$@ - all positional parameters
-# 	$0, $1, ... - specific positional parameters for each method
-
 #set -e
 
 dir="$(dirname "$0")"
