@@ -140,10 +140,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Cache m2 modules
+      - name: Cache m2 folder
         uses: actions/cache@v2
         env:
-          cache-name: cache-node-modules
+          cache-name: cache-m2
         with:
           path: ~/.m2
           key: \${{ runner.os }}-build-\${{ env.cache-name }}
@@ -187,10 +187,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Cache m2 modules
+      - name: Cache m2 folder
         uses: actions/cache@v2
         env:
-          cache-name: cache-node-modules
+          cache-name: cache-m2
         with:
           path: ~/.m2
           key: \${{ runner.os }}-build-\${{ env.cache-name }}
