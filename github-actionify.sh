@@ -14,9 +14,10 @@
 dir="$(dirname "$0")"
 
 ciDir=.github
-ciConfigRoot=/workflows/.gitaction.yml
-ciConfig=$ciDir$ciConfigRoot
-ciPRConfig=$ciDir/workflows/.gitaction-pr.yml
+ciSlugBuildMain=workflows/build-main.yml
+ciSlugBuildPR=workflows/build-pr.yml
+ciConfigBuildMain=$ciDir/$ciSlugBuildMain
+ciConfigBuildPR=$ciDir/$ciSlugBuildPR
 ciSetupScript=$ciDir/setup.sh
 ciBuildScript=$ciDir/build.sh
 ciSettingsFile=$ciDir/settings.xml
@@ -117,9 +118,9 @@ process() {
 	# -- GitHub Action sanity checks --
 
 	test -e "$ciDir" -a ! -d "$ciDir" && die "$ciDir is not a directory"
-	test -e "$ciConfig" -a ! -f "$ciConfig" && die "$ciConfig is not a regular file"
-	test -e "$ciPRConfig" -a ! -f "$ciPRConfig" && die "$ciPRConfig is not a regular file"
-	test -e "$ciConfig" && warn "$ciConfig already exists"
+	test -e "$ciConfigBuildMain" -a ! -f "$ciConfigBuildMain" && die "$ciConfigBuildMain is not a regular file"
+	test -e "$ciConfigBuildPR" -a ! -f "$ciConfigBuildPR" && die "$ciConfigBuildPR is not a regular file"
+	test -e "$ciConfigBuildMain" && warn "$ciConfigBuildMain already exists"
 	test -e "$ciBuildScript" && warn "$ciBuildScript already exists"
 	test -e "$ciSetupScript" && warn "$ciSetupScript already exists"
 
@@ -170,7 +171,7 @@ jobs:
           OSSRH_PASS: \${{ secrets.OSSRH_PASS }}
           SIGNING_ASC: \${{ secrets.SIGNING_ASC }}
 EOL
-	update "$ciConfig" "add/update main build action"
+	update "$ciConfigBuildMain" "add/update main build action"
 
 	# Add/update the GitHub Actions PR configuration file.
 	cat >"$tmpFile" <<EOL
@@ -210,7 +211,7 @@ jobs:
       - name: Build with Maven
         run: ./$ciBuildScript
 EOL
-	update "$ciPRConfig" "add/update PR build action"
+	update "$ciConfigBuildPR" "add/update PR build action"
 
 	# Add/update the GitHub Action setup script.
 	cat >"$tmpFile" <<EOL
@@ -276,11 +277,11 @@ EOL
 	if grep -q "travis-ci.*svg" README.md >/dev/null 2>&1
 	then
 		info "Updating README.md GitHub Action badge"
-		sed "s;travis-ci.*;$domain/$repoSlug/actions/$ciConfigRoot/badge.svg)](https://$domain/$repoSlug/actions$ciConfigRoot);g" README.md >"$tmpFile"
+		sed "s;travis-ci.*;$domain/$repoSlug/actions/$ciSlugBuildMain/badge.svg)](https://$domain/$repoSlug/actions/$ciSlugBuildMain);g" README.md >"$tmpFile"
 		update README.md 'update README.md badge link'
 	else
 		info "Adding GitHub Action badge to README.md"
-		echo "[![SciJava CI](https://$domain/$repoSlug/actions/$ciConfigRoot/badge.svg)](https://$domain/$repoSlug/actions/$ciConfigRoot)" >"$tmpFile"
+		echo "[![](https://$domain/$repoSlug/actions/$ciSlugBuildMain/badge.svg)](https://$domain/$repoSlug/actions/$ciSlugBuildMain)" >"$tmpFile"
 		echo >>"$tmpFile"
 		test -f README.md && cat README.md >>"$tmpFile"
 		update README.md 'add README.md badge link'
