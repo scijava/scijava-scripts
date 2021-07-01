@@ -172,7 +172,7 @@ jobs:
 EOL
 	update "$ciConfig" "add/update main build action"
 
-	# Add/update the GitHun Actions PR configuration file.
+	# Add/update the GitHub Actions PR configuration file.
 	cat >"$tmpFile" <<EOL
 name: build PR
 
