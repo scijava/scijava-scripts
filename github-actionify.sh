@@ -160,9 +160,9 @@ jobs:
           java-version: '8'
           distribution: 'zulu'
       - name: Set up CI environment
-        run: ./$ciSetupScript
+        run: $ciSetupScript
       - name: Build with Maven
-        run: ./$ciBuildScript
+        run: $ciBuildScript
         env:
           GPG_KEY_NAME: \${{ secrets.GPG_KEY_NAME }}
           GPG_PASSPHRASE: \${{ secrets.GPG_PASSPHRASE }}
@@ -207,9 +207,9 @@ jobs:
           java-version: '8'
           distribution: 'zulu'
       - name: Set up CI environment
-        run: ./$ciSetupScript
+        run: $ciSetupScript
       - name: Build with Maven
-        run: ./$ciBuildScript
+        run: $ciBuildScript
 EOL
 	update "$ciConfigBuildPR" "add/update PR build action"
 
