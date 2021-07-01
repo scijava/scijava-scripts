@@ -285,7 +285,7 @@ secrets to your GitHub organization if they aren't already present.
 EOL
 
 # call check method to verify prerequisites
-check git sed cut perl xmllint
+check git sed perl xmllint
 
 # parse arguments
 EXEC=:
