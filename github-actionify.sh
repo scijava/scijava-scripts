@@ -24,7 +24,7 @@ ciNotifyScript=$ciDir/notify.sh
 credentialsDir=$HOME/.scijava/credentials
 varsFile=$credentialsDir/vars
 pomMinVersion='17.1.1'
-tmpFile=gitaction.tmp
+tmpFile=github-actionify.tmp
 msgPrefix="CI: "
 
 info() { echo "- $@"; }
