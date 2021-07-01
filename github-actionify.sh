@@ -270,6 +270,12 @@ EOL
 		test -f README.md && cat README.md >>"$tmpFile"
 		update README.md 'add README.md badge link'
 	fi
+
+	# remove old Travis CI configuration
+	git rm -rf .travis.yml .travis
+	$EXEC git diff-index --quiet HEAD -- &&
+		info "No old CI configuration to remove." ||
+		$EXEC git commit -m "${msgPrefix}remove Travis CI configuration"
 }
 
 cat <<EOL
