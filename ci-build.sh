@@ -118,7 +118,7 @@ EOL
 	BUILD_ARGS='-B -Djdk.tls.client.protocols="TLSv1,TLSv1.1,TLSv1.2"'
 	if [ "$deployOK" ]; then
 		echo
-		echo "== Building and deploying master SNAPSHOT =="
+		echo "== Building and deploying main branch SNAPSHOT =="
 		mvn -Pdeploy-to-scijava $BUILD_ARGS deploy
 		checkSuccess $?
 	elif [ "$deployOK" -a -f release.properties ]; then
