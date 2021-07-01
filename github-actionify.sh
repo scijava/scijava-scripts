@@ -248,12 +248,23 @@ EOL
 	releaseProfile=$(grep '<releaseProfiles>' pom.xml 2>/dev/null | sed 's/[^>]*>//' | sed 's/<.*//')
 	if [ "$releaseProfile" ]
 	then
-		test "$releaseProfile" = 'deploy-to-scijava' ||
-			warn "Unknown release profile: $releaseProfile"
+		case "$releaseProfile" in
+			sign,deploy-to-scijava)
+				info 'No changes needed to <releaseProfiles> property'
+				;;
+			deploy-to-scijava)
+				info 'Updating <releaseProfiles> property'
+				sed 's;\(<releaseProfiles>\).*\(</releaseProfiles>\);\1sign,deploy-to-scijava\2;' pom.xml >"$tmpFile"
+				update pom.xml 'sign JARs when deploying releases'
+				;;
+			*)
+				warn "Unknown release profile: $releaseProfile"
+				;;
+		esac
 	else
 		info 'Adding <releaseProfiles> property'
 		cp pom.xml "$tmpFile"
-		perl -0777 -i -pe 's/(\n\t<\/properties>\n)/\n\n\t\t<!-- NB: Deploy releases to the SciJava Maven repository. -->\n\t\t<releaseProfiles>deploy-to-scijava<\/releaseProfiles>\1/igs' "$tmpFile"
+		perl -0777 -i -pe 's/(\n\t<\/properties>\n)/\n\n\t\t<!-- NB: Deploy releases to the SciJava Maven repository. -->\n\t\t<releaseProfiles>sign,deploy-to-scijava<\/releaseProfiles>\1/igs' "$tmpFile"
 		update pom.xml 'deploy releases to the SciJava repository'
 	fi
 
