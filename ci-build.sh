@@ -9,6 +9,11 @@
 
 dir="$(dirname "$0")"
 
+MACOS=
+case "$(uname -s)"
+	Darwin) MACOS=1;;
+esac
+
 success=0
 checkSuccess() {
 	# Log non-zero exit code.
@@ -95,7 +100,7 @@ EOL
 	fi
 
 	# Install GPG on macOS
-	if which brew >/dev/null 2>/dev/null; then
+	if "$MACOS"; then
 		HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg2
 	fi
 
