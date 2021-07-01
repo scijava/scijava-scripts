@@ -170,7 +170,7 @@ jobs:
           OSSRH_PASS: \${{ secrets.OSSRH_PASS }}
           SIGNING_ASC: \${{ secrets.SIGNING_ASC }}
 EOL
-	update "$ciConfig"
+	update "$ciConfig" "add/update main build action"
 
 	# Add/update the GitHun Actions PR configuration file.
 	cat >"$tmpFile" <<EOL
@@ -210,7 +210,7 @@ jobs:
       - name: Build with Maven
         run: ./$ciBuildScript
 EOL
-	update "$ciPRConfig"
+	update "$ciPRConfig" "add/update PR build action"
 
 	# Add/update the GitHub Action setup script.
 	cat >"$tmpFile" <<EOL
