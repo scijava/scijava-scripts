@@ -120,6 +120,8 @@ on:
   push:
     branches:
       - $defaultBranch
+    tags:
+      - "*-[0-9]+.*"
 
 jobs:
   build:
