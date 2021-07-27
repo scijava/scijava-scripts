@@ -134,7 +134,7 @@ EOL
 		case "$maven_gpg_plugin_version" in
 			0.*|1.*|2.*|3.0.0)
 				echo "--> Forcing maven-gpg-plugin version from $maven_gpg_plugin_version to 3.0.1"
-				BUILD_ARGS="$BUILD_ARGS -Dmaven-gpg-plugin.version=3.0.1"
+				BUILD_ARGS="$BUILD_ARGS -Dmaven-gpg-plugin.version=3.0.1 -Darguments=-Dmaven-gpg-plugin.version=3.0.1"
 				;;
 			*)
 				echo "--> maven-gpg-plugin version OK: $maven_gpg_plugin_version"
