@@ -103,6 +103,9 @@ EOL
 		HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg2
 	fi
 
+	# Avoid GPG error: "signing failed: Inappropriate ioctl for device"
+	export GPG_TTY=$(tty)
+
 	# Import the GPG signing key.
 	keyFile=.ci/signingkey.asc
 	if [ "$deployOK" ]; then
