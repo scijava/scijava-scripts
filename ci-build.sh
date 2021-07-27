@@ -36,11 +36,15 @@ if [ -f pom.xml ]; then
 	# Populate the settings.xml configuration.
 	mkdir -p "$HOME/.m2"
 	settingsFile="$HOME/.m2/settings.xml"
-	customSettings=.ci/settings.xml
-	if [ -f "$customSettings" ]; then
-		cp "$customSettings" "$settingsFile"
+	if [ -e "$settingsFile" ]
+	then
+		echo "[WARNING] $settingsFile already exists; skipping generation."
 	else
-		cat >"$settingsFile" <<EOL
+		customSettings=.ci/settings.xml
+		if [ -f "$customSettings" ]; then
+			cp "$customSettings" "$settingsFile"
+		else
+			cat >"$settingsFile" <<EOL
 <settings>
 	<servers>
 		<server>
@@ -60,7 +64,7 @@ if [ -f pom.xml ]; then
 		</server>
 	</servers>
 EOL
-		cat >>"$settingsFile" <<EOL
+			cat >>"$settingsFile" <<EOL
 	<profiles>
 		<profile>
 			<id>gpg</id>
@@ -77,6 +81,7 @@ EOL
 	</profiles>
 </settings>
 EOL
+		fi
 	fi
 
 	# Determine whether deploying will be possible.
