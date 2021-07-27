@@ -128,6 +128,19 @@ EOL
 	if [ "$deployOK" -a -f release.properties ]; then
 		echo
 		echo "== Cutting and deploying release version =="
+
+		# HACK: Use a newer version of maven-gpg-plugin, if a too-old version is declared.
+		maven_gpg_plugin_version=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${maven-gpg-plugin.version}' --non-recursive validate exec:exec 2>&1)
+		case "$maven_gpg_plugin_version" in
+			0.*|1.*|2.*|3.0.0)
+				echo "--> Forcing maven-gpg-plugin version from $maven_gpg_plugin_version to 3.0.1"
+				BUILD_ARGS="$BUILD_ARGS -Dmaven-gpg-plugin.version=3.0.1"
+				;;
+			*)
+				echo "--> maven-gpg-plugin version OK: $maven_gpg_plugin_version"
+				;;
+		esac
+
 		mvn -B $BUILD_ARGS release:perform
 		checkSuccess $?
 		echo "== Invalidating SciJava Maven repository cache =="
