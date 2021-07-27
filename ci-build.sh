@@ -116,12 +116,7 @@ EOL
 
 	# Run the build.
 	BUILD_ARGS='-B -Djdk.tls.client.protocols="TLSv1,TLSv1.1,TLSv1.2"'
-	if [ "$deployOK" ]; then
-		echo
-		echo "== Building and deploying main branch SNAPSHOT =="
-		mvn -Pdeploy-to-scijava $BUILD_ARGS deploy
-		checkSuccess $?
-	elif [ "$deployOK" -a -f release.properties ]; then
+	if [ "$deployOK" -a -f release.properties ]; then
 		echo
 		echo "== Cutting and deploying release version =="
 		mvn -B $BUILD_ARGS release:perform
@@ -135,6 +130,11 @@ EOL
 			echo "        login $MAVEN_USER" >>"$HOME/.netrc" &&
 			echo "        password $MAVEN_PASS" >>"$HOME/.netrc" &&
 			sh maven-helper.sh invalidate-cache "$ga"
+		checkSuccess $?
+	elif [ "$deployOK" ]; then
+		echo
+		echo "== Building and deploying main branch SNAPSHOT =="
+		mvn -Pdeploy-to-scijava $BUILD_ARGS deploy
 		checkSuccess $?
 	else
 		echo
