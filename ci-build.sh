@@ -113,6 +113,7 @@ EOL
 		mkdir -p .ci
 		echo "$SIGNING_ASC" > "$keyFile"
 		ls -la "$keyFile"
+		gpg --version
 		gpg --batch --fast-import "$keyFile"
 		checkSuccess $?
 	fi
