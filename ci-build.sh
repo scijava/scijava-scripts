@@ -36,8 +36,7 @@ if [ -f pom.xml ]; then
 	# Populate the settings.xml configuration.
 	mkdir -p "$HOME/.m2"
 	settingsFile="$HOME/.m2/settings.xml"
-	if [ -e "$settingsFile" ]
-	then
+	if [ -e "$settingsFile" ]; then
 		echo "[WARNING] $settingsFile already exists; skipping generation."
 	else
 		customSettings=.ci/settings.xml
@@ -208,7 +207,7 @@ if [ -f environment.yml ]; then
 fi
 
 # Execute Jupyter notebooks.
-if which jupyter >/dev/null 2>/dev/null; then
+if which jupyter >/dev/null 2>&1; then
 	echo ::group::"= Jupyter notebooks ="
 	# NB: This part is fiddly. We want to loop over files even with spaces,
 	# so we use the "find ... -print0 | while read $'\0' ..." idiom.
