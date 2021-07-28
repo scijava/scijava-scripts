@@ -107,7 +107,7 @@ EOL
 		HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg2
 	fi
 
-	# Avoid GPG error: "signing failed: Inappropriate ioctl for device"
+	# Avoid "signing failed: Inappropriate ioctl for device" error.
 	export GPG_TTY=$(tty)
 
 	# Import the GPG signing key.
@@ -128,7 +128,7 @@ EOL
 		echo
 		echo "== Cutting and deploying release version =="
 
-		# HACK: Use a newer version of maven-gpg-plugin, if a too-old version is declared.
+		# HACK: Use maven-gpg-plugin 3.0.1+. Avoids "signing failed: No such file or directory" error.
 		maven_gpg_plugin_version=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${maven-gpg-plugin.version}' --non-recursive validate exec:exec 2>&1)
 		case "$maven_gpg_plugin_version" in
 			0.*|1.*|2.*|3.0.0)
@@ -140,8 +140,16 @@ EOL
 				;;
 		esac
 
+		# HACK: Try restarting the gpg agent. Avoids "signing failed: No pinentry" error.
+		if { pgrep gpg-agent >/dev/null && which gpgconf >/dev/null 2>&1; } then
+			echo '--> Restarting gpg-agent'
+			gpgconf --reload gpg-agent
+			checkSuccess $?
+		fi
+
 		mvn -B $BUILD_ARGS release:perform
 		checkSuccess $?
+
 		echo "== Invalidating SciJava Maven repository cache =="
 		curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/maven-helper.sh &&
 			gav=$(sh maven-helper.sh gav-from-pom pom.xml) &&
