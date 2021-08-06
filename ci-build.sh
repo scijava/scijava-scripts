@@ -23,6 +23,11 @@ checkSuccess() {
 	test $success -eq 0 && success=$1
 }
 
+# Credit: https://stackoverflow.com/a/12873723/1207769
+escapeXML() {
+	echo "$1" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'"'"'/\&#39;/g'
+}
+
 # Build Maven projects.
 if [ -f pom.xml ]; then
 	echo ::group::"= Maven build ="
@@ -48,17 +53,17 @@ if [ -f pom.xml ]; then
 		<server>
 			<id>scijava.releases</id>
 			<username>$MAVEN_USER</username>
-			<password>$MAVEN_PASS</password>
+			<password>$(escapeXML "$MAVEN_PASS")</password>
 		</server>
 		<server>
 			<id>scijava.snapshots</id>
 			<username>$MAVEN_USER</username>
-			<password>$MAVEN_PASS</password>
+			<password>$(escapeXML "$MAVEN_PASS")</password>
 		</server>
 		<server>
 			<id>sonatype-nexus-releases</id>
 			<username>scijava-ci</username>
-			<password>$OSSRH_PASS</password>
+			<password>$(escapeXML "$OSSRH_PASS")</password>
 		</server>
 	</servers>
 	<profiles>
@@ -71,7 +76,7 @@ if [ -f pom.xml ]; then
 			</activation>
 			<properties>
 				<gpg.keyname>$GPG_KEY_NAME</gpg.keyname>
-				<gpg.passphrase>$GPG_PASSPHRASE</gpg.passphrase>
+				<gpg.passphrase>$(escapeXML "$GPG_PASSPHRASE")</gpg.passphrase>
 			</properties>
 		</profile>
 	</profiles>
