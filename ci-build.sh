@@ -152,7 +152,7 @@ EOL
 		checkSuccess $?
 
 		echo "== Invalidating SciJava Maven repository cache =="
-		curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/maven-helper.sh &&
+		curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/bdd932af4c4816f88cb6a52cdd7449f175934634/maven-helper.sh &&
 			gav=$(sh maven-helper.sh gav-from-pom pom.xml) &&
 			ga=${gav%:*} &&
 			echo "--> Artifact to invalidate = $ga" &&
