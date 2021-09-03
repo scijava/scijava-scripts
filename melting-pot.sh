@@ -425,8 +425,8 @@ scmTag() {
 		local a=$(artifactId "$1")
 		local v=$(version "$1")
 		local scmURL="$(scmURL "$1")"
-		local allTags=$(git ls-remote --tags "$scmURL" | sed 's/.*refs\/tags\///' ||
-			error "$1: Invalid scm url: $scmURL")
+		local allTags="$(git ls-remote --tags "$scmURL" | sed 's/.*refs\/tags\///' ||
+			error "$1: Invalid scm url: $scmURL")"
 		for tag in "$a-$v" "$v" "v$v"
 		do
 			echo "$allTags" | grep -q "^$tag$" && {
