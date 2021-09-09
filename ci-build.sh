@@ -141,11 +141,16 @@ EOL
 				;;
 		esac
 
-		# HACK: Try restarting the gpg agent. Avoids "signing failed: No pinentry" error.
-		if { pgrep gpg-agent >/dev/null && which gpgconf >/dev/null 2>&1; } then
-			echo '--> Restarting gpg-agent'
-			gpgconf --reload gpg-agent
-			checkSuccess $?
+		# HACK: Install pinentry helper program if missing. Avoids "signing failed: No pinentry" error.
+		if which pinentry >/dev/null 2>&1; then
+			echo '--> Installing missing pinentry helper for GPG'
+			sudo apt-get install -y pinentry-tty
+			# HACK: Restart the gpg agent, to notice the newly installed pinentry.
+			if { pgrep gpg-agent >/dev/null && which gpgconf >/dev/null 2>&1; } then
+				echo '--> Restarting gpg-agent'
+				gpgconf --reload gpg-agent
+				checkSuccess $?
+			fi
 		fi
 
 		mvn -B $BUILD_ARGS release:perform
