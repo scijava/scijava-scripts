@@ -193,7 +193,7 @@ if which jupyter >/dev/null 2>&1; then
 	do
 		echo
 		echo "== $nbf =="
-		jupyter nbconvert --execute --stdout "$nbf"
+		jupyter nbconvert --to python --stdout --execute "$nbf"
 		checkSuccess $?
 		test "$success" -eq 0 || echo "$success" > success.tmp
 	done
