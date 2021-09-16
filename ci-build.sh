@@ -180,46 +180,6 @@ EOL
 	echo ::endgroup::
 fi
 
-# Configure conda environment, if one is needed.
-if [ -f environment.yml ]; then
-	echo ::group::"= Conda setup ="
-
-	condaDir=$HOME/miniconda
-	condaSh=$condaDir/etc/profile.d/conda.sh
-	if [ ! -f "$condaSh" ]; then
-		echo
-		echo "== Installing conda =="
-		python_version=${python -V}
-		python_version=${python_version:7:3} # get python version in the format like '2.7'
-		if [ "${python_version}" = "2.7" ]; then
-			wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh
-		else
-			wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-		fi
-		rm -rf "$condaDir"
-		bash miniconda.sh -b -p "$condaDir"
-		checkSuccess $?
-	fi
-
-	echo
-	echo "== Updating conda =="
-	. "$condaSh" &&
-		conda config --set always_yes yes --set changeps1 no &&
-		conda update -q conda &&
-		conda info -a
-	checkSuccess $?
-
-	echo
-	echo "== Configuring environment =="
-	condaEnv=ci-scijava
-	test -d "$condaDir/envs/$condaEnv" && condaAction=update || condaAction=create
-	conda env "$condaAction" -n "$condaEnv" -f environment.yml &&
-		conda activate "$condaEnv"
-	checkSuccess $?
-
-	echo ::endgroup::
-fi
-
 # Execute Jupyter notebooks.
 if which jupyter >/dev/null 2>&1; then
 	echo ::group::"= Jupyter notebooks ="
