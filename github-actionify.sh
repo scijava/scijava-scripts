@@ -130,7 +130,9 @@ process() {
           java-version: '8'
           distribution: 'zulu'"
 	actionSetupConda="name: Set up conda
-        uses: s-weigand/setup-conda@v1"
+        uses: s-weigand/setup-conda@v1
+      - name: Install conda packages
+        run: conda env update -f environment.yml -n base"
 	actionSetupCI="name: Set up CI environment
         run: $ciSetupScript"
 	actionExecuteBuild="name: Execute the build
