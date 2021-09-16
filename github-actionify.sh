@@ -110,6 +110,37 @@ process() {
 	test -e "$ciBuildScript" && warn "$ciBuildScript already exists"
 	test -e "$ciSetupScript" && warn "$ciSetupScript already exists"
 
+	# -- GitHub Action steps --
+
+	actionCheckout="uses: actions/checkout@v2"
+	actionCacheLocalRepo="name: Cache local Maven repository
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-m2
+        with:
+          path: ~/.m2/repository
+          key: \${{ runner.os }}-build-\${{ env.cache-name }}
+          restore-keys: |
+            \${{ runner.os }}-build-\${{ env.cache-name }}-
+            \${{ runner.os }}-build-
+            \${{ runner.os }}-"
+	actionSetupJava="name: Set up Java
+        uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'zulu'"
+	actionSetupCI="name: Set up CI environment
+        run: $ciSetupScript"
+	actionExecuteBuild="name: Execute the build
+        run: $ciBuildScript"
+  actionSecrets="env:
+          GPG_KEY_NAME: \${{ secrets.GPG_KEY_NAME }}
+          GPG_PASSPHRASE: \${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_USER: \${{ secrets.MAVEN_USER }}
+          MAVEN_PASS: \${{ secrets.MAVEN_PASS }}
+          OSSRH_PASS: \${{ secrets.OSSRH_PASS }}
+          SIGNING_ASC: \${{ secrets.SIGNING_ASC }}"
+
 	# -- Do things --
 
 	# Add/update the main GitHub Actions configuration file.
@@ -128,36 +159,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Cache m2 folder
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-m2
-        with:
-          path: ~/.m2/repository
-          key: \${{ runner.os }}-build-\${{ env.cache-name }}
-          restore-keys: |
-            \${{ runner.os }}-build-\${{ env.cache-name }}-
-            \${{ runner.os }}-build-
-            \${{ runner.os }}-
-
-      - name: Set up JDK 8
-        uses: actions/setup-java@v2
-        with:
-          java-version: '8'
-          distribution: 'zulu'
-      - name: Set up CI environment
-        run: $ciSetupScript
-      - name: Execute the build
-        run: $ciBuildScript
-        env:
-          GPG_KEY_NAME: \${{ secrets.GPG_KEY_NAME }}
-          GPG_PASSPHRASE: \${{ secrets.GPG_PASSPHRASE }}
-          MAVEN_USER: \${{ secrets.MAVEN_USER }}
-          MAVEN_PASS: \${{ secrets.MAVEN_PASS }}
-          OSSRH_PASS: \${{ secrets.OSSRH_PASS }}
-          SIGNING_ASC: \${{ secrets.SIGNING_ASC }}
+      - $actionCheckout
+      - $actionCacheLocalRepo
+      - $actionSetupJava
+      - $actionSetupCI
+      - $actionExecuteBuild
+        $actionSecrets
 EOL
 	update "$ciConfigBuildMain" "add/update main build action"
 
@@ -175,29 +182,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Cache m2 folder
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-m2
-        with:
-          path: ~/.m2/repository
-          key: \${{ runner.os }}-build-\${{ env.cache-name }}
-          restore-keys: |
-            \${{ runner.os }}-build-\${{ env.cache-name }}-
-            \${{ runner.os }}-build-
-            \${{ runner.os }}-
-
-      - name: Set up JDK 8
-        uses: actions/setup-java@v2
-        with:
-          java-version: '8'
-          distribution: 'zulu'
-      - name: Set up CI environment
-        run: $ciSetupScript
-      - name: Execute the build
-        run: $ciBuildScript
+      - $actionCheckout
+      - $actionCacheLocalRepo
+      - $actionSetupJava
+      - $actionSetupCI
+      - $actionExecuteBuild
 EOL
 	update "$ciConfigBuildPR" "add/update PR build action"
 
