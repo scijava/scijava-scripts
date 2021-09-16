@@ -129,6 +129,8 @@ process() {
         with:
           java-version: '8'
           distribution: 'zulu'"
+	actionSetupConda="name: Set up conda
+        uses: s-weigand/setup-conda@v1"
 	actionSetupCI="name: Set up CI environment
         run: $ciSetupScript"
 	actionExecuteBuild="name: Execute the build
@@ -162,6 +164,9 @@ jobs:
       - $actionCheckout
       - $actionCacheLocalRepo
       - $actionSetupJava
+EOL
+	test -f environment.yml && echo "      - $actionSetupConda" >>"$tmpFile"
+	cat >>"$tmpFile" <<EOL
       - $actionSetupCI
       - $actionExecuteBuild
         $actionSecrets
@@ -185,6 +190,9 @@ jobs:
       - $actionCheckout
       - $actionCacheLocalRepo
       - $actionSetupJava
+EOL
+	test -f environment.yml && echo "      - $actionSetupConda" >>"$tmpFile"
+	cat >>"$tmpFile" <<EOL
       - $actionSetupCI
       - $actionExecuteBuild
 EOL
