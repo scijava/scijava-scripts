@@ -189,7 +189,7 @@ if which jupyter >/dev/null 2>&1; then
 	# that any updates to the success variable will not persist outside
 	# the loop. So we store non-zero success values into a temporary file,
 	# then capture the value back into the parent shell's success variable.
-	find . -name '*.ipynb' | while read f
+	find . -name '*.ipynb' | while read nbf
 	do
 		echo
 		echo "== $nbf =="
