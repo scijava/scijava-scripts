@@ -87,6 +87,7 @@ EOL
 	# Determine whether deploying will be possible.
 	deployOK=
 	scmURL=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${project.scm.url}' --non-recursive validate exec:exec 2>&1)
+	scmURL=${scmURL%.git}
 
 	if [ $? -ne 0 ]; then
 		echo "No deploy -- could not extract ciManagement URL"
