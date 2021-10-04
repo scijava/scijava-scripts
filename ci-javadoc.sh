@@ -1,19 +1,20 @@
 #!/bin/bash
 
 #
-# github-javadoc.sh - A script to build the javadocs of a SciJava-based project.
+# ci-build.sh - A script to build the javadocs of SciJava-based projects
+#               automatically using a continuous integration service.
 #
 
 # The following repositories are known to use this script:
 #
 #   bonej-org/bonej-javadoc
 #   fiji/fiji-javadoc
+#   flimlib/flimlib-javadoc
 #   imagej/imagej-javadoc
 #   imglib/imglib2-javadoc
 #   scifio/scifio-javadoc
 #   scijava/java3d-javadoc
 #   scijava/scijava-javadoc
-#   slim-curve/slim-javadoc
 #   uw-loci/loci-javadoc
 
 # Wait for a launched background command to complete, emitting
@@ -42,15 +43,9 @@ ciRepo=${ciURL##*/}
 ciPrefix=${ciURL%/*}
 ciOrg=${ciPrefix##*/}
 gitBranch=$(git branch --show-current) # get current branch name
-curl -o pull-request.txt https://api.github.com/repos/$ciOrg/$ciRepo/pulls >/dev/null 2>&1 # Check for pull requests
-curl -o secure-env.txt https://api.github.com/orgs/$ciOrg/$ciRepo/secrets >/dev/null 2>&1 # Check for secure env var
-if [ grep -q "documentation_url" secure-env.txt \
-	-a ! grep -q "url" pull-request.txt \
-	-a "$gitBranch" = master ]
+if [ "$gitBranch" = main -o "$gitBranch" = master ]
 then
 	project=$1
-	openssl_key=$2
-	openssl_iv=$3
 
 	# Populate the settings.xml configuration.
 	mkdir -p "$HOME/.m2"
@@ -95,12 +90,6 @@ EOL
 	echo &&
 	echo "== Configuring environment ==" &&
 
-	# Configure SSH. The file .github/javadoc.scijava.org.enc must contain
-	# an encrypted private RSA key for communicating with the git remote.
-	mkdir -p "$HOME/.ssh" &&
-	openssl aes-256-cbc -K "$openssl_key" -iv "$openssl_iv" -in '.github/javadoc.scijava.org.enc' -out "$HOME/.ssh/id_rsa" -d &&
-	chmod 400 "$HOME/.ssh/id_rsa" &&
-
 	# Configure git settings.
 	git config --global user.email "ci@scijava.org" &&
 	git config --global user.name "SciJava CI" &&
@@ -122,7 +111,7 @@ EOL
 
 	test "$success" || exit 1
 
-	git commit -m "Update $project javadocs (GitHub Actions build $WORKFLOW_RUN_NUMBER)" # Env var defined in GitHub Actions yml file
+	git commit -m "Update $project javadocs (via $ciOrg/$ciRepo)"
 	git pull --rebase &&
 	git push -q origin gh-pages > /dev/null || exit 2
 
