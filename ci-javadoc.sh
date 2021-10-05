@@ -104,7 +104,7 @@ EOL
 	# Update the relevant javadocs.
 	cd javadoc.scijava.org &&
 	rm -rf "$project" &&
-	mv target/apidocs "$project" &&
+	mv ../target/apidocs "$project" &&
 
 	# Commit and push the changes.
 	git add "$project" &&
