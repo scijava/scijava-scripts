@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #
-# ci-build.sh - A script to build the javadocs of SciJava-based projects
-#               automatically using a continuous integration service.
+# ci-javadoc.sh - A script to build the javadocs of SciJava-based projects
+#                 automatically using a continuous integration service.
 #
 
 # The following repositories are known to use this script:
