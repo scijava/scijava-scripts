@@ -7,15 +7,16 @@
 
 # The following repositories are known to use this script:
 #
-#   bonej-org/bonej-javadoc
-#   fiji/fiji-javadoc
-#   flimlib/flimlib-javadoc
-#   imagej/imagej-javadoc
-#   imglib/imglib2-javadoc
-#   scifio/scifio-javadoc
-#   scijava/java3d-javadoc
-#   scijava/scijava-javadoc
-#   uw-loci/loci-javadoc
+# - bonej-org/bonej-javadoc
+# - fiji/fiji-javadoc
+# - flimlib/flimlib-javadoc
+# - imagej/imagej-javadoc
+# - imglib/imglib2-javadoc
+# - scifio/scifio-javadoc
+# - scenerygraphics/sciview-javadoc
+# - scijava/java3d-javadoc
+# - scijava/scijava-javadoc
+# - uw-loci/loci-javadoc
 
 # Wait for a launched background command to complete, emitting
 # an occasional message to avoid long periods without output.
