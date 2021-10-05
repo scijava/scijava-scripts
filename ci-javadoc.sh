@@ -40,6 +40,7 @@ keep_alive() {
 }
 
 ciURL=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${project.ciManagement.url}' --non-recursive validate exec:exec 2>&1)
+ciURL=${ciURL%/actions}
 ciRepo=${ciURL##*/}
 ciPrefix=${ciURL%/*}
 ciOrg=${ciPrefix##*/}
