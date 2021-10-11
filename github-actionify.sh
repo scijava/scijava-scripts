@@ -203,7 +203,7 @@ EOL
 	# Add/update the GitHub Action setup script.
 	cat >"$tmpFile" <<EOL
 #!/bin/sh
-curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/ci-setup-github-actions.sh
+curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/main/ci-setup-github-actions.sh
 sh ci-setup-github-actions.sh
 EOL
 	chmod +x "$tmpFile"
@@ -212,7 +212,7 @@ EOL
 	# Add/update the GitHub Action build script.
 	cat >"$tmpFile" <<EOL
 #!/bin/sh
-curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/ci-build.sh
+curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/main/ci-build.sh
 sh ci-build.sh
 EOL
 	chmod +x "$tmpFile"

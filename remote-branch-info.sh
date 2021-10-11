@@ -24,10 +24,11 @@ esac
 
 for ref in $(git for-each-ref refs/remotes/$remote --format='%(refname)')
 do
-
+  headBranch=$(git remote show "$remote" | grep HEAD | sed 's/ *HEAD branch: //')
   refname=${ref#refs/remotes/$remote/}
-  case "$refname" in contrib|master) continue;; esac
-  unmerged_count=$(git cherry master $ref | grep '^+' | wc -l)
-  info=$(git log -n 1 --format='%an - %ar' $ref)
-  echo $refname - $info - $unmerged_count unmerged
-done
+  test "$refname" = "$headBranch" -o "$refname" = HEAD && continue
+  unmerged_count=$(git cherry "$headBranch" "$ref" | grep '^+' | wc -l)
+  author=$(git log -n 1 --format='%an' "$ref")
+  timestamp=$(git log -n 1 --format='%ar' "$ref")
+  echo "$refname~$author~$timestamp~$unmerged_count unmerged"
+done | column -t -s '~'
