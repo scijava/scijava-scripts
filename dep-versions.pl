@@ -5,7 +5,7 @@
 
 use strict;
 
-my @deps = `mvn dependency:list`;
+my @deps = `mvn -B dependency:list`;
 
 my $active = 0;
 for my $dep (@deps) {
