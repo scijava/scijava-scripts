@@ -67,7 +67,7 @@ process() {
 
 	# -- Git sanity checks --
 
-	repoSlug=$(xmllint --xpath '//*[local-name()="project"]/*[local-name()="scm"]/*[local-name()="connection"]' pom.xml | sed 's_.*github.com[:/]\(.*\)<.*_\1_')
+	repoSlug=$(grep '<connection>' pom.xml | sed 's;.*github.com[/:]\(.*/.*\)</connection>.*;\1;')
 	test "$repoSlug" && info "Repository = $repoSlug" || die 'Could not determine GitHub repository slug'
 	case "$repoSlug" in
 		*.git)
@@ -88,7 +88,7 @@ process() {
 
 	# -- POM sanity checks --
 
-	parent=$(xmllint --xpath '//*[local-name()="project"]/*[local-name()="parent"]/*[local-name()="artifactId"]' pom.xml | sed 's/[^>]*>//' | sed 's/<.*//')
+	parent=$(grep -A4 '<parent>' pom.xml | grep '<artifactId>' | sed 's;.*<artifactId>\(.*\)</artifactId>.*;\1;')
 	if [ -z "$SKIP_PARENT_CHECK" ]
 	then
 		test "$parent" = "pom-scijava" ||
@@ -221,7 +221,7 @@ EOL
 	# Upgrade version of pom-scijava.
 	if [ -z "$SKIP_PARENT_CHECK" ]
 	then
-		version=$(xmllint --xpath '//*[local-name()="project"]/*[local-name()="parent"]/*[local-name()="version"]' pom.xml | sed 's/[^>]*>//' | sed 's/<.*//')
+		version=$(grep -A4 '<parent>' pom.xml | grep '<version>' | sed 's;.*<version>\(.*\)</version>.*;\1;')
 		# HACK: Using a lexicographic comparison here is imperfect.
 		if [ "$version" \< "$pomMinVersion" ]
 		then
@@ -292,7 +292,7 @@ secrets to your GitHub organization if they aren't already present.
 EOL
 
 # call check method to verify prerequisites
-check git sed perl xmllint
+check git grep sed perl
 
 # parse arguments
 EXEC=:
