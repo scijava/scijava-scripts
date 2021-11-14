@@ -264,6 +264,9 @@ EOL
 		info "Updating README.md GitHub Action badge"
 		sed "s;travis-ci.*;$domain/$repoSlug/actions/$ciSlugBuildMain/badge.svg)](https://$domain/$repoSlug/actions/$ciSlugBuildMain);g" README.md >"$tmpFile"
 		update README.md 'update README.md badge link'
+	elif grep -qF "$domain/$repoSlug/actions/$ciSlugBuildMain/badge.svg" README.md >/dev/null 2>&1
+	then
+		info "GitHub Action badge already present in README.md"
 	else
 		info "Adding GitHub Action badge to README.md"
 		echo "[![](https://$domain/$repoSlug/actions/$ciSlugBuildMain/badge.svg)](https://$domain/$repoSlug/actions/$ciSlugBuildMain)" >"$tmpFile"
