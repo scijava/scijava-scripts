@@ -6,8 +6,8 @@
 commits=$@
 
 remote=$(git rev-parse --symbolic-full-name HEAD@{u})
-remote=${remote%/*}
 remote=${remote#refs/remotes/}
+remote=${remote%%/*}
 headBranch=$(git remote show "$remote" | grep HEAD | sed 's/ *HEAD branch: //')
 
 test "$commits" || commits=$(git rev-list HEAD "^$headBranch" | sed '1!G;h;$!d')
