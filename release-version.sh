@@ -154,7 +154,7 @@ If you are sure, try again with --skip-version-check flag."
 VALID_SEMVER_BUMP="$(cd "$(dirname "$0")" && pwd)/valid-semver-bump.sh"
 test -f "$VALID_SEMVER_BUMP" ||
 	die "Missing helper script at '$VALID_SEMVER_BUMP'
-Do you have a full clone of git://github.com/scijava/scijava-scripts?"
+Do you have a full clone of https://github.com/scijava/scijava-scripts?"
 test "$SKIP_VERSION_CHECK" || {
 	sh -$- "$VALID_SEMVER_BUMP" "$pomVersion" "$VERSION" ||
 		die "If you are sure, try again with --skip-version-check flag."
@@ -164,7 +164,7 @@ test "$SKIP_VERSION_CHECK" || {
 MAVEN_HELPER="$(cd "$(dirname "$0")" && pwd)/maven-helper.sh"
 test -f "$MAVEN_HELPER" ||
 	die "Missing helper script at '$MAVEN_HELPER'
-Do you have a full clone of git://github.com/scijava/scijava-scripts?"
+Do you have a full clone of https://github.com/scijava/scijava-scripts?"
 test "$SKIP_VERSION_CHECK" -o "$parentGAV" != "${parentGAV#$}" || {
 	latestParentVersion=$(sh -$- "$MAVEN_HELPER" latest-version "$parentGAV")
 	currentParentVersion=${parentGAV##*:}
@@ -252,9 +252,9 @@ test -n "$tag" &&
 # The release:perform command wants to use the developerConnection URL when
 # checking out the release tag. But reading from this URL requires credentials
 # which we would rather Travis not need. So we replace the scm.url in the
-# release.properties file to use the read-only (git://github.com/...) URL.
+# release.properties file to use the public (https://github.com/...) URL.
 # This is OK, since release:perform does not need write access to the repo.
-$DRY_RUN sed -i.bak -e 's|^scm.url=scm\\:git\\:git@github.com\\:|scm.url=scm\\:git\\:git\\://github.com/|' release.properties &&
+$DRY_RUN sed -i.bak -e 's|^scm.url=scm\\:git\\:git@github.com\\:|scm.url=scm\\:git\\:https\\://github.com/|' release.properties &&
 $DRY_RUN rm release.properties.bak &&
 $DRY_RUN git checkout "$tag" &&
 $DRY_RUN git add -f release.properties &&
