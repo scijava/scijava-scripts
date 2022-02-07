@@ -79,7 +79,7 @@ process() {
 	currentBranch=$(git rev-parse --abbrev-ref HEAD)
 	upstreamBranch=$(git rev-parse --abbrev-ref --symbolic-full-name @{u})
 	remote=${upstreamBranch%/*}
-	defaultBranch=$(git remote show "$remote" | grep "HEAD branch" | sed 's/.*: //')
+	defaultBranch=$(git remote show "$remote" | grep "HEAD" | sed 's/.*: //')
 	test "$currentBranch" = "$defaultBranch" || die "Non-default branch: $currentBranch"
 	git merge --ff --ff-only 'HEAD@{u}' >/dev/null ||
 		die "Cannot fast forward (local diverging?)"
