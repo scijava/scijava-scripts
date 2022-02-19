@@ -203,6 +203,20 @@ test "$FETCH_HEAD" = HEAD ||
 test "$FETCH_HEAD" = "$(git merge-base $FETCH_HEAD $HEAD)" ||
 	die "'$defaultBranch' is not up-to-date"
 
+# Ensure that schema location URL uses HTTPS, not HTTP.
+if grep -q http://maven.apache.org/xsd/maven-4.0.0.xsd pom.xml >/dev/null 2>/dev/null
+then
+	echo "====================================================================="
+	echo "NOTE: Your POM's schema location uses HTTP, not HTTPS. Fixing it now."
+	echo "====================================================================="
+	sed 's;http://maven.apache.org/xsd/maven-4.0.0.xsd;https://maven.apache.org/xsd/maven-4.0.0.xsd;' pom.xml > pom.new &&
+	mv -f pom.new pom.xml &&
+	git commit pom.xml \
+		-m 'POM: use HTTPS for schema location URL' \
+		-m 'Maven no longer supports plain HTTP for the schema location.' \
+		-m 'And using HTTP now generates errors in Eclipse (and probably other IDEs).'
+fi
+
 # Ensure license headers are up-to-date.
 test "$SKIP_LICENSE_UPDATE" -o -z "$licenseName" -o "$licenseName" = "N/A" || {
 	mvn license:update-project-license license:update-file-header &&
