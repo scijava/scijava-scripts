@@ -135,7 +135,7 @@ fi
 
 # Discern the version to release.
 pomVersion=${currentVersion%-SNAPSHOT}
-test "$VERSION" || test ! -t 0 || {
+test "$VERSION" -o ! -t 0 || {
 	printf 'Version? [%s]: ' "$pomVersion"
 	read VERSION
 	test "$VERSION" || VERSION=$pomVersion
