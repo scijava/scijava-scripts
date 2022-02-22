@@ -113,22 +113,12 @@ process() {
 	# -- GitHub Action steps --
 
 	actionCheckout="uses: actions/checkout@v2"
-	actionCacheLocalRepo="name: Cache local Maven repository
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-m2
-        with:
-          path: ~/.m2/repository
-          key: \${{ runner.os }}-build-\${{ env.cache-name }}
-          restore-keys: |
-            \${{ runner.os }}-build-\${{ env.cache-name }}-
-            \${{ runner.os }}-build-
-            \${{ runner.os }}-"
 	actionSetupJava="name: Set up Java
         uses: actions/setup-java@v2
         with:
           java-version: '8'
-          distribution: 'zulu'"
+          distribution: 'zulu'
+          cache: 'maven'"
 	actionSetupConda="name: Set up conda
         uses: s-weigand/setup-conda@v1
       - name: Install conda packages
@@ -164,7 +154,6 @@ jobs:
 
     steps:
       - $actionCheckout
-      - $actionCacheLocalRepo
       - $actionSetupJava
 EOL
 	test -f environment.yml && echo "      - $actionSetupConda" >>"$tmpFile"
@@ -190,7 +179,6 @@ jobs:
 
     steps:
       - $actionCheckout
-      - $actionCacheLocalRepo
       - $actionSetupJava
 EOL
 	test -f environment.yml && echo "      - $actionSetupConda" >>"$tmpFile"
