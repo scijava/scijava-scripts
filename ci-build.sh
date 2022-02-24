@@ -100,9 +100,39 @@ EOL
 		elif [ "$BUILD_REPOSITORY" -a "$BUILD_REPOSITORY" != "$scmURL" ]; then
 			echo "No deploy -- repository fork: $BUILD_REPOSITORY != $scmURL"
 		else
-			echo "All checks passed for artifact deployment"
-			deployOK=1
+			# Are we building a snapshot version, or a release version?
+			version=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive validate exec:exec 2>&1)
+			result=$?
+			checkSuccess $result
+			if [ $result -ne 0 ]; then
+				echo "No deploy -- could not extract version string"
+				echo "Output of failed attempt follows:"
+				echo "$version"
+			else
+				case "$version" in
+					*-SNAPSHOT)
+						# Snapshot version -- ensure release.properties not present.
+						if [ -f release.properties ]; then
+							echo "[ERROR] Spurious release.properties file is present"
+							echo "Remove the file from version control and try again."
+							exit 1
+						fi
+						;;
+					*)
+						# Release version -- ensure release.properties is present.
+						if [ ! -f release.properties ]; then
+							echo "[ERROR] Release version, but release.properties not found"
+							echo "You must use release-version.sh to release -- see https://imagej.net/develop/releasing"
+							exit 1
+						fi
+						;;
+				esac
+				deployOK=1
+			fi
 		fi
+	fi
+	if [ "$deployOK" ]; then
+		echo "All checks passed for artifact deployment"
 	fi
 
 	# Install GPG on macOS
