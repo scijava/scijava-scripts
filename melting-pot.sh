@@ -641,7 +641,7 @@ meltDown() {
 
 		if [ "$(isIncluded "$gav")" ]
 		then
-			info "$a: fetching component source"
+			info "$g:$a: fetching source for version $v"
 			dir="$(retrieveSource "$gav")"
 		fi
 	done
