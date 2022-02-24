@@ -72,37 +72,13 @@
 
 # -- Functions --
 
-stderr() {
-	>&2 echo "$@"
-}
-
-debug() {
-	test "$debug" &&
-		stderr "+ $@"
-}
-
-info() {
-	test "$verbose" &&
-		stderr "[INFO] $@"
-}
-
-warn() {
-	stderr "[WARNING] $@"
-}
-
-error() {
-	stderr "[ERROR] $@"
-}
-
-die() {
-	error $1
-	exit $2
-}
-
-unknownArg() {
-	error "Unknown option: $@"
-	usage=1
-}
+stderr() { >&2 echo "$@"; }
+debug() { test "$debug" && stderr "+ $@"; }
+info() { test "$verbose" && stderr "[INFO] $@"; }
+warn() { stderr "[WARNING] $@"; }
+error() { stderr "[ERROR] $@"; }
+die() { error $1; exit $2; }
+unknownArg() { error "Unknown option: $@"; usage=1; }
 
 checkPrereqs() {
 	while [ $# -gt 0 ]
