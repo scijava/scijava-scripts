@@ -85,16 +85,19 @@ EOL
 	fi
 
 	# Determine whether deploying will be possible.
+	echo "Performing deployment checks"
 	deployOK=
-	scmURL=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${project.scm.url}' --non-recursive validate exec:exec 2>&1)
-	scmURL=${scmURL%.git}
-	scmURL=${scmURL%/}
 
-	if [ $? -ne 0 ]; then
+	scmURL=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${project.scm.url}' --non-recursive validate exec:exec 2>&1)
+	result=$?
+	checkSuccess $result
+	if [ $result -ne 0 ]; then
 		echo "No deploy -- could not extract ciManagement URL"
 		echo "Output of failed attempt follows:"
 		echo "$scmURL"
 	else
+		scmURL=${scmURL%.git}
+		scmURL=${scmURL%/}
 		if [ ! "$SIGNING_ASC" -o ! "$GPG_KEY_NAME" -o ! "$GPG_PASSPHRASE" -o ! "$MAVEN_PASS" -o ! "$OSSRH_PASS" ]; then
 			echo "No deploy -- secure environment variables not available"
 		elif [ "$BUILD_REPOSITORY" -a "$BUILD_REPOSITORY" != "$scmURL" ]; then
