@@ -95,7 +95,7 @@ EOL
 		echo "Output of failed attempt follows:"
 		echo "$scmURL"
 	else
-		if [ ! "$SIGNING_ASC" ] || [ ! "$GPG_KEY_NAME" ] || [ ! "$GPG_PASSPHRASE" ] || [ ! "$MAVEN_PASS" ] || [ ! "$OSSRH_PASS" ]; then
+		if [ ! "$SIGNING_ASC" -o ! "$GPG_KEY_NAME" -o ! "$GPG_PASSPHRASE" -o ! "$MAVEN_PASS" -o ! "$OSSRH_PASS" ]; then
 			echo "No deploy -- secure environment variables not available"
 		elif [ "$BUILD_REPOSITORY" -a "$BUILD_REPOSITORY" != "$scmURL" ]; then
 			echo "No deploy -- repository fork: $BUILD_REPOSITORY != $scmURL"
