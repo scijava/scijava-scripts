@@ -10,7 +10,7 @@ remote=${remote#refs/remotes/}
 remote=${remote%%/*}
 headBranch=$(git remote show "$remote" | grep HEAD | sed 's/ *HEAD branch: //')
 
-test "$commits" || commits=$(git rev-list HEAD "^$headBranch" | sed '1!G;h;$!d')
+test "$commits" || commits=$(git rev-list HEAD "^$remote/$headBranch" | sed '1!G;h;$!d')
 # NB: The sed line above reverses the order of the commits.
 # See: http://stackoverflow.com/a/744093
 
