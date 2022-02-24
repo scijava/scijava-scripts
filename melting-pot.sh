@@ -637,7 +637,7 @@ meltDown() {
 		local gav="$g:$a:$v"
 
 		test -z "$(isChanged "$gav")" &&
-			args="$args \\\\\n  -D$a.version=$v"
+			args="$args \\\\\n  -D$g.$a.version=$v -D$a.version=$v"
 
 		if [ "$(isIncluded "$gav")" ]
 		then
