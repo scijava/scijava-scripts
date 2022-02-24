@@ -70,6 +70,10 @@
 # Author: Curtis Rueden
 # ============================================================================
 
+# -- Constants --
+
+meltingPotCache="$HOME/.scijava/melting-pot"
+
 # -- Functions --
 
 stderr() { >&2 echo "$@"; }
@@ -423,18 +427,31 @@ retrieveSource() {
 	test "$scmURL" || die "Cannot glean SCM URL for $1" 10
 	local scmBranch
 	test "$2" && scmBranch="$2" || scmBranch="$(scmTag "$1")"
-	local dir="$(groupId "$1")/$(artifactId "$1")"
-	debug "git clone \"$scmURL\" --branch \"$scmBranch\" --depth 1 \"$dir\""
-	git clone "$scmURL" --branch "$scmBranch" --depth 1 "$dir" 2> /dev/null ||
-		die "Could not fetch project source for $1" 3
+	local g=$(groupId "$1")
+	local a=$(artifactId "$1")
+	local v=$(version "$1")
+	local sourceDir="$meltingPotCache/$g/$a/$v"
+	if [ -d "$sourceDir" ]
+	then
+		debug "Using previously fetched project source at $sourceDir"
+	else
+		# Source has never been fetched before. Save it into ~/.scijava/melting-pot.
+		debug "git clone \"$scmURL\" --branch \"$scmBranch\" --depth 1 \"$sourceDir\""
+		git clone "$scmURL" --branch "$scmBranch" --depth 1 "$sourceDir" 2> /dev/null ||
+			die "Could not fetch project source for $1" 3
+	fi
+	# Copy the pristine cached source directory into the melting-pot structure.
+	local destDir="$g/$a"
+	mkdir -p "$(dirname "$destDir")"
+	cp -rp "$sourceDir" "$destDir"
 
 	# Now verify that the cloned pom.xml contains the expected version!
 	local expectedVersion=$(version "$1")
-	local actualVersion=$(xpath "$dir/pom.xml" project version)
+	local actualVersion=$(xpath "$destDir/pom.xml" project version)
 	test "$expectedVersion" = "$actualVersion" ||
 		die "POM for $1 contains wrong version: $actualVersion" 14
 
-	echo "$dir"
+	echo "$destDir"
 }
 
 # Gets the list of dependencies for the project in the CWD.
