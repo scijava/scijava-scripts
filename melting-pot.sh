@@ -444,7 +444,7 @@ deps() {
 	local depList="$(mvn -DincludeScope=runtime -B dependency:list)" ||
 		die "Problem fetching dependencies!" 5
 	echo "$depList" | grep '^\[INFO\]    [^ ]' |
-		sed 's/\[INFO\]    //' | sed 's/  *(optional) *$//' | sort
+		sed 's/\[INFO\]    //' | sed 's/ .*//' | sort
 	cd - > /dev/null
 }
 
