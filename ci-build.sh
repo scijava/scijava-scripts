@@ -196,7 +196,7 @@ EOL
 	if [ "$deployOK" -a -f release.properties ]; then
 		echo
 		echo "== Cutting and deploying release version =="
-		mvn -B $BUILD_ARGS release:perform
+		mvn $BUILD_ARGS release:perform
 		checkSuccess $?
 
 		echo "== Invalidating SciJava Maven repository cache =="
