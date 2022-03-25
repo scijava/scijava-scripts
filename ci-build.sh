@@ -165,6 +165,30 @@ EOL
 		checkSuccess $?
 	fi
 
+	# HACK: Use maven-gpg-plugin 3.0.1+. Avoids "signing failed: No such file or directory" error.
+	maven_gpg_plugin_version=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${maven-gpg-plugin.version}' --non-recursive validate exec:exec 2>&1)
+	case "$maven_gpg_plugin_version" in
+		0.*|1.*|2.*|3.0.0)
+			echo "--> Forcing maven-gpg-plugin version from $maven_gpg_plugin_version to 3.0.1"
+			BUILD_ARGS="$BUILD_ARGS -Dmaven-gpg-plugin.version=3.0.1 -Darguments=-Dmaven-gpg-plugin.version=3.0.1"
+			;;
+		*)
+			echo "--> maven-gpg-plugin version OK: $maven_gpg_plugin_version"
+			;;
+	esac
+
+	# HACK: Install pinentry helper program if missing. Avoids "signing failed: No pinentry" error.
+	if which pinentry >/dev/null 2>&1; then
+		echo '--> Installing missing pinentry helper for GPG'
+		sudo apt-get install -y pinentry-tty
+		# HACK: Restart the gpg agent, to notice the newly installed pinentry.
+		if { pgrep gpg-agent >/dev/null && which gpgconf >/dev/null 2>&1; } then
+			echo '--> Restarting gpg-agent'
+			gpgconf --reload gpg-agent
+			checkSuccess $?
+		fi
+	fi
+
 	# --== BUILD EXECUTION ==--
 
 	# Run the build.
@@ -172,31 +196,6 @@ EOL
 	if [ "$deployOK" -a -f release.properties ]; then
 		echo
 		echo "== Cutting and deploying release version =="
-
-		# HACK: Use maven-gpg-plugin 3.0.1+. Avoids "signing failed: No such file or directory" error.
-		maven_gpg_plugin_version=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${maven-gpg-plugin.version}' --non-recursive validate exec:exec 2>&1)
-		case "$maven_gpg_plugin_version" in
-			0.*|1.*|2.*|3.0.0)
-				echo "--> Forcing maven-gpg-plugin version from $maven_gpg_plugin_version to 3.0.1"
-				BUILD_ARGS="$BUILD_ARGS -Dmaven-gpg-plugin.version=3.0.1 -Darguments=-Dmaven-gpg-plugin.version=3.0.1"
-				;;
-			*)
-				echo "--> maven-gpg-plugin version OK: $maven_gpg_plugin_version"
-				;;
-		esac
-
-		# HACK: Install pinentry helper program if missing. Avoids "signing failed: No pinentry" error.
-		if which pinentry >/dev/null 2>&1; then
-			echo '--> Installing missing pinentry helper for GPG'
-			sudo apt-get install -y pinentry-tty
-			# HACK: Restart the gpg agent, to notice the newly installed pinentry.
-			if { pgrep gpg-agent >/dev/null && which gpgconf >/dev/null 2>&1; } then
-				echo '--> Restarting gpg-agent'
-				gpgconf --reload gpg-agent
-				checkSuccess $?
-			fi
-		fi
-
 		mvn -B $BUILD_ARGS release:perform
 		checkSuccess $?
 
