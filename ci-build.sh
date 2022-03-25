@@ -31,6 +31,9 @@ escapeXML() {
 # Build Maven projects.
 if [ -f pom.xml ]; then
 	echo ::group::"= Maven build ="
+
+	# --== MAVEN SETUP ==--
+
 	echo
 	echo "== Configuring Maven =="
 
@@ -83,6 +86,8 @@ if [ -f pom.xml ]; then
 </settings>
 EOL
 	fi
+
+	# --== DEPLOYMENT CHECKS ==--
 
 	# Determine whether deploying will be possible.
 	echo "Performing deployment checks"
@@ -138,6 +143,8 @@ EOL
 		echo "All checks passed for artifact deployment"
 	fi
 
+	# --== GPG SETUP ==--
+
 	# Install GPG on macOS
 	if [ "$MACOS" ]; then
 		HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg2
@@ -157,6 +164,8 @@ EOL
 		gpg --batch --fast-import "$keyFile"
 		checkSuccess $?
 	fi
+
+	# --== BUILD EXECUTION ==--
 
 	# Run the build.
 	BUILD_ARGS='-B -Djdk.tls.client.protocols="TLSv1,TLSv1.1,TLSv1.2"'
@@ -212,6 +221,9 @@ EOL
 		mvn $BUILD_ARGS install javadoc:javadoc
 		checkSuccess $?
 	fi
+
+	# --== POST-BUILD ACTIONS ==--
+
 	echo ::endgroup::
 fi
 
