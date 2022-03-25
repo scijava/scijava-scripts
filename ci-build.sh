@@ -178,7 +178,7 @@ EOL
 	esac
 
 	# HACK: Install pinentry helper program if missing. Avoids "signing failed: No pinentry" error.
-	if which pinentry >/dev/null 2>&1; then
+	if ! which pinentry >/dev/null 2>&1; then
 		echo '--> Installing missing pinentry helper for GPG'
 		sudo apt-get install -y pinentry-tty
 		# HACK: Restart the gpg agent, to notice the newly installed pinentry.
