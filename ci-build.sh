@@ -28,6 +28,10 @@ escapeXML() {
 	echo "$1" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'"'"'/\&#39;/g'
 }
 
+mavenEvaluate() {
+	mvn -B -U -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args="$1" --non-recursive validate exec:exec 2>&1
+}
+
 # Build Maven projects.
 if [ -f pom.xml ]; then
 	echo ::group::"= Maven build ="
@@ -93,7 +97,7 @@ EOL
 	echo "Performing deployment checks"
 	deployOK=
 
-	scmURL=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${project.scm.url}' --non-recursive validate exec:exec 2>&1)
+	scmURL=$(mavenEvaluate '${project.scm.url}')
 	result=$?
 	checkSuccess $result
 	if [ $result -ne 0 ]; then
@@ -109,7 +113,7 @@ EOL
 			echo "No deploy -- repository fork: $BUILD_REPOSITORY != $scmURL"
 		else
 			# Are we building a snapshot version, or a release version?
-			version=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive validate exec:exec 2>&1)
+			version=$(mavenEvaluate '${project.version}')
 			result=$?
 			checkSuccess $result
 			if [ $result -ne 0 ]; then
@@ -166,7 +170,7 @@ EOL
 	fi
 
 	# HACK: Use maven-gpg-plugin 3.0.1+. Avoids "signing failed: No such file or directory" error.
-	maven_gpg_plugin_version=$(mvn -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args='${maven-gpg-plugin.version}' --non-recursive validate exec:exec 2>&1)
+	maven_gpg_plugin_version=$(mavenEvaluate '${maven-gpg-plugin.version}')
 	case "$maven_gpg_plugin_version" in
 		0.*|1.*|2.*|3.0.0)
 			echo "--> Forcing maven-gpg-plugin version from $maven_gpg_plugin_version to 3.0.1"
