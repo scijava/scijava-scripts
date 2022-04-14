@@ -147,6 +147,10 @@ EOL
 		echo "All checks passed for artifact deployment"
 	fi
 
+	# --== Maven build arguments ==--
+
+	BUILD_ARGS="-B -Djdk.tls.client.protocols=TLSv1,TLSv1.1,TLSv1.2"
+
 	# --== GPG SETUP ==--
 
 	# Install GPG on macOS
@@ -196,7 +200,6 @@ EOL
 	# --== BUILD EXECUTION ==--
 
 	# Run the build.
-	BUILD_ARGS='-B -Djdk.tls.client.protocols="TLSv1,TLSv1.1,TLSv1.2"'
 	if [ "$deployOK" -a -f release.properties ]; then
 		echo
 		echo "== Cutting and deploying release version =="
