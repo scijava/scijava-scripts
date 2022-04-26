@@ -391,7 +391,8 @@ pomValue() {
 
 # Gets the SCM URL for the given GAV.
 scmURL() {
-	pomValue "$1" project scm connection | sed -E 's/^scm:git://'
+	pomValue "$1" project scm connection | sed 's/^scm:git://' |
+		sed 's_git:\(//github.com/\)_https:\1_'
 }
 
 # Gets the SCM tag for the given GAV.
