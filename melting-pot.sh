@@ -602,14 +602,15 @@ generateScript() {
 		fi
 	done
 	echo >> melt.sh
-	echo 'do (' >> melt.sh
+	echo 'do' >> melt.sh
 	echo '	cd "$f"' >> melt.sh
-	echo '	sh "$dir/build.sh" > build.log 2>&1 &&' >> melt.sh
+	echo '	sh "$dir/build.sh" >build.log 2>&1 &&' >> melt.sh
 	echo '		echo "[SUCCESS] $f" || {' >> melt.sh
 	echo '			echo "[FAILURE] $f"' >> melt.sh
 	echo '			failCount=$((failCount+1))' >> melt.sh
 	echo '		}' >> melt.sh
-	echo ') done' >> melt.sh
+	echo '	cd - >/dev/null' >> melt.sh
+	echo 'done' >> melt.sh
 	echo 'test "$failCount" -gt 255 && failCount=255' >> melt.sh
 	echo 'exit "$failCount"' >> melt.sh
 }
