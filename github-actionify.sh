@@ -114,7 +114,7 @@ process() {
 
 	actionCheckout="uses: actions/checkout@v2"
 	actionSetupJava="name: Set up Java
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           java-version: '8'
           distribution: 'zulu'
