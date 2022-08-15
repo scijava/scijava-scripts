@@ -72,7 +72,7 @@
 
 # -- Constants --
 
-meltingPotCache="$HOME/.scijava/melting-pot"
+meltingPotCache="$HOME/.cache/scijava/melting-pot"
 
 # -- Functions --
 
