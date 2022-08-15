@@ -5,50 +5,43 @@
 # ============================================================================
 # Tests all components of a project affected by changes in its dependencies.
 #
-# First, an anecdote illustrating the problem this script solves:
+# In particular, this script detects problems caused by diamond dependency
+# structures:
 #
-# Suppose you have a large application, org:app:1.0.0, with many dependencies:
-# org:foo:1.2.3, org:bar:3.4.5, and many others.
+#   https://jlbp.dev/what-is-a-diamond-dependency-conflict
 #
-# Now suppose you make some changes to foo, and want to know whether deploying
-# them (i.e., releasing a new foo and updating app to depend on that release)
-# will break the app. So you manually update your local copy of app to depend
-# on org:foo:1.3.0-SNAPSHOT, and run the build (including tests, of course).
+# This "melting pot" build rebuilds every dependency of a project, but at
+# unified dependency versions matching those of the toplevel project.
 #
-# The build passes, but this alone is insufficient: org:bar:3.4.5 also depends
-# on org:foo:1.2.3, so you manually update bar to use org:foo:1.3.0-SNAPSHOT,
-# then build bar to verify that it also is not broken by the update.
+# For example, net.imagej:imagej:2.5.0 depends on many components including
+# org.scijava:scijava-common:2.88.1 and net.imagej:imagej-ops:0.46.1,
+# both of which depend on org.scijava:parsington. But:
 #
-# This process quickly becomes very tedious when there are dozens of
-# components of app which all depend on foo.
+# - org.scijava:scijava-common:2.88.1 depends on org.scijava:parsington:3.0.0
+# - net.imagej:imagej-ops:0.46.1 depends on org.scijava:parsington:2.0.0
 #
-# And more importantly, testing each component individually in this manner is
-# still insufficient to determine whether all of them will truly work together
-# at runtime, where only a single version of each component is deployed.
+# ImageJ2 can only depend on one of these versions at runtime. The newer one,
+# ideally. SciJava projects use the pom-scijava parent POM as a Bill of
+# Materials (BOM) to declare these winning versions, which works great...
+# EXCEPT for when newer versions break backwards compatibility, as happened
+# here: it's a SemVer-versioned project at different major version numbers.
 #
-# For example: suppose org:bar:3.4.5 depends on org:lib:8.0.0, while
-# org:foo:1.2.3 depends on org:lib:7.0.0. The relevant facts are:
+# Enter this melting-pot script. It rebuilds each project dependency from
+# source and runs the unit tests, but with all dependency versions pinned to
+# match those of the toplevel project.
 #
-# * Your new foo (org:foo:1.3.0-SNAPSHOT) builds against lib 7, and portions
-#   of it rely on lib-7-specific API.
+# So in the example above, this script:
 #
-# * The bar component pinned to foo 1.3.0-SNAPSHOT builds against lib 8; it
-#   compiles with passing tests because bar only invokes portions of the foo
-#   API which do not require lib-7-specific API.
+# 1. gathers the dependencies of net.imagej:imagej:2.5.0;
+# 2. clones each dependency from SCM at the correct release tag;
+# 3. rebuilds each dependency, but with dependency versions overridden to
+#    those of net.imagej:imagej:2.5.0 rather than those originally used for
+#    that dependency at that release.
 #
-# In this scenario, it is lib 8 that is actually deployed at runtime with the
-# app, so parts of foo will be broken, even though both foo and bar build with
-# passing tests individually.
-#
-# This "melting pot" build seeks to overcome many of these issues by unifying
-# all components of the app into a single multi-module build, with all
-# versions uniformly pinned to the ones that will actually be deployed at
-# runtime.
-#
-# This goal is achieved by synthesizing a multi-module build including all
-# affected components (or optionally, all components period) of the specific
-# project, and then executing a Maven build with uniformly overridden versions
-# of all components to the ones resolved for the project itself.
+# So e.g. in the above scenario, net.imagej:imagej-ops:0.46.1 will be rebuilt
+# against org.scijava:parsington:3.0.0, and we will discover whether any of
+# parsington's breaking API changes from 2.0.0 to 3.0.0 actually impact the
+# compilation or (tested) runtime behavior of imagej-ops.
 #
 # IMPORTANT IMPLEMENTATION DETAIL! The override works by setting a version
 # property for each component of the form "artifactId.version"; it is assumed
