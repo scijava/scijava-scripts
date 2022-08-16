@@ -220,6 +220,32 @@ then
 		-m 'And using HTTP now generates errors in Eclipse (and probably other IDEs).'
 fi
 
+# Change forum references from forum.image.net to forum.image.sc.
+if grep -q 'https*://forum.imagej.net' pom.xml >/dev/null 2>/dev/null
+then
+	echo "================================================================"
+	echo "NOTE: Your POM still references forum.imagej.net. Fixing it now."
+	echo "================================================================"
+	sed 's;https*://forum.imagej.net;https://forum.image.sc;g' pom.xml > pom.new &&
+	mv -f pom.new pom.xml &&
+	git commit pom.xml \
+		-m 'POM: fix forum.image.sc tag link' \
+		-m 'The Discourse software updated the tags path from /tags/ to /tag/.'
+fi
+
+# Ensure that references to forum.image.sc use /tag/, not /tags/.
+if grep -q forum.image.sc/tags/ pom.xml >/dev/null 2>/dev/null
+then
+	echo "=================================================================="
+	echo "NOTE: Your POM has an old-style forum.image.sc tag. Fixing it now."
+	echo "=================================================================="
+	sed 's;forum.image.sc/tags/;forum.image.sc/tag/;g' pom.xml > pom.new &&
+	mv -f pom.new pom.xml &&
+	git commit pom.xml \
+		-m 'POM: fix forum.image.sc tag link' \
+		-m 'The Discourse software updated the tags path from /tags/ to /tag/.'
+fi
+
 # Ensure license headers are up-to-date.
 test "$SKIP_LICENSE_UPDATE" -o -z "$licenseName" -o "$licenseName" = "N/A" || {
 	mvn license:update-project-license license:update-file-header &&
