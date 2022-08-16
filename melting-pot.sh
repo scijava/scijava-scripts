@@ -347,6 +347,7 @@ pom() {
 xpath() {
 	local xmlFile="$1"
 	shift
+	local expression="$@"
 	local xpath="/"
 	while [ $# -gt 0 ]
 	do
@@ -354,9 +355,10 @@ xpath() {
 		xpath="$xpath/*[local-name()='$1']"
 		shift
 	done
-	debug "xmllint --xpath \"$xpath\" \"$xmlFile\""
-	xmllint --xpath "$xpath" "$xmlFile" 2> /dev/null |
-		sed -E 's/^[^>]*>(.*)<[^<]*$/\1/'
+	local value=$(xmllint --xpath "$xpath" "$xmlFile" 2> /dev/null |
+		sed -E 's/^[^>]*>(.*)<[^<]*$/\1/')
+	debug "xpath $xmlFile $expression -> $value"
+	echo "$value"
 }
 
 # For the given GAV ($1), recursively gets the value of the
@@ -399,6 +401,10 @@ scmTag() {
 		local a=$(artifactId "$1")
 		local v=$(version "$1")
 		local scmURL="$(scmURL "$1")"
+		# TODO: Avoid network use. We can scan the locally cached repo.
+		# But this gets complicated when the locally cached repo is
+		# out of date, and the needed tag is not there yet...
+		debug "git ls-remote --tags \"$scmURL\" | sed 's/.*refs\/tags\///'"
 		local allTags="$(git ls-remote --tags "$scmURL" | sed 's/.*refs\/tags\///' ||
 			error "$1: Invalid scm url: $scmURL")"
 		for tag in "$a-$v" "$v" "v$v"
@@ -415,35 +421,46 @@ scmTag() {
 	fi
 }
 
-# Fetches the source code for the given GAV. Returns the directory.
-retrieveSource() {
-	local scmURL="$(scmURL "$1")"
-	test "$scmURL" || die "Cannot glean SCM URL for $1" 10
-	local scmBranch
-	test "$2" && scmBranch="$2" || scmBranch="$(scmTag "$1")"
+# Ensures the source code for the given GAV exists in the melting-pot
+# structure, and is up-to-date with the remote. Returns the directory.
+resolveSource() {
 	local g=$(groupId "$1")
 	local a=$(artifactId "$1")
-	local v=$(version "$1")
-	local sourceDir="$meltingPotCache/$g/$a/$v"
-	if [ -d "$sourceDir" ]
+	local cachedRepoDir="$meltingPotCache/$g/$a"
+	if [ ! -d "$cachedRepoDir" ]
 	then
-		debug "Using previously fetched project source at $sourceDir"
-	else
-		# Source has never been fetched before. Save it into ~/.scijava/melting-pot.
-		debug "git clone \"$scmURL\" --branch \"$scmBranch\" --depth 1 \"$sourceDir\""
-		git clone "$scmURL" --branch "$scmBranch" --depth 1 "$sourceDir" 2> /dev/null ||
-			die "Could not fetch project source for $1" 3
+		# Source does not exist locally. Clone it into the melting pot cache.
+		local scmURL="$(scmURL "$1")"
+		test "$scmURL" || die "$1: cannot glean SCM URL" 10
+		info "$1: cached repository not found; cloning from remote: $scmURL"
+		debug "git clone --bare \"$scmURL\" \"$cachedRepoDir\""
+		git clone --bare "$scmURL" "$cachedRepoDir" 2> /dev/null ||
+			die "$1: could not clone project source from $scmURL" 3
 	fi
-	# Copy the pristine cached source directory into the melting-pot structure.
+
+	# Check whether the needed branch/tag exists.
+	local scmBranch
+	test "$2" && scmBranch="$2" || scmBranch="$(scmTag "$1")"
+	debug "git ls-remote \"file://$cachedRepoDir\" | grep -q \"\trefs/tags/$scmBranch$\""
+	git ls-remote "file://$cachedRepoDir" | grep -q "\trefs/tags/$scmBranch$" || {
+		# Couldn't find the scmBranch as a tag in the cached repo. Either the
+		# tag is new, or it's not a tag ref at all (e.g. it's a branch).
+		# So let's update from the original remote repository.
+		info "$1: local tag not found for ref '$scmBranch'; updating cached repository: $cachedRepoDir"
+		(cd "$cachedRepoDir" && debug "git fetch --tags" && git fetch --tags)
+	}
+
+	# Shallow clone the source at the given version into melting-pot structure.
 	local destDir="$g/$a"
-	mkdir -p "$(dirname "$destDir")"
-	cp -rp "$sourceDir" "$destDir"
+	debug "git clone \"file://$cachedRepoDir\" --branch \"$scmBranch\" --depth 1 \"$destDir\""
+	git clone "file://$cachedRepoDir" --branch "$scmBranch" --depth 1 "$destDir" 2> /dev/null ||
+		die "$1: could not clone branch '$scmBranch' from local cache" 15
 
 	# Now verify that the cloned pom.xml contains the expected version!
 	local expectedVersion=$(version "$1")
 	local actualVersion=$(xpath "$destDir/pom.xml" project version)
 	test "$expectedVersion" = "$actualVersion" ||
-		die "POM for $1 contains wrong version: $actualVersion" 14
+		warn "$1: POM contains wrong version: $actualVersion"
 
 	echo "$destDir"
 }
@@ -451,7 +468,7 @@ retrieveSource() {
 # Gets the list of dependencies for the project in the CWD.
 deps() {
 	cd "$1"
-	debug "mvn dependency:list"
+	debug "mvn -DincludeScope=runtime -B dependency:list"
 	local depList="$(mvn -DincludeScope=runtime -B dependency:list)" ||
 		die "Problem fetching dependencies!" 5
 	echo "$depList" | grep '^\[INFO\]    [^ ]' |
@@ -626,7 +643,7 @@ meltDown() {
 	else
 		# Treat specified project as a GAV.
 		info "Fetching project source"
-		retrieveSource "$1" "$branch"
+		resolveSource "$1" "$branch"
 	fi
 
 	# Get the project dependencies.
@@ -653,8 +670,8 @@ meltDown() {
 
 		if [ "$(isIncluded "$gav")" ]
 		then
-			info "$g:$a: fetching source for version $v"
-			dir="$(retrieveSource "$gav")"
+			info "$g:$a: resolving source for version $v"
+			dir="$(resolveSource "$gav")"
 		fi
 	done
 
