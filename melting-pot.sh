@@ -613,6 +613,11 @@ generateScript() {
 	done
 	echo >> melt.sh
 	echo 'do' >> melt.sh
+	echo '	# If the build passed previously, don'\''t repeat it.' >> melt.sh
+	echo '	test -f "$f/build.log" &&' >> melt.sh
+	echo '		tail -n6 "$f/build.log" | grep -qF '\''[INFO] BUILD SUCCESS'\'' &&' >> melt.sh
+	echo '		echo "[SUCCESS] $f (prior)" && continue' >> melt.sh
+	echo >> melt.sh
 	echo '	cd "$f"' >> melt.sh
 	echo '	sh "$dir/build.sh" >build.log 2>&1 &&' >> melt.sh
 	echo '		echo "[SUCCESS] $f" || {' >> melt.sh
