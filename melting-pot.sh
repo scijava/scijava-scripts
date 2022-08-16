@@ -698,7 +698,7 @@ meltDown() {
 	# Generate build scripts.
 	info "Generating build scripts"
 	generatePOM
-	echo "mvn $args \\\\\n  test \$@" > build.sh
+	echo "mvn $args \\\\\n  dependency:list test \$@" > build.sh
 	generateScript
 
 	# Build everything.
