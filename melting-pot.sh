@@ -441,8 +441,8 @@ resolveSource() {
 	# Check whether the needed branch/tag exists.
 	local scmBranch
 	test "$2" && scmBranch="$2" || scmBranch="$(scmTag "$1")"
-	debug "git ls-remote \"file://$cachedRepoDir\" | grep -q \"\trefs/tags/$scmBranch$\""
-	git ls-remote "file://$cachedRepoDir" | grep -q "\trefs/tags/$scmBranch$" || {
+	debug "git ls-remote \"file://$cachedRepoDir\" | grep -q \"\brefs/tags/$scmBranch$\""
+	git ls-remote "file://$cachedRepoDir" | grep -q "\brefs/tags/$scmBranch$" || {
 		# Couldn't find the scmBranch as a tag in the cached repo. Either the
 		# tag is new, or it's not a tag ref at all (e.g. it's a branch).
 		# So let's update from the original remote repository.
