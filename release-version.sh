@@ -116,6 +116,8 @@ echoArg='${project.version}:${license.licenseName}:${project.parent.groupId}:${p
 projectDetails=$(mvn -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
 test $? -eq 0 || projectDetails=$(mvn -U -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
 test $? -eq 0 || die "Could not extract version from pom.xml. Error follows:\n$projectDetails"
+echo "$projectDetails" | grep -Fqv '[ERROR]' ||
+	die "Error extracting version from pom.xml. Error follows:\n$projectDetails"
 currentVersion=${projectDetails%%:*}
 projectDetails=${projectDetails#*:}
 licenseName=${projectDetails%%:*}
