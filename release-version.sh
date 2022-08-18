@@ -113,7 +113,7 @@ Options include:
 # -- Extract project details --
 
 echoArg='${project.version}:${license.licenseName}:${project.parent.groupId}:${project.parent.artifactId}:${project.parent.version}'
-projectDetails=$(mvn -N -U -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
+projectDetails=$(mvn -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
 test $? -eq 0 || projectDetails=$(mvn -U -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
 test $? -eq 0 || die "Could not extract version from pom.xml. Error follows:\n$projectDetails"
 currentVersion=${projectDetails%%:*}
