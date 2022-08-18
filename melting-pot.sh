@@ -441,13 +441,23 @@ resolveSource() {
 	# Check whether the needed branch/tag exists.
 	local scmBranch
 	test "$2" && scmBranch="$2" || scmBranch="$(scmTag "$1")"
+	test "$scmBranch" || die "$1: cannot glean SCM tag" 14
 	debug "git ls-remote \"file://$cachedRepoDir\" | grep -q \"\brefs/tags/$scmBranch$\""
 	git ls-remote "file://$cachedRepoDir" | grep -q "\brefs/tags/$scmBranch$" || {
 		# Couldn't find the scmBranch as a tag in the cached repo. Either the
 		# tag is new, or it's not a tag ref at all (e.g. it's a branch).
 		# So let's update from the original remote repository.
-		info "$1: local tag not found for ref '$scmBranch'; updating cached repository: $cachedRepoDir"
-		(cd "$cachedRepoDir" && debug "git fetch --tags" && git fetch --tags)
+		info "$1: local tag not found for ref '$scmBranch'"
+		info "$1: updating cached repository: $cachedRepoDir"
+		cd "$cachedRepoDir"
+		debug "git fetch --tags"
+		if [ "$debug" ]
+		then
+			git fetch --tags
+		else
+			git fetch --tags > /dev/null
+		fi
+		cd - > /dev/null
 	}
 
 	# Shallow clone the source at the given version into melting-pot structure.
@@ -467,7 +477,7 @@ resolveSource() {
 
 # Gets the list of dependencies for the project in the CWD.
 deps() {
-	cd "$1"
+	cd "$1" || die "No such directory: $1" 16
 	debug "mvn -DincludeScope=runtime -B dependency:list"
 	local depList="$(mvn -DincludeScope=runtime -B dependency:list)" ||
 		die "Problem fetching dependencies!" 5
@@ -643,17 +653,18 @@ meltDown() {
 		test -f "$1/pom.xml" || die "Not a Maven project: $1" 12
 		info "Local Maven project: $1"
 		mkdir -p "LOCAL"
-		local dir="LOCAL/PROJECT"
-		ln -s "$1" "$dir"
+		local projectDir="LOCAL/PROJECT"
+		ln -s "$1" "$projectDir"
 	else
 		# Treat specified project as a GAV.
 		info "Fetching project source"
-		resolveSource "$1" "$branch"
+		local projectDir=$(resolveSource "$1" "$branch")
+		test $? -eq 0 || exit $?
 	fi
 
 	# Get the project dependencies.
 	info "Determining project dependencies"
-	local deps="$(deps "$dir")"
+	local deps="$(deps "$projectDir")"
 	test "$deps" || die "Cannot glean project dependencies" 7
 
 	local args="-Denforcer.skip"
@@ -676,7 +687,7 @@ meltDown() {
 		if [ "$(isIncluded "$gav")" ]
 		then
 			info "$g:$a: resolving source for version $v"
-			dir="$(resolveSource "$gav")"
+			resolveSource "$gav" >/dev/null
 		fi
 	done
 
