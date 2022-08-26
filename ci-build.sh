@@ -219,6 +219,20 @@ EOL
 
 	# --== POST-BUILD ACTIONS ==--
 
+	# Dump logs for any failing unit tests.
+	if [ -d target/surefire-reports ]
+	then
+		find target/surefire-reports -name '*.txt' | while read report
+		do
+			if grep -qF 'FAILURE!' "$report"
+			then
+				echo
+				echo "[$report]"
+				cat "$report"
+			fi
+		done
+	fi
+
 	if [ "$deployOK" -a "$success" -eq 0 ]; then
 		echo
 		echo "== Invalidating SciJava Maven repository cache =="
