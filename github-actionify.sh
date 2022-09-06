@@ -9,10 +9,8 @@
 dir="$(dirname "$0")"
 
 ciDir=.github
-ciSlugBuildMain=workflows/build-main.yml
-ciSlugBuildPR=workflows/build-pr.yml
-ciConfigBuildMain=$ciDir/$ciSlugBuildMain
-ciConfigBuildPR=$ciDir/$ciSlugBuildPR
+ciSlugBuild=workflows/build.yml
+ciConfigBuild=$ciDir/$ciSlugBuild
 ciSetupScript=$ciDir/setup.sh
 ciBuildScript=$ciDir/build.sh
 pomMinVersion='17.1.1'
@@ -104,9 +102,8 @@ process() {
 	# -- GitHub Action sanity checks --
 
 	test -e "$ciDir" -a ! -d "$ciDir" && die "$ciDir is not a directory"
-	test -e "$ciConfigBuildMain" -a ! -f "$ciConfigBuildMain" && die "$ciConfigBuildMain is not a regular file"
-	test -e "$ciConfigBuildPR" -a ! -f "$ciConfigBuildPR" && die "$ciConfigBuildPR is not a regular file"
-	test -e "$ciConfigBuildMain" && warn "$ciConfigBuildMain already exists"
+	test -e "$ciConfigBuild" -a ! -f "$ciConfigBuild" && die "$ciConfigBuild is not a regular file"
+	test -e "$ciConfigBuild" && warn "$ciConfigBuild already exists"
 	test -e "$ciBuildScript" && warn "$ciBuildScript already exists"
 	test -e "$ciSetupScript" && warn "$ciSetupScript already exists"
 
@@ -137,7 +134,7 @@ process() {
 
 	# -- Do things --
 
-	# Add/update the main GitHub Actions configuration file.
+	# Add/update the GitHub Actions build configuration file.
 	cat >"$tmpFile" <<EOL
 name: build
 
@@ -147,28 +144,6 @@ on:
       - $defaultBranch
     tags:
       - "*-[0-9]+.*"
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - $actionCheckout
-      - $actionSetupJava
-EOL
-	test -f environment.yml && echo "      - $actionSetupConda" >>"$tmpFile"
-	cat >>"$tmpFile" <<EOL
-      - $actionSetupCI
-      - $actionExecuteBuild
-        $actionSecrets
-EOL
-	update "$ciConfigBuildMain" "add/update main build action"
-
-	# Add/update the GitHub Actions PR configuration file.
-	cat >"$tmpFile" <<EOL
-name: build PR
-
-on:
   pull_request:
     branches:
       - $defaultBranch
@@ -185,10 +160,11 @@ EOL
 	cat >>"$tmpFile" <<EOL
       - $actionSetupCI
       - $actionExecuteBuild
+        $actionSecrets
 EOL
-	update "$ciConfigBuildPR" "add/update PR build action"
+	update "$ciConfigBuild" "add/update build action"
 
-	# Add/update the GitHub Action setup script.
+	# Add/update the GitHub Actions setup script.
 	cat >"$tmpFile" <<EOL
 #!/bin/sh
 curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/main/ci-setup-github-actions.sh
@@ -197,7 +173,7 @@ EOL
 	chmod +x "$tmpFile"
 	update "$ciSetupScript" "add executable script $ciSetupScript" "true"
 
-	# Add/update the GitHub Action build script.
+	# Add/update the GitHub Actions build script.
 	cat >"$tmpFile" <<EOL
 #!/bin/sh
 curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/main/ci-build.sh
@@ -250,14 +226,14 @@ EOL
 	if grep -q "travis-ci.*svg" README.md >/dev/null 2>&1
 	then
 		info "Updating README.md GitHub Action badge"
-		sed "s;travis-ci.*;$domain/$repoSlug/actions/$ciSlugBuildMain/badge.svg)](https://$domain/$repoSlug/actions/$ciSlugBuildMain);g" README.md >"$tmpFile"
+		sed "s;travis-ci.*;$domain/$repoSlug/actions/$ciSlugBuild/badge.svg)](https://$domain/$repoSlug/actions/$ciSlugBuild);g" README.md >"$tmpFile"
 		update README.md 'update README.md badge link'
-	elif grep -qF "$domain/$repoSlug/actions/$ciSlugBuildMain/badge.svg" README.md >/dev/null 2>&1
+	elif grep -qF "$domain/$repoSlug/actions/$ciSlugBuild/badge.svg" README.md >/dev/null 2>&1
 	then
 		info "GitHub Action badge already present in README.md"
 	else
 		info "Adding GitHub Action badge to README.md"
-		echo "[![](https://$domain/$repoSlug/actions/$ciSlugBuildMain/badge.svg)](https://$domain/$repoSlug/actions/$ciSlugBuildMain)" >"$tmpFile"
+		echo "[![Build Status](https://$domain/$repoSlug/actions/$ciSlugBuild/badge.svg)](https://$domain/$repoSlug/actions/$ciSlugBuild)" >"$tmpFile"
 		echo >>"$tmpFile"
 		test -f README.md && cat README.md >>"$tmpFile"
 		update README.md 'add README.md badge link'
