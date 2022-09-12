@@ -4,7 +4,7 @@
 
 class_version() {
   # extract bytes 4-7
-  info=$(head -c 8 | hexdump -s 4 -e '4/1 "%d\n" "\n"')
+  info=$(head -c 8 | hexdump -e '4/1 "%d\n" "\n"' | tail -n4)
   minor1="$(echo "$info" | sed -n 1p)"
   minor2="$(echo "$info" | sed -n 2p)"
   major1="$(echo "$info" | sed -n 3p)"
