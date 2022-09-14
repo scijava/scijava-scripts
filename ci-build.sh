@@ -93,7 +93,7 @@ EOL
 
 	# --== DEPLOYMENT CHECKS ==--
 
-	# Determine whether deploying will be possible.
+	# Determine whether deploying is both possible and warranted.
 	echo "Performing deployment checks"
 	deployOK=
 
@@ -139,7 +139,12 @@ EOL
 						fi
 						;;
 				esac
-				deployOK=1
+				if [ "$BUILD_BASE_REF" -o "$BUILD_HEAD_REF" ]
+				then
+					echo "No deploy -- proposed change: $BUILD_BASE_REF -> $BUILD_HEAD_REF"
+				else
+					deployOK=1
+				fi
 			fi
 		fi
 	fi
