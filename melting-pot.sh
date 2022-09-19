@@ -600,12 +600,12 @@ generatePOM() {
   echo '</project>'                                                  >> pom.xml
 }
 
-# Generates melt.sh script for all modules in the current directory.
-generateScript() {
+# Generates melt.sh and helper scripts for all modules in the current directory.
+generateScripts() {
   echo '#!/bin/sh'                                                    > melt.sh
   echo 'trap "exit" INT'                                             >> melt.sh
   echo 'echo "Melting the pot..."'                                   >> melt.sh
-  echo 'dir=$(pwd)'                                                  >> melt.sh
+  echo 'dir=$(cd "$(dirname "$0")" && pwd)'                          >> melt.sh
   echo 'failCount=0'                                                 >> melt.sh
   echo 'for f in \'                                                  >> melt.sh
   local dir
@@ -623,22 +623,109 @@ generateScript() {
   done
   echo                                                               >> melt.sh
   echo 'do'                                                          >> melt.sh
-  echo '  # If the build passed previously, don'\''t repeat it.'     >> melt.sh
-  echo '  test -f "$f/build.log" &&'                                 >> melt.sh
-  echo '    tail -n6 "$f/build.log" |'                               >> melt.sh
-  echo '      grep -qF '\''[INFO] BUILD SUCCESS'\'' &&'              >> melt.sh
-  echo '    echo "[SKIPPED] $f (already succeeded)" && continue'     >> melt.sh
-  echo                                                               >> melt.sh
+  echo '  if [ "$("$dir/prior-success.sh" "$f")" ]'                  >> melt.sh
+  echo '  then'                                                      >> melt.sh
+  echo '    echo "[SKIPPED] $f (prior success)"'                     >> melt.sh
+  echo '    continue'                                                >> melt.sh
+  echo '  fi'                                                        >> melt.sh
   echo '  cd "$f"'                                                   >> melt.sh
-  echo '  sh "$dir/build.sh" >build.log 2>&1 &&'                     >> melt.sh
-  echo '    echo "[SUCCESS] $f" || {'                                >> melt.sh
-  echo '      echo "[FAILURE] $f"'                                   >> melt.sh
-  echo '      failCount=$((failCount+1))'                            >> melt.sh
-  echo '    }'                                                       >> melt.sh
+  echo '  "$dir/build.sh" >build.log 2>&1 && {'                      >> melt.sh
+  echo '    echo "[SUCCESS] $f"'                                     >> melt.sh
+  echo '    "$dir/record-success.sh" "$f"'                           >> melt.sh
+  echo '  } || {'                                                    >> melt.sh
+  echo '    echo "[FAILURE] $f"'                                     >> melt.sh
+  echo '    failCount=$((failCount+1))'                              >> melt.sh
+  echo '  }'                                                         >> melt.sh
   echo '  cd - >/dev/null'                                           >> melt.sh
   echo 'done'                                                        >> melt.sh
   echo 'test "$failCount" -gt 255 && failCount=255'                  >> melt.sh
   echo 'exit "$failCount"'                                           >> melt.sh
+  chmod +x melt.sh
+
+cat <<\PRIOR > prior-success.sh
+#!/bin/sh
+test "$1" || { echo "[ERROR] Please specify project to check."; exit 1; }
+
+stderr() { >&2 echo "$@"; }
+debug() { test "$DEBUG" && stderr "[DEBUG] $@"; }
+warn() { stderr "[WARNING] $@"; }
+
+dir=$(cd "$(dirname "$0")" && pwd)
+
+# Check build.log for BUILD SUCCESS.
+buildLog="$dir/$1/build.log"
+test -f "$buildLog" && tail -n6 "$buildLog" | grep -qF '[INFO] BUILD SUCCESS' && {
+  echo "build.log"
+  exit 0
+}
+
+# Check success.log for matching dependency configuration.
+successLog="$HOME/.cache/scijava/melting-pot/$1.success.log"
+test -f "$successLog" || exit 0
+success=
+for deps in $(cat "$successLog")
+do
+  debug "Checking dep config: $deps"
+  mismatch=
+  for dep in $(echo "$deps" | tr ',' '\n')
+  do
+    # g:a:p:v:s -> -Dg.a.version=v
+    s=${dep##*:}
+    case "$s" in
+      test) continue ;; # skip test dependencies
+    esac
+    gapv=${dep%:*}
+    g=${gapv%%:*}
+    apv=${gapv#*:}
+    a=${apv%%:*}
+    v=${apv##*:}
+    arg=" -D$g.$a.version=$v "
+    if ! grep -Fq "$arg" "$dir/build.sh"
+    then
+      # G:A property is not set to this V.
+      # Now check if the property is even declared.
+      if grep -Fq " -D$g.$a.version=" "$dir/build.sh"
+      then
+        # G:A version is mismatched.
+        debug "$dep [MISMATCH]"
+        mismatch=1
+        break
+      else
+        # G:A version is not managed.
+        warn "Unmanaged dependency: $dep"
+      fi
+    fi
+  done
+  test "$mismatch" || {
+    success=$deps
+    break
+  }
+done
+echo "$success"
+PRIOR
+  chmod +x prior-success.sh
+
+cat <<\RECORD > record-success.sh
+#!/bin/sh
+test "$1" || { echo "[ERROR] Please specify project to update."; exit 1; }
+
+dir=$(cd "$(dirname "$0")" && pwd)
+buildLog="$dir/$1/build.log"
+test -f "$buildLog" || exit 1
+successLog="$HOME/.cache/scijava/melting-pot/$1.success.log"
+mkdir -p "$(dirname "$successLog")"
+
+# Record dependency configuration of successful build.
+deps=$(grep "^\[INFO\]    " "$buildLog" |
+  sed -e "s/^.\{10\}//" -e "s/ -- .*//" |
+  sort | tr '\n' ',')
+test -f "$successLog" && grep -Fxq "$deps" "$successLog" || {
+  echo "$deps" > "$successLog".new
+  test -f "$successLog" && cat "$successLog" >> "$successLog".new
+  mv -f "$successLog".new "$successLog"
+}
+RECORD
+  chmod +x record-success.sh
 }
 
 # Creates and tests an appropriate multi-module reactor for the given project.
@@ -710,8 +797,10 @@ meltDown() {
   # Generate build scripts.
   info "Generating build scripts"
   generatePOM
-  echo "mvn $args \\\\\n  dependency:list test \$@" > build.sh
-  generateScript
+  echo "#!/bin/sh" > build.sh
+  echo "mvn $args \\\\\n  dependency:list test \$@" >> build.sh
+  chmod +x build.sh
+  generateScripts
 
   # Build everything.
   if [ "$skipBuild" ]
