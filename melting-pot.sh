@@ -568,76 +568,77 @@ isProject() {
 
 # Generates an aggregator POM for all modules in the current directory.
 generatePOM() {
-  echo '<?xml version="1.0" encoding="UTF-8"?>' > pom.xml
-  echo '<project xmlns="http://maven.apache.org/POM/4.0.0"' >> pom.xml
-  echo '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' >> pom.xml
-  echo '  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0' >> pom.xml
-  echo '    https://maven.apache.org/xsd/maven-4.0.0.xsd">' >> pom.xml
-  echo '  <modelVersion>4.0.0</modelVersion>' >> pom.xml
-  echo >> pom.xml
-  echo '  <groupId>melting-pot</groupId>' >> pom.xml
-  echo '  <artifactId>melting-pot</artifactId>' >> pom.xml
-  echo '  <version>0.0.0-SNAPSHOT</version>' >> pom.xml
-  echo '  <packaging>pom</packaging>' >> pom.xml
-  echo >> pom.xml
-  echo '  <name>Melting Pot</name>' >> pom.xml
-  echo >> pom.xml
-  echo '  <modules>' >> pom.xml
+  echo '<?xml version="1.0" encoding="UTF-8"?>'                       > pom.xml
+  echo '<project xmlns="http://maven.apache.org/POM/4.0.0"'          >> pom.xml
+  echo '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'     >> pom.xml
+  echo '  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0'     >> pom.xml
+  echo '    https://maven.apache.org/xsd/maven-4.0.0.xsd">'          >> pom.xml
+  echo '  <modelVersion>4.0.0</modelVersion>'                        >> pom.xml
+  echo                                                               >> pom.xml
+  echo '  <groupId>melting-pot</groupId>'                            >> pom.xml
+  echo '  <artifactId>melting-pot</artifactId>'                      >> pom.xml
+  echo '  <version>0.0.0-SNAPSHOT</version>'                         >> pom.xml
+  echo '  <packaging>pom</packaging>'                                >> pom.xml
+  echo                                                               >> pom.xml
+  echo '  <name>Melting Pot</name>'                                  >> pom.xml
+  echo                                                               >> pom.xml
+  echo '  <modules>'                                                 >> pom.xml
   local dir
   for dir in */*
   do
     if [ "$(isProject "$dir")" ]
     then
-      echo "    <module>$dir</module>" >> pom.xml
+      echo "    <module>$dir</module>"                               >> pom.xml
     else
       # Check for a child component of a multi-module project.
       local childDir="$dir/$(basename "$dir")"
       test "$(isProject "$childDir")" &&
-        echo "    <module>$childDir</module>" >> pom.xml
+        echo "    <module>$childDir</module>"                        >> pom.xml
     fi
   done
-  echo '  </modules>' >> pom.xml
-  echo '</project>' >> pom.xml
+  echo '  </modules>'                                                >> pom.xml
+  echo '</project>'                                                  >> pom.xml
 }
 
 # Generates melt.sh script for all modules in the current directory.
 generateScript() {
-  echo '#!/bin/sh' > melt.sh
-  echo 'trap "exit" INT' >> melt.sh
-  echo 'echo "Melting the pot..."' >> melt.sh
-  echo 'dir=$(pwd)' >> melt.sh
-  echo 'failCount=0' >> melt.sh
-  echo 'for f in \' >> melt.sh
+  echo '#!/bin/sh'                                                    > melt.sh
+  echo 'trap "exit" INT'                                             >> melt.sh
+  echo 'echo "Melting the pot..."'                                   >> melt.sh
+  echo 'dir=$(pwd)'                                                  >> melt.sh
+  echo 'failCount=0'                                                 >> melt.sh
+  echo 'for f in \'                                                  >> melt.sh
   local dir
   for dir in */*
   do
     if [ "$(isProject "$dir")" ]
     then
-      echo "  $dir \\" >> melt.sh
+      echo "  $dir \\"                                               >> melt.sh
     else
       # Check for a child component of a multi-module project.
       local childDir="$dir/$(basename "$dir")"
       test "$(isProject "$childDir")" &&
-        echo "  $childDir \\" >> melt.sh
+        echo "  $childDir \\"                                        >> melt.sh
     fi
   done
-  echo >> melt.sh
-  echo 'do' >> melt.sh
-  echo '  # If the build passed previously, don'\''t repeat it.' >> melt.sh
-  echo '  test -f "$f/build.log" &&' >> melt.sh
-  echo '    tail -n6 "$f/build.log" | grep -qF '\''[INFO] BUILD SUCCESS'\'' &&' >> melt.sh
-  echo '    echo "[SKIPPED] $f (already succeeded)" && continue' >> melt.sh
-  echo >> melt.sh
-  echo '  cd "$f"' >> melt.sh
-  echo '  sh "$dir/build.sh" >build.log 2>&1 &&' >> melt.sh
-  echo '    echo "[SUCCESS] $f" || {' >> melt.sh
-  echo '      echo "[FAILURE] $f"' >> melt.sh
-  echo '      failCount=$((failCount+1))' >> melt.sh
-  echo '    }' >> melt.sh
-  echo '  cd - >/dev/null' >> melt.sh
-  echo 'done' >> melt.sh
-  echo 'test "$failCount" -gt 255 && failCount=255' >> melt.sh
-  echo 'exit "$failCount"' >> melt.sh
+  echo                                                               >> melt.sh
+  echo 'do'                                                          >> melt.sh
+  echo '  # If the build passed previously, don'\''t repeat it.'     >> melt.sh
+  echo '  test -f "$f/build.log" &&'                                 >> melt.sh
+  echo '    tail -n6 "$f/build.log" |'                               >> melt.sh
+  echo '      grep -qF '\''[INFO] BUILD SUCCESS'\'' &&'              >> melt.sh
+  echo '    echo "[SKIPPED] $f (already succeeded)" && continue'     >> melt.sh
+  echo                                                               >> melt.sh
+  echo '  cd "$f"'                                                   >> melt.sh
+  echo '  sh "$dir/build.sh" >build.log 2>&1 &&'                     >> melt.sh
+  echo '    echo "[SUCCESS] $f" || {'                                >> melt.sh
+  echo '      echo "[FAILURE] $f"'                                   >> melt.sh
+  echo '      failCount=$((failCount+1))'                            >> melt.sh
+  echo '    }'                                                       >> melt.sh
+  echo '  cd - >/dev/null'                                           >> melt.sh
+  echo 'done'                                                        >> melt.sh
+  echo 'test "$failCount" -gt 255 && failCount=255'                  >> melt.sh
+  echo 'exit "$failCount"'                                           >> melt.sh
 }
 
 # Creates and tests an appropriate multi-module reactor for the given project.
