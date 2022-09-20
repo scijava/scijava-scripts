@@ -706,6 +706,10 @@ deps=$(grep "^\[INFO\]    " "$buildLog" |
   sort | tr '\n' ',')
 if [ -z "$(containsLine "$deps" "$successLog")" ]
 then
+  # NB: *Prepend*, rather than append, the new successful configuration.
+  # We do this because it is more likely this new configuration will be
+  # encountered again in the future, as dependency versions are highly
+  # likely to repeatedly increment, rather than moving backwards.
   echo "$deps" > "$successLog".new
   test -f "$successLog" && cat "$successLog" >> "$successLog".new
   mv -f "$successLog".new "$successLog"
