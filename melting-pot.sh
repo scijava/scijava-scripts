@@ -566,8 +566,8 @@ isProject() {
   test "$1" = "LOCAL/PROJECT" -o "$a" = "$(basename "$1")" && echo 1
 }
 
-# Generates melt.sh and helper scripts for all modules in the current directory.
-generateScripts() {
+# Generates melt.sh, covering all projects in the current directory.
+generateMeltScript() {
   echo '#!/bin/sh'                                                    > melt.sh
   echo 'trap "exit" INT'                                             >> melt.sh
   echo 'echo "Melting the pot..."'                                   >> melt.sh
@@ -607,8 +607,11 @@ generateScripts() {
   echo 'test "$failCount" -gt 255 && failCount=255'                  >> melt.sh
   echo 'exit "$failCount"'                                           >> melt.sh
   chmod +x melt.sh
+}
 
-cat <<\PRIOR > prior-success.sh
+# Generates helper scripts, including prior-success.sh and record-success.sh.
+generateHelperScripts() {
+  cat <<\PRIOR > prior-success.sh
 #!/bin/sh
 test "$1" || { echo "[ERROR] Please specify project to check."; exit 1; }
 
@@ -671,7 +674,7 @@ echo "$success"
 PRIOR
   chmod +x prior-success.sh
 
-cat <<\RECORD > record-success.sh
+  cat <<\RECORD > record-success.sh
 #!/bin/sh
 test "$1" || { echo "[ERROR] Please specify project to update."; exit 1; }
 
@@ -738,6 +741,10 @@ meltDown() {
   local deps="$(deps "$projectDir")"
   test "$deps" || die "Cannot glean project dependencies" 7
 
+  # Generate helper scripts. We need prior-success.sh
+  # to decide whether to include each component.
+  generateHelperScripts
+
   local args="-Denforcer.skip"
 
   # Process the dependencies.
@@ -754,12 +761,6 @@ meltDown() {
 
     test -z "$(isChanged "$gav")" &&
       args="$args \\\\\n  -D$g.$a.version=$v -D$a.version=$v"
-
-    if [ "$(isIncluded "$gav")" ]
-    then
-      info "$g:$a: resolving source for version $v"
-      resolveSource "$gav" >/dev/null
-    fi
   done
 
   # Override versions of changed GAVs.
@@ -774,15 +775,40 @@ meltDown() {
   done
   unset TLS
 
-  # Prune the build, if applicable.
-  test "$prune" && pruneReactor
-
-  # Generate build scripts.
-  info "Generating build scripts"
+  # Generate build script.
+  info "Generating build.sh script"
   echo "#!/bin/sh" > build.sh
   echo "mvn $args \\\\\n  dependency:list test \$@" >> build.sh
   chmod +x build.sh
-  generateScripts
+
+  # Clone source code.
+  info "Cloning source code"
+  for dep in $deps
+  do
+    local g="$(groupId "$dep")"
+    local a="$(artifactId "$dep")"
+    local v="$(version "$dep")"
+    local c="$(classifier "$dep")"
+    test -z "$c" || continue # skip secondary artifacts
+    local gav="$g:$a:$v"
+    if [ "$(isIncluded "$gav")" ]
+    then
+      if [ "$(./prior-success.sh "$g/$a")" ]
+      then
+        info "$g:$a: skipping version $v due to prior successful build"
+        continue
+      fi
+      info "$g:$a: resolving source for version $v"
+      resolveSource "$gav" >/dev/null
+    fi
+  done
+
+  # Prune the build, if applicable.
+  test "$prune" && pruneReactor
+
+  # Generate melt script.
+  info "Generating melt.sh script"
+  generateMeltScript
 
   # Build everything.
   if [ "$skipBuild" ]
