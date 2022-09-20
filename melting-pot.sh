@@ -566,40 +566,6 @@ isProject() {
   test "$1" = "LOCAL/PROJECT" -o "$a" = "$(basename "$1")" && echo 1
 }
 
-# Generates an aggregator POM for all modules in the current directory.
-generatePOM() {
-  echo '<?xml version="1.0" encoding="UTF-8"?>'                       > pom.xml
-  echo '<project xmlns="http://maven.apache.org/POM/4.0.0"'          >> pom.xml
-  echo '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'     >> pom.xml
-  echo '  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0'     >> pom.xml
-  echo '    https://maven.apache.org/xsd/maven-4.0.0.xsd">'          >> pom.xml
-  echo '  <modelVersion>4.0.0</modelVersion>'                        >> pom.xml
-  echo                                                               >> pom.xml
-  echo '  <groupId>melting-pot</groupId>'                            >> pom.xml
-  echo '  <artifactId>melting-pot</artifactId>'                      >> pom.xml
-  echo '  <version>0.0.0-SNAPSHOT</version>'                         >> pom.xml
-  echo '  <packaging>pom</packaging>'                                >> pom.xml
-  echo                                                               >> pom.xml
-  echo '  <name>Melting Pot</name>'                                  >> pom.xml
-  echo                                                               >> pom.xml
-  echo '  <modules>'                                                 >> pom.xml
-  local dir
-  for dir in */*
-  do
-    if [ "$(isProject "$dir")" ]
-    then
-      echo "    <module>$dir</module>"                               >> pom.xml
-    else
-      # Check for a child component of a multi-module project.
-      local childDir="$dir/$(basename "$dir")"
-      test "$(isProject "$childDir")" &&
-        echo "    <module>$childDir</module>"                        >> pom.xml
-    fi
-  done
-  echo '  </modules>'                                                >> pom.xml
-  echo '</project>'                                                  >> pom.xml
-}
-
 # Generates melt.sh and helper scripts for all modules in the current directory.
 generateScripts() {
   echo '#!/bin/sh'                                                    > melt.sh
@@ -796,7 +762,6 @@ meltDown() {
 
   # Generate build scripts.
   info "Generating build scripts"
-  generatePOM
   echo "#!/bin/sh" > build.sh
   echo "mvn $args \\\\\n  dependency:list test \$@" >> build.sh
   chmod +x build.sh
