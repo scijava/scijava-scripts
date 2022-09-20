@@ -675,6 +675,22 @@ cat <<\RECORD > record-success.sh
 #!/bin/sh
 test "$1" || { echo "[ERROR] Please specify project to update."; exit 1; }
 
+containsLine() {
+  pattern=$1
+  file=$2
+  test -f "$file" || return
+  # HACK: The obvious way to do this is:
+  #
+  #   grep -qxF "$pattern" "$file"
+  #
+  # Unfortunately, BSD grep dies with "out of memory" when the pattern is 5111
+  # characters or longer. So let's do something needlessly complex instead!
+  cat "$file" | while read line
+  do
+    test "$pattern" = "$line" && echo 1 && break
+  done
+}
+
 dir=$(cd "$(dirname "$0")" && pwd)
 buildLog="$dir/$1/build.log"
 test -f "$buildLog" || exit 1
@@ -685,11 +701,12 @@ mkdir -p "$(dirname "$successLog")"
 deps=$(grep "^\[INFO\]    " "$buildLog" |
   sed -e "s/^.\{10\}//" -e "s/ -- .*//" |
   sort | tr '\n' ',')
-test -f "$successLog" && grep -Fxq "$deps" "$successLog" || {
+if [ -z "$(containsLine "$deps" "$successLog")" ]
+then
   echo "$deps" > "$successLog".new
   test -f "$successLog" && cat "$successLog" >> "$successLog".new
   mv -f "$successLog".new "$successLog"
-}
+fi
 RECORD
   chmod +x record-success.sh
 }
