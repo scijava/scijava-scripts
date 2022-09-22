@@ -642,6 +642,7 @@ do
     s=${dep##*:}
     case "$s" in
       test) continue ;; # skip test dependencies
+      none) continue ;; # empty dependency config
     esac
     gapv=${dep%:*}
     g=${gapv%%:*}
@@ -701,8 +702,8 @@ successLog="$HOME/.cache/scijava/melting-pot/$1.success.log"
 mkdir -p "$(dirname "$successLog")"
 
 # Record dependency configuration of successful build.
-deps=$(grep "^\[INFO\]    " "$buildLog" |
-  sed -e "s/^.\{10\}//" -e "s/ -- .*//" |
+deps=$(grep '^\[INFO\]    ' "$buildLog" |
+  sed -e 's/^.\{10\}//' -e 's/ -- .*//' -e 's/ (\([^)]*\))/-\1/' |
   sort | tr '\n' ',')
 if [ -z "$(containsLine "$deps" "$successLog")" ]
 then
