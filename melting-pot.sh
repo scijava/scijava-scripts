@@ -617,6 +617,7 @@ test "$1" || { echo "[ERROR] Please specify project to check."; exit 1; }
 
 stderr() { >&2 echo "$@"; }
 debug() { test "$DEBUG" && stderr "[DEBUG] $@"; }
+info() { stderr "[INFO] $@"; }
 warn() { stderr "[WARNING] $@"; }
 
 dir=$(cd "$(dirname "$0")" && pwd)
@@ -631,10 +632,12 @@ test -f "$buildLog" && tail -n6 "$buildLog" | grep -qF '[INFO] BUILD SUCCESS' &&
 # Check success.log for matching dependency configuration.
 successLog="$HOME/.cache/scijava/melting-pot/$1.success.log"
 test -f "$successLog" || exit 0
+row=1
+mismatch1=
 success=
 for deps in $(cat "$successLog")
 do
-  debug "Checking dep config: $deps"
+  debug "$1: Checking dep config: $deps"
   mismatch=
   for dep in $(echo "$deps" | tr ',' '\n')
   do
@@ -649,29 +652,36 @@ do
     apv=${gapv#*:}
     a=${apv%%:*}
     v=${apv##*:}
-    arg=" -D$g.$a.version=$v "
-    if ! grep -Fq "$arg" "$dir/build.sh"
+    bomV=$(grep -o " -D$g\.$a\.version=[^ ]*" "$dir/build.sh" | sed 's;.*=;;')
+    if [ "$bomV" != "$v" ]
     then
       # G:A property is not set to this V.
       # Now check if the property is even declared.
-      if grep -Fq " -D$g.$a.version=" "$dir/build.sh"
+      if [ "$bomV" ]
       then
         # G:A version is mismatched.
-        debug "$dep [MISMATCH]"
-        mismatch=1
-        break
+        mismatch="$mismatch\n* $g:$a:$v != $bomV"
       else
-        # G:A version is not managed.
-        warn "Unmanaged dependency: $dep"
+        # G:A version is not pinned.
+        warn "$1: Unpinned dependency: $dep"
       fi
     fi
   done
-  test "$mismatch" || {
+  if [ "$mismatch" ]
+  then
+    test "$row" -eq 1 && mismatch1=$mismatch ||
+      debug "$1: Mismatched dependencies (vs. success #$row):$mismatch"
+  else
     success=$deps
     break
-  }
+  fi
+  row=$((row+1))
 done
-echo "$success"
+test "$success" && echo "$success" || {
+  test "$mismatch1" &&
+    info "$1: Mismatched dependencies:$mismatch1" ||
+    info "$1: No prior successes"
+}
 PRIOR
   chmod +x prior-success.sh
 
