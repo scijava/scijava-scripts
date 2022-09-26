@@ -240,7 +240,8 @@ EOL
 	fi
 
 	# remove old Travis CI configuration
-	$EXEC git rm -rf .travis.yml .travis
+	test ! -e .travis.yml || $EXEC git rm -rf .travis.yml
+	test ! -e .travis || $EXEC git rm -rf .travis
 	$EXEC git diff-index --quiet HEAD -- &&
 		info "No old CI configuration to remove." ||
 		$EXEC git commit -m "${msgPrefix}remove Travis CI configuration"
