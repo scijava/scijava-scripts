@@ -624,7 +624,7 @@ dir=$(cd "$(dirname "$0")" && pwd)
 
 # Check build.log for BUILD SUCCESS.
 buildLog="$dir/$1/build.log"
-test -f "$buildLog" && tail -n6 "$buildLog" | grep -qF '[INFO] BUILD SUCCESS' && {
+test -f "$buildLog" && tail -n6 "$buildLog" | grep -qF 'BUILD SUCCESS' && {
   echo "build.log"
   exit 0
 }
