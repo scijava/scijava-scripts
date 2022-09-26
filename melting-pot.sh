@@ -478,8 +478,8 @@ resolveSource() {
 # Gets the list of dependencies for the project in the CWD.
 deps() {
   cd "$1" || die "No such directory: $1" 16
-  debug "mvn -DincludeScope=runtime -B dependency:list"
-  local depList="$(mvn -DincludeScope=runtime -B dependency:list)" ||
+  debug "mvn -B -DincludeScope=runtime dependency:list"
+  local depList="$(mvn -B -DincludeScope=runtime dependency:list)" ||
     die "Problem fetching dependencies!" 5
   echo "$depList" | grep '^\[INFO\]    [^ ]' |
     sed 's/\[INFO\]    //' | sed 's/ .*//' | sort
@@ -712,8 +712,8 @@ successLog="$HOME/.cache/scijava/melting-pot/$1.success.log"
 mkdir -p "$(dirname "$successLog")"
 
 # Record dependency configuration of successful build.
-deps=$(grep '^\[INFO\]    ' "$buildLog" |
-  sed -e 's/^.\{10\}//' -e 's/ -- .*//' -e 's/ (\([^)]*\))/-\1/' |
+deps=$(grep '^\[[^ ]*INFO[^ ]*\]    ' "$buildLog" |
+  sed -e 's/^[^ ]* *//' -e 's/ -- .*//' -e 's/ (\([^)]*\))/-\1/' |
   sort | tr '\n' ',')
 if [ -z "$(containsLine "$deps" "$successLog")" ]
 then
@@ -760,6 +760,9 @@ meltDown() {
   # to decide whether to include each component.
   generateHelperScripts
 
+  # NB: We do *not* include -B here, because we want build.sh to preserve
+  # colored output if the version of Maven is new enough. We will take care
+  # elsewhere when parsing it to be flexible about whether colors are present.
   local args="-Denforcer.skip"
 
   # Process the dependencies.
