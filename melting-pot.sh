@@ -69,11 +69,11 @@ meltingPotCache="$HOME/.cache/scijava/melting-pot"
 
 # -- Functions --
 
-stderr() { >&2 echo "$@"; }
+stderr() { >&2 printf "$@\n"; }
 debug() { test "$debug" && stderr "+ $@"; }
-info() { test "$verbose" && stderr "[INFO] $@"; }
-warn() { stderr "[WARNING] $@"; }
-error() { stderr "[ERROR] $@"; }
+info() { test "$verbose" && stderr "\e[0;37m[INFO] $@\e[0m"; }
+warn() { stderr "\e[0;33m[WARNING] $@\e[0m"; }
+error() { stderr "\e[0;31m[ERROR] $@\e[0m"; }
 die() { error $1; exit $2; }
 unknownArg() { error "Unknown option: $@"; usage=1; }
 
@@ -591,15 +591,15 @@ generateMeltScript() {
   echo 'do'                                                          >> melt.sh
   echo '  if [ "$("$dir/prior-success.sh" "$f")" ]'                  >> melt.sh
   echo '  then'                                                      >> melt.sh
-  echo '    echo "[SKIPPED] $f (prior success)"'                     >> melt.sh
+  echo '    printf "\e[0;36m[SKIPPED] $f (prior success)\e[0m\n"'    >> melt.sh
   echo '    continue'                                                >> melt.sh
   echo '  fi'                                                        >> melt.sh
   echo '  cd "$f"'                                                   >> melt.sh
   echo '  "$dir/build.sh" >build.log 2>&1 && {'                      >> melt.sh
-  echo '    echo "[SUCCESS] $f"'                                     >> melt.sh
+  echo '    printf "\e[0;32m[SUCCESS] $f\e[0m\n"'                    >> melt.sh
   echo '    "$dir/record-success.sh" "$f"'                           >> melt.sh
   echo '  } || {'                                                    >> melt.sh
-  echo '    echo "[FAILURE] $f"'                                     >> melt.sh
+  echo '    printf "\e[0;31m[FAILURE] $f\e[0m\n"'                    >> melt.sh
   echo '    failCount=$((failCount+1))'                              >> melt.sh
   echo '  }'                                                         >> melt.sh
   echo '  cd - >/dev/null'                                           >> melt.sh
@@ -613,12 +613,15 @@ generateMeltScript() {
 generateHelperScripts() {
   cat <<\PRIOR > prior-success.sh
 #!/bin/sh
-test "$1" || { echo "[ERROR] Please specify project to check."; exit 1; }
+test "$1" || {
+  printf "\e[0;31m[ERROR] Please specify project to check.\e[0m\n"
+  exit 1
+}
 
-stderr() { >&2 echo "$@"; }
-debug() { test "$DEBUG" && stderr "[DEBUG] $@"; }
-info() { stderr "[INFO] $@"; }
-warn() { stderr "[WARNING] $@"; }
+stderr() { >&2 printf "$@\n"; }
+debug() { test "$DEBUG" && stderr "\e[0;37m[DEBUG] $@\e[0m"; }
+info() { stderr "\e[0;37m[INFO] $@\e[0m"; }
+warn() { stderr "\e[0;33m[WARNING] $@\e[0m"; }
 
 dir=$(cd "$(dirname "$0")" && pwd)
 
@@ -687,7 +690,10 @@ PRIOR
 
   cat <<\RECORD > record-success.sh
 #!/bin/sh
-test "$1" || { echo "[ERROR] Please specify project to update."; exit 1; }
+test "$1" || {
+  printf "\e[0;31m[ERROR] Please specify project to update.\e[0m\n"
+  exit 1
+}
 
 containsLine() {
   pattern=$1
