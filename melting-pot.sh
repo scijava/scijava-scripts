@@ -663,7 +663,7 @@ do
       if [ "$bomV" ]
       then
         # G:A version is mismatched.
-        mismatch="$mismatch\n* $g:$a:$v != $bomV"
+        mismatch="$mismatch\n* $g:$a:$v -> $bomV"
       else
         # G:A version is not pinned.
         warn "$1: Unpinned dependency: $dep"
@@ -673,7 +673,7 @@ do
   if [ "$mismatch" ]
   then
     test "$row" -eq 1 && mismatch1=$mismatch ||
-      debug "$1: Mismatched dependencies (vs. success #$row):$mismatch"
+      debug "$1: Dependency changes since success #$row:$mismatch"
   else
     success=$deps
     break
@@ -682,7 +682,7 @@ do
 done
 test "$success" && echo "$success" || {
   test "$mismatch1" &&
-    info "$1: Mismatched dependencies:$mismatch1" ||
+    info "$1: Dependency changes since last success:$mismatch1" ||
     info "$1: No prior successes"
 }
 PRIOR
