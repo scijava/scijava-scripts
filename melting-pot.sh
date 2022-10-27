@@ -466,6 +466,9 @@ resolveSource() {
   git clone "file://$cachedRepoDir" --branch "$scmBranch" --depth 1 "$destDir" 2> /dev/null ||
     die "$1: could not clone branch '$scmBranch' from local cache" 15
 
+  # Save the GAV string to a file, for convenience.
+  echo "$1" > "$destDir/gav"
+
   # Now verify that the cloned pom.xml contains the expected version!
   local expectedVersion=$(version "$1")
   local actualVersion=$(xpath "$destDir/pom.xml" project version)
@@ -784,7 +787,7 @@ meltDown() {
     local gav="$g:$a:$v"
 
     test -z "$(isChanged "$gav")" &&
-      args="$args \\\\\n  -D$g.$a.version=$v -D$a.version=$v"
+      args="$args \\\\\n    -D$g.$a.version=$v -D$a.version=$v"
   done
 
   # Override versions of changed GAVs.
@@ -795,14 +798,65 @@ meltDown() {
   do
     local a="$(artifactId "$gav")"
     local v="$(version "$gav")"
-    args="$args \\\\\n  -D$a.version=$v"
+    args="$args \\\\\n    -D$a.version=$v"
   done
   unset TLS
 
   # Generate build script.
   info "Generating build.sh script"
-  echo "#!/bin/sh" > build.sh
-  echo "mvn $args \\\\\n  dependency:list test \$@" >> build.sh
+  echo '#!/bin/sh'                                                   > build.sh
+  echo                                                              >> build.sh
+  echo 'mvnPin() {'                                                 >> build.sh
+  echo "  mvn $args \\\\\n    \$@"                                  >> build.sh
+  echo '}'                                                          >> build.sh
+  echo                                                              >> build.sh
+  echo 'unpackArtifact() {'                                         >> build.sh
+  echo '  # Download and unpack the given artifact'                 >> build.sh
+  echo '  # (G:A:V) to the specified location.'                     >> build.sh
+  echo '  gav=$1'                                                   >> build.sh
+  echo '  out=$2'                                                   >> build.sh
+  echo                                                              >> build.sh
+  echo '  repoPrefix=$HOME/.m2/repository # TODO: generalize this'  >> build.sh
+  echo '  g=${gav%%:*}; r=${gav#*:}; a=${r%%:*}; v=${r##*:}'        >> build.sh
+  echo '  gavPath="$(echo "$g" | tr "." "/")/$a/$v/$a-$v"'          >> build.sh
+  echo '  jarPath="$repoPrefix/$gavPath.jar"'                       >> build.sh
+  echo                                                              >> build.sh
+  echo '  # HACK: The best goal to use would be dependency:unpack,' >> build.sh
+  echo '  # or failing that, dependency:copy followed by jar xf.'   >> build.sh
+  echo '  # But those goals do not support remoteRepositories;'     >> build.sh
+  echo '  # see https://issues.apache.org/jira/browse/MDEP-390.'    >> build.sh
+  echo '  # So we use dependency:get and then extract it by hand.'  >> build.sh
+  echo '  mvnPin dependency:get \'                                  >> build.sh
+  echo "    -DremoteRepositories=\"$remoteRepos\" \\"               >> build.sh
+  echo '    -Dartifact="$gav" &&'                                   >> build.sh
+  echo                                                              >> build.sh
+  echo '  test -f "$jarPath" &&'                                    >> build.sh
+  echo '  mkdir -p "$out" &&'                                       >> build.sh
+  echo '  cd "$out" &&'                                             >> build.sh
+  echo '  jar xf "$jarPath" &&'                                     >> build.sh
+  echo '  cd - >/dev/null'                                          >> build.sh
+  echo '}'                                                          >> build.sh
+  echo                                                              >> build.sh
+  echo 'mvnPin dependency:list &&'                                  >> build.sh
+  echo                                                              >> build.sh
+  echo 'if [ -f gav ]'                                              >> build.sh
+  echo 'then'                                                       >> build.sh
+  echo '  echo'                                                     >> build.sh
+  echo '  echo "================================================"'  >> build.sh
+  echo '  echo "========= Testing with deployed binary ========="'  >> build.sh
+  echo '  echo "================================================"'  >> build.sh
+  echo '  unpackArtifact "$(cat gav)" target/classes &&'            >> build.sh
+  echo '  mvnPin \'                                                 >> build.sh
+  echo '    -Dmaven.main.skip=true \'                               >> build.sh
+  echo '    -Dmaven.resources.skip=true \'                          >> build.sh
+  echo '    test $@'                                                >> build.sh
+  echo 'fi &&'                                                      >> build.sh
+  echo                                                              >> build.sh
+  echo 'echo &&'                                                    >> build.sh
+  echo 'echo "================================================" &&' >> build.sh
+  echo 'echo "============ Rebuilding from source ============" &&' >> build.sh
+  echo 'echo "================================================" &&' >> build.sh
+  echo 'mvnPin clean test $@'                                       >> build.sh
   chmod +x build.sh
 
   # Clone source code.
