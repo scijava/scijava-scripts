@@ -320,13 +320,13 @@ downloadPOM() {
   local a="$(artifactId "$1")"
   local v="$(version "$1")"
   debug "mvn dependency:get \\
-  -DrepoUrl=\"$remoteRepos\" \\
+  -DremoteRepositories=\"$remoteRepos\" \\
   -DgroupId=\"$g\" \\
   -DartifactId=\"$a\" \\
   -Dversion=\"$v\" \\
   -Dpackaging=pom"
   mvn dependency:get \
-    -DrepoUrl="$remoteRepos" \
+    -DremoteRepositories="$remoteRepos" \
     -DgroupId="$g" \
     -DartifactId="$a" \
     -Dversion="$v" \
