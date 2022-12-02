@@ -19,6 +19,35 @@ checkSuccess() {
 	# Log non-zero exit code.
 	test $1 -eq 0 || echo "==> FAILED: EXIT CODE $1" 1>&2
 
+	if [ $1 -ne 0 -a -f "$2" ]
+	then
+		# The operation failed and a log file was provided.
+		# Do some heuristics, because we like being helpful!
+		javadocErrors=$(grep error: "$2")
+		generalErrors=$(grep -i '\b\(errors\?\|fail\|failures\?\)\b' "$2")
+		if [ "$javadocErrors" ]
+		then
+			echo
+			echo '/----------------------------------------------------------\'
+			echo '| ci-build.sh analysis: I noticed probable javadoc errors: |'
+			echo '\----------------------------------------------------------/'
+			echo "$javadocErrors"
+		elif [ "$generalErrors" ]
+		then
+			echo
+			echo '/-------------------------------------------------------\'
+			echo '| ci-build.sh analysis: I noticed the following errors: |'
+			echo '\-------------------------------------------------------/'
+			echo "$generalErrors"
+		else
+			echo
+			echo '/----------------------------------------------------------------------\'
+			echo '| ci-build.sh analysis: I see no problems in the operation log. Sorry! |'
+			echo '\----------------------------------------------------------------------/'
+			echo
+		fi
+	fi
+
 	# Record the first non-zero exit code.
 	test $success -eq 0 && success=$1
 }
@@ -208,19 +237,19 @@ EOL
 	if [ "$deployOK" -a -f release.properties ]; then
 		echo
 		echo "== Cutting and deploying release version =="
-		mvn $BUILD_ARGS release:perform
-		checkSuccess $?
+		BUILD_ARGS="$BUILD_ARGS release:perform"
 	elif [ "$deployOK" ]; then
 		echo
 		echo "== Building and deploying main branch SNAPSHOT =="
-		mvn -Pdeploy-to-scijava $BUILD_ARGS deploy
-		checkSuccess $?
+		BUILD_ARGS="-Pdeploy-to-scijava $BUILD_ARGS deploy"
 	else
 		echo
 		echo "== Building the artifact locally only =="
-		mvn $BUILD_ARGS install javadoc:javadoc
-		checkSuccess $?
+		BUILD_ARGS="$BUILD_ARGS install javadoc:javadoc"
 	fi
+	# Check the build result.
+	{ mvn $BUILD_ARGS; echo $? > exit-code; } | tee mvn-log
+	checkSuccess "$(cat exit-code)" mvn-log
 
 	# --== POST-BUILD ACTIONS ==--
 
