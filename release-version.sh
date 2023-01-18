@@ -231,11 +231,40 @@ then
 	echo "====================================================================="
 	sed 's;http://maven.apache.org/xsd/maven-4.0.0.xsd;https://maven.apache.org/xsd/maven-4.0.0.xsd;' pom.xml > pom.new &&
 	mv -f pom.new pom.xml &&
-	git commit pom.xml \
-		-m 'POM: use HTTPS for schema location URL' \
+	git commit pom.xml -m 'POM: use HTTPS for schema location URL' \
 		-m 'Maven no longer supports plain HTTP for the schema location.' \
 		-m 'And using HTTP now generates errors in Eclipse (and probably other IDEs).'
 fi
+
+# Check project xmlns, xmlns:xsi, and xsi:schemaLocation attributes.
+grep -q 'xmlns="http://maven.apache.org/POM/4.0.0"' pom.xml >/dev/null 2>/dev/null &&
+	grep -q 'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' pom.xml >/dev/null 2>/dev/null &&
+	grep -q 'xsi:schemaLocation="http://maven.apache.org/POM/4.0.0\b"' pom.xml >/dev/null 2>/dev/null ||
+{
+	echo "====================================================================="
+	echo "NOTE: Your POM's project attributes are incorrect. Fixing it now."
+	echo "====================================================================="
+	sed 's;xmlns="[^"]*";xmlns="http://maven.apache.org/POM/4.0.0";' pom.xml > pom.new &&
+	mv -f pom.new pom.xml &&
+	sed 's;xmlns:xsi="[^"]*";xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance";' pom.xml > pom.new &&
+	mv -f pom.new pom.xml &&
+	sed 's;xsi:schemaLocation="[^"]*";xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd";' pom.xml > pom.new &&
+	mv -f pom.new pom.xml &&
+	git commit pom.xml -m 'POM: fix project attributes' \
+		-m 'The XML schema for Maven POMs is located at:' \
+		-m '  https://maven.apache.org/xsd/maven-4.0.0.xsd' \
+		-m 'Its XML namespace is the string:' \
+		-m '  http://maven.apache.org/POM/4.0.0' \
+		-m 'So that exact string must be the value of xmlns. It must also
+match the first half of xsi:schemaLocation, which maps that
+namespace to an actual URL online where the schema resides.
+Otherwise, the document is not a Maven POM.' \
+		-m 'Similarly, the xmlns:xsi attribute of an XML document declaring a
+particular schema should always use the string identifier:' \
+		-m '  http://www.w3.org/2001/XMLSchema-instance' \
+		-m "because that's the namespace identifier for instances of an XML schema." \
+		-m "For details, see the specification at: https://www.w3.org/TR/xmlschema-1/"
+}
 
 # Change forum references from forum.image.net to forum.image.sc.
 if grep -q 'https*://forum.imagej.net' pom.xml >/dev/null 2>/dev/null
