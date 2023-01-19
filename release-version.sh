@@ -237,9 +237,9 @@ then
 fi
 
 # Check project xmlns, xmlns:xsi, and xsi:schemaLocation attributes.
-grep -q 'xmlns="http://maven.apache.org/POM/4.0.0"' pom.xml >/dev/null 2>/dev/null &&
-	grep -q 'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' pom.xml >/dev/null 2>/dev/null &&
-	grep -q 'xsi:schemaLocation="http://maven.apache.org/POM/4.0.0\b"' pom.xml >/dev/null 2>/dev/null ||
+grep -qF 'xmlns="http://maven.apache.org/POM/4.0.0"' pom.xml >/dev/null 2>/dev/null &&
+	grep -qF 'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' pom.xml >/dev/null 2>/dev/null &&
+	grep -qF 'xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 ' pom.xml >/dev/null 2>/dev/null ||
 {
 	echo "====================================================================="
 	echo "NOTE: Your POM's project attributes are incorrect. Fixing it now."
