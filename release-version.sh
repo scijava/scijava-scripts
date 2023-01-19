@@ -14,7 +14,12 @@ export LC_ALL=C
 
 # -- Functions --
 
-die () {
+debug() {
+	test "$DEBUG" || return
+	echo "[DEBUG] $@"
+}
+
+die() {
 	echo "$*" >&2
 	exit 1
 }
@@ -111,6 +116,7 @@ Options include:
 "
 
 # -- Extract project details --
+debug "Extracting project details"
 
 echoArg='${project.version}:${license.licenseName}:${project.parent.groupId}:${project.parent.artifactId}:${project.parent.version}'
 projectDetails=$(mvn -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
@@ -124,10 +130,12 @@ licenseName=${projectDetails%%:*}
 parentGAV=${projectDetails#*:}
 
 # -- Sanity checks --
+debug "Performing sanity checks"
 
 # Check that we have push rights to the repository.
 if [ ! "$SKIP_PUSH" ]
 then
+	debug "Checking repository push rights"
 	push=$(git remote -v | grep origin | grep '(push)')
 	test "$push" || die 'No push URL found for remote origin.
 Please use "git remote -v" to double check your remote settings.'
@@ -136,6 +144,7 @@ Please use "git remote set-url origin ..." to change it.'
 fi
 
 # Discern the version to release.
+debug "Gleaning release version"
 pomVersion=${currentVersion%-SNAPSHOT}
 test "$VERSION" -o ! -t 0 || {
 	printf 'Version? [%s]: ' "$pomVersion"
@@ -161,6 +170,7 @@ test -f "$VALID_SEMVER_BUMP" ||
 	die "Missing helper script at '$VALID_SEMVER_BUMP'
 Do you have a full clone of https://github.com/scijava/scijava-scripts?"
 test "$SKIP_VERSION_CHECK" || {
+	debug "Checking conformance to SemVer"
 	sh -$- "$VALID_SEMVER_BUMP" "$pomVersion" "$VERSION" ||
 		die "If you are sure, try again with --skip-version-check flag."
 }
@@ -171,6 +181,7 @@ test -f "$MAVEN_HELPER" ||
 	die "Missing helper script at '$MAVEN_HELPER'
 Do you have a full clone of https://github.com/scijava/scijava-scripts?"
 test "$SKIP_VERSION_CHECK" -o "$parentGAV" != "${parentGAV#$}" || {
+	debug "Checking pom-scijava parent version"
 	latestParentVersion=$(sh -$- "$MAVEN_HELPER" latest-version "$parentGAV")
 	currentParentVersion=${parentGAV##*:}
 	test "$currentParentVersion" = "$latestParentVersion" ||
@@ -180,11 +191,13 @@ Or if you know better, try again with --skip-version-check flag."
 }
 
 # Check that the working copy is clean.
+debug "Checking if working copy is clean"
 no_changes_pending || die 'There are uncommitted changes!'
 test -z "$(git ls-files -o --exclude-standard)" ||
 	die 'There are untracked files! Please stash them before releasing.'
 
 # Discern default branch.
+debug "Discerning default branch"
 currentBranch=$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)
 upstreamBranch=$(git rev-parse --abbrev-ref --symbolic-full-name @{u})
 remote=${upstreamBranch%/*}
@@ -192,6 +205,7 @@ defaultBranch=$(git remote show "$remote" | grep "HEAD branch" | sed 's/.*: //')
 
 # Check that we are on the main branch.
 test "$SKIP_BRANCH_CHECK" || {
+	debug "Checking current branch"
 	test "$currentBranch" = "$defaultBranch" || die "Non-default branch: $currentBranch.
 If you are certain you want to release from this branch,
 try again with --skip-branch-check flag."
@@ -201,6 +215,7 @@ try again with --skip-branch-check flag."
 REMOTE="${REMOTE:-$remote}"
 
 # Check that the main branch isn't behind the upstream branch.
+debug "Ensuring local branch is up-to-date"
 HEAD="$(git rev-parse HEAD)" &&
 git fetch "$REMOTE" "$defaultBranch" &&
 FETCH_HEAD="$(git rev-parse FETCH_HEAD)" &&
@@ -209,6 +224,7 @@ test "$FETCH_HEAD" = "$(git merge-base $FETCH_HEAD $HEAD)" ||
 	die "'$defaultBranch' is not up-to-date"
 
 # Check for release-only files committed to the main branch.
+debug "Checking for spurious release-only files"
 for release_file in release.properties pom.xml.releaseBackup
 do
 	if [ -e "$release_file" ]
@@ -224,6 +240,7 @@ do
 done
 
 # Ensure that schema location URL uses HTTPS, not HTTP.
+debug "Checking that schema location URL uses HTTPS"
 if grep -q http://maven.apache.org/xsd/maven-4.0.0.xsd pom.xml >/dev/null 2>/dev/null
 then
 	echo "====================================================================="
@@ -237,6 +254,7 @@ then
 fi
 
 # Check project xmlns, xmlns:xsi, and xsi:schemaLocation attributes.
+debug "Checking correctness of POM project XML attributes"
 grep -qF 'xmlns="http://maven.apache.org/POM/4.0.0"' pom.xml >/dev/null 2>/dev/null &&
 	grep -qF 'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' pom.xml >/dev/null 2>/dev/null &&
 	grep -qF 'xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 ' pom.xml >/dev/null 2>/dev/null ||
@@ -267,6 +285,7 @@ particular schema should always use the string identifier:' \
 }
 
 # Change forum references from forum.image.net to forum.image.sc.
+debug "Checking correctness of forum URL references"
 if grep -q 'https*://forum.imagej.net' pom.xml >/dev/null 2>/dev/null
 then
 	echo "================================================================"
@@ -280,6 +299,7 @@ then
 fi
 
 # Ensure that references to forum.image.sc use /tag/, not /tags/.
+debug "Checking correctness of forum tag references"
 if grep -q forum.image.sc/tags/ pom.xml >/dev/null 2>/dev/null
 then
 	echo "=================================================================="
@@ -294,6 +314,7 @@ fi
 
 # Ensure license headers are up-to-date.
 test "$SKIP_LICENSE_UPDATE" -o -z "$licenseName" -o "$licenseName" = "N/A" || {
+	debug "Ensuring that license headers are up-to-date"
 	mvn license:update-project-license license:update-file-header &&
 	git add LICENSE.txt || die 'Failed to update copyright blurbs.
 You can skip the license update using the --skip-license-update flag.'
@@ -308,6 +329,7 @@ Alternately, try again with the --skip-license-update flag.'
 }
 
 # Prepare new release without pushing (requires the release plugin >= 2.1).
+debug "Preparing new release"
 $DRY_RUN mvn $BATCH_MODE release:prepare -DpushChanges=false -Dresume=false $TAG \
         $PROFILE $DEV_VERSION -DreleaseVersion="$VERSION" \
 	"-Darguments=-Dgpg.skip=true ${EXTRA_ARGS# }" ||
@@ -317,6 +339,7 @@ Use "mvn javadoc:javadoc | grep error" to check for javadoc syntax errors.'
 # Squash the maven-release-plugin's two commits into one.
 if test -z "$DRY_RUN"
 then
+	debug "Squashing release commits"
 	test "[maven-release-plugin] prepare for next development iteration" = \
 		"$(git show -s --format=%s HEAD)" ||
 		die "maven-release-plugin's commits are unexpectedly missing!"
@@ -328,6 +351,7 @@ then
 fi &&
 
 # Extract the name of the new tag.
+debug "Extracting new tag name"
 if test -z "$DRY_RUN"
 then
 	tag=$(sed -n 's/^scm.tag=//p' < release.properties)
@@ -336,6 +360,7 @@ else
 fi &&
 
 # Rewrite the tag to include release.properties.
+debug "Rewriting tag to include release.properties"
 test -n "$tag" &&
 # HACK: SciJava projects use SSH (git@github.com:...) for developerConnection.
 # The release:perform command wants to use the developerConnection URL when
@@ -355,9 +380,13 @@ $DRY_RUN git checkout @{-1} &&
 # Push the current branch and the tag.
 if test -z "$SKIP_PUSH"
 then
+	debug "Pushing changes"
 	$DRY_RUN git push "$REMOTE" HEAD $tag
 fi
 
 # Remove files generated by the release process. They can end up
 # committed to the mainline branch and hosing up later releases.
+debug "Cleaning up"
 $DRY_RUN rm -f release.properties pom.xml.releaseBackup
+
+debug "Release complete!"
