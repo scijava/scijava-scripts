@@ -669,7 +669,8 @@ do
         mismatch="$mismatch\n* $g:$a:$v -> $bomV"
       else
         # G:A version is not pinned.
-        warn "$1: Unpinned dependency: $dep"
+        test "$row" -ne 1 ||
+          warn "$1: Unpinned dependency: $dep"
       fi
     fi
   done
