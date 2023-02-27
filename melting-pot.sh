@@ -484,7 +484,7 @@ deps() {
   debug "mvn -B -DincludeScope=runtime dependency:list"
   local depList="$(mvn -B -DincludeScope=runtime dependency:list)" ||
     die "Problem fetching dependencies!" 5
-  echo "$depList" | grep '^\[INFO\]    [^ ]' |
+  echo "$depList" | grep '^\[INFO\]    \w' |
     sed 's/\[INFO\]    //' | sed 's/ .*//' | sort
   cd - > /dev/null
 }
@@ -722,7 +722,7 @@ successLog="$HOME/.cache/scijava/melting-pot/$1.success.log"
 mkdir -p "$(dirname "$successLog")"
 
 # Record dependency configuration of successful build.
-deps=$(grep '^\[[^ ]*INFO[^ ]*\]    ' "$buildLog" |
+deps=$(grep '^\[[^ ]*INFO[^ ]*\]    \w' "$buildLog" |
   sed -e 's/^[^ ]* *//' -e 's/ -- .*//' -e 's/ (\([^)]*\))/-\1/' |
   sort | tr '\n' ',')
 if [ -z "$(containsLine "$deps" "$successLog")" ]
@@ -838,7 +838,7 @@ meltDown() {
   echo '  cd - >/dev/null'                                          >> build.sh
   echo '}'                                                          >> build.sh
   echo                                                              >> build.sh
-  echo 'mvnPin dependency:list &&'                                  >> build.sh
+  echo 'mvnPin dependency:list dependency:tree &&'                  >> build.sh
   echo                                                              >> build.sh
   echo 'if [ -f gav ]'                                              >> build.sh
   echo 'then'                                                       >> build.sh
