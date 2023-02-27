@@ -415,7 +415,7 @@ scmTag() {
         return
       }
     done
-    error "$1: inscrutable tag scheme"
+    error "$1: inscrutable tag scheme -- using default branch"
   else
     echo "$tag"
   fi
@@ -441,24 +441,43 @@ resolveSource() {
   # Check whether the needed branch/tag exists.
   local scmBranch
   test "$2" && scmBranch="$2" || scmBranch="$(scmTag "$1")"
-  test "$scmBranch" || die "$1: cannot glean SCM tag" 14
-  debug "git ls-remote \"file://$cachedRepoDir\" | grep -q \"\brefs/tags/$scmBranch$\""
-  git ls-remote "file://$cachedRepoDir" | grep -q "\brefs/tags/$scmBranch$" || {
-    # Couldn't find the scmBranch as a tag in the cached repo. Either the
-    # tag is new, or it's not a tag ref at all (e.g. it's a branch).
-    # So let's update from the original remote repository.
-    info "$1: local tag not found for ref '$scmBranch'"
+
+  if [ "$scmBranch" ]
+  then
+    # Successfully gleaned SCM branch/tag.
+    debug "git ls-remote \"file://$cachedRepoDir\" | grep -q \"\brefs/tags/$scmBranch$\""
+    git ls-remote "file://$cachedRepoDir" | grep -q "\brefs/tags/$scmBranch$" || {
+      # Couldn't find the scmBranch as a tag in the cached repo. Either the
+      # tag is new, or it's not a tag ref at all (e.g. it's a branch).
+      # So let's update from the original remote repository.
+      info "$1: local tag not found for ref '$scmBranch'"
+      info "$1: updating cached repository: $cachedRepoDir"
+      cd "$cachedRepoDir"
+      debug "git fetch --tags"
+      if [ "$debug" ]
+      then
+        git fetch --tags
+      else
+        git fetch --tags > /dev/null
+      fi
+      cd - > /dev/null
+    }
+  else
+    # No SCM branch/tag; fall back to the default branch.
     info "$1: updating cached repository: $cachedRepoDir"
     cd "$cachedRepoDir"
-    debug "git fetch --tags"
+    debug "git fetch"
     if [ "$debug" ]
     then
-      git fetch --tags
+      git fetch
     else
-      git fetch --tags > /dev/null
+      git fetch > /dev/null
     fi
+    head=$(cat HEAD)
+    scmBranch=${head##*/}
+    info "$1: detected default branch as $scmBranch"
     cd - > /dev/null
-  }
+  fi
 
   # Shallow clone the source at the given version into melting-pot structure.
   local destDir="$g/$a"
