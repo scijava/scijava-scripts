@@ -678,7 +678,11 @@ do
     a=${apv%%:*}
     v=${apv##*:}
     bomV=$(grep -o " -D$g\.$a\.version=[^ ]*" "$dir/build.sh" | sed 's;.*=;;')
-    if [ "$bomV" != "$v" ]
+    if [ "$bomV" != "${bomV#*-SNAPSHOT*}" ]
+    then
+      warn "$1: Snapshot dependency pin detected: $g:$a:$bomV -- forcing a rebuild"
+      exit 0
+    elif [ "$bomV" != "$v" ]
     then
       # G:A property is not set to this V.
       # Now check if the property is even declared.
@@ -744,7 +748,7 @@ mkdir -p "$(dirname "$successLog")"
 deps=$(grep '^\[[^ ]*INFO[^ ]*\]    \w' "$buildLog" |
   sed -e 's/^[^ ]* *//' -e 's/ -- .*//' -e 's/ (\([^)]*\))/-\1/' |
   sort | tr '\n' ',')
-if [ -z "$(containsLine "$deps" "$successLog")" ]
+if [ "$deps" = "${deps%*-SNAPSHOT*}" -a -z "$(containsLine "$deps" "$successLog")" ]
 then
   # NB: *Prepend*, rather than append, the new successful configuration.
   # We do this because it is more likely this new configuration will be
@@ -891,7 +895,10 @@ meltDown() {
     local gav="$g:$a:$v"
     if [ "$(isIncluded "$gav")" ]
     then
-      if [ "$(./prior-success.sh "$g/$a")" ]
+      if [ "$v" != "${v%-SNAPSHOT}" ]
+      then
+        info "$g:$a: forcing inclusion due to SNAPSHOT version"
+      elif [ "$(./prior-success.sh "$g/$a")" ]
       then
         info "$g:$a: skipping version $v due to prior successful build"
         continue
