@@ -49,7 +49,11 @@ class_version() {
 }
 
 first_class() {
-  jar tf "$1" | grep '\.class$' | head -n 1
+  jar tf "$1" |
+    grep '\.class$' |
+    grep -v '^META-INF/' |
+    grep -v 'module-info\.class' |
+    head -n 1
 }
 
 for file in "$@"
