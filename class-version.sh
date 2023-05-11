@@ -56,26 +56,37 @@ first_class() {
     head -n 1
 }
 
-for file in "$@"
+for arg in "$@"
 do
-  case "$file" in
+  case "$arg" in
+    *:*:*)
+      ga=${arg%:*}
+      g=${ga%%:*}
+      a=${ga#*:}
+      v=${arg##*:}
+      f="$HOME/.m2/repository/$(echo "$g" | tr '.' '/')/$a/$v/$a-$v.jar"
+      test -f "$f" || mvn dependency:get -D"$arg"
+      arg="$f"
+      ;;
+  esac
+  case "$arg" in
     *.class)
-      version=$(cat "$file" | class_version)
+      version=$(cat "$arg" | class_version)
       ;;
     *.jar)
-      class=$(first_class "$file")
+      class=$(first_class "$arg")
       if [ -z "$class" ]
       then
-        echo "$file: No classes"
+        echo "$arg: No classes"
         continue
       fi
-      version=$(unzip -p "$file" "$class" | class_version)
+      version=$(unzip -p "$arg" "$class" | class_version)
       ;;
     *)
-      >&2 echo "Unsupported file: $file"
+      >&2 echo "Unsupported argument: $arg"
       continue
   esac
 
   # report the results
-  echo "$file: $version"
+  echo "$arg: $version"
 done
