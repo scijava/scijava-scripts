@@ -119,11 +119,16 @@ Options include:
 debug "Extracting project details"
 
 echoArg='${project.version}:${license.licenseName}:${project.parent.groupId}:${project.parent.artifactId}:${project.parent.version}'
-projectDetails=$(mvn -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
-test $? -eq 0 || projectDetails=$(mvn -U -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
+projectDetails=$(mvn -B -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
+test $? -eq 0 || projectDetails=$(mvn -B -U -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
 test $? -eq 0 || die "Could not extract version from pom.xml. Error follows:\n$projectDetails"
-echo "$projectDetails" | grep -Fqv '[ERROR]' ||
+printf '%s' "$projectDetails\n" | grep -Fqv '[ERROR]' ||
 	die "Error extracting version from pom.xml. Error follows:\n$projectDetails"
+# HACK: Even with -B, some versions of mvn taint the output with the <ESC>[0m
+# color reset sequence. So we forcibly remove such sequences, just to be safe.
+projectDetails=$(printf '%s' "$projectDetails" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g")
+# And also remove extraneous newlines, particularly any trailing ones.
+projectDetails=$(printf '%s' "$projectDetails" | tr -d '\n')
 currentVersion=${projectDetails%%:*}
 projectDetails=${projectDetails#*:}
 licenseName=${projectDetails%%:*}
@@ -185,7 +190,7 @@ test "$SKIP_VERSION_CHECK" -o "$parentGAV" != "${parentGAV#$}" || {
 	latestParentVersion=$(sh -$- "$MAVEN_HELPER" latest-version "$parentGAV")
 	currentParentVersion=${parentGAV##*:}
 	test "$currentParentVersion" = "$latestParentVersion" ||
-		die "Newer version of parent '${parentGAV%:*}' is available: $latestParentVersion.
+		die "Newer version of parent '$parentGAV' is available: $latestParentVersion.
 I recommend you update it before releasing.
 Or if you know better, try again with --skip-version-check flag."
 }
