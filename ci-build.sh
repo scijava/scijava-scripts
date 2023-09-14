@@ -183,7 +183,7 @@ EOL
 
 	# --== Maven build arguments ==--
 
-	BUILD_ARGS="-B -Djdk.tls.client.protocols=TLSv1,TLSv1.1,TLSv1.2"
+	BUILD_ARGS="$BUILD_ARGS -B -Djdk.tls.client.protocols=TLSv1,TLSv1.1,TLSv1.2"
 
 	# --== GPG SETUP ==--
 
