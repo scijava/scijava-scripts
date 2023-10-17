@@ -24,7 +24,15 @@ do
   prefix="$(printf %04d $count)"
   filename="tmp/$prefix-$commit"
   start=$(date +%s)
-  mvn clean verify > "$filename" 2>&1 && result=SUCCESS || result=FAILURE
+  if [ -f Makefile ]
+  then
+    make test > "$filename" 2>&1 && result=SUCCESS || result=FAILURE
+  elif [ -f pom.xml ]
+  then
+    mvn clean verify > "$filename" 2>&1 && result=SUCCESS || result=FAILURE
+  else
+    result=SKIPPED
+  fi
   end=$(date +%s)
   time=$(expr "$end" - "$start")
   echo "$prefix $commit $result $time"
