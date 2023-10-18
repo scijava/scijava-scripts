@@ -15,16 +15,29 @@ props() {
 	if [ -e "$1" ]
 	then
 		# extract version properties from the given file path
-		versions=$(cat "$1")
+		pomContent=$(cat "$1")
 	else
-		url="$repo/org/scijava/pom-scijava/$1/pom-scijava-$1.pom"
-		versions=$(curl -s "$url")
 		# assume argument is a version number of pom-scijava
+		pomURL="$repo/org/scijava/pom-scijava/$1/pom-scijava-$1.pom"
+		pomContent=$(curl -s "$pomURL")
 	fi
-	echo "$versions" | \
-		grep '\.version>' | \
-		sed -E -e 's/^				(.*)/\1 [DEV]/' | \
-		sed -E -e 's/^	*<(.*)\.version>(.*)<\/.*\.version>/\1 = \2/' | \
+
+	# grep the pom-scijava-base parent version of out of the POM,
+	# then rip out the version properties from that one as well!
+	psbVersion=$(echo "$pomContent" |
+		grep -A1 '<artifactId>pom-scijava-base' |
+		grep '<version>' | sed 's;.*>\([^<]*\)<.*;\1;')
+	psbContent=
+	if [ "$psbVersion" ]
+	then
+		psbURL="$repo/org/scijava/pom-scijava-base/$psbVersion/pom-scijava-base-$psbVersion.pom"
+		psbContent=$(curl -s "$psbURL")
+	fi
+
+	{ echo "$pomContent"; echo "$psbContent"; } |
+		grep '\.version>' |
+		sed -E -e 's/^				(.*)/\1 [DEV]/' |
+		sed -E -e 's/^	*<(.*)\.version>(.*)<\/.*\.version>/\1 = \2/' |
 		sort
 }
 
