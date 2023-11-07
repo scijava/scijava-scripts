@@ -9,10 +9,7 @@
 
 dir="$(dirname "$0")"
 
-MACOS=
-case "$(uname -s)" in
-	Darwin) MACOS=1;;
-esac
+platform=$(uname -s)
 
 success=0
 checkSuccess() {
@@ -188,7 +185,7 @@ EOL
 	# --== GPG SETUP ==--
 
 	# Install GPG on macOS
-	if [ "$MACOS" ]; then
+	if [ "$platform" = Darwin ]; then
 		HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg2
 	fi
 
