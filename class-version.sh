@@ -17,27 +17,24 @@ class_version() {
   # derive Java version
   case $major in
     45)
-      version="JDK 1.1"
+      version="Java 1.0/1.1"
       ;;
     46)
-      version="JDK 1.2"
+      version="Java 1.2"
       ;;
     47)
-      version="JDK 1.3"
+      version="Java 1.3"
       ;;
     48)
-      version="JDK 1.4"
+      version="Java 1.4"
       ;;
     49)
-      version="J2SE 5.0"
-      ;;
-    50)
-      version="J2SE 6.0"
+      version="Java 5"
       ;;
     *)
-      if [ "$major" -gt 50 ]
+      if [ "$major" -gt 49 ]
       then
-        version="J2SE $(expr $major - 44)"
+        version="Java $(expr $major - 44)"
       else
         version="Unknown"
       fi
