@@ -80,6 +80,9 @@ if [ -f pom.xml ]; then
 	elif [ -f "$customSettings" ]; then
 		cp "$customSettings" "$settingsFile"
 	else
+		if [ -z "$OSSRH_USER" ]; then
+			OSSRH_USER=scijava-ci
+		fi
 		cat >"$settingsFile" <<EOL
 <settings>
 	<servers>
@@ -95,7 +98,7 @@ if [ -f pom.xml ]; then
 		</server>
 		<server>
 			<id>sonatype-nexus-releases</id>
-			<username>scijava-ci</username>
+			<username>$OSSRH_USER</username>
 			<password>$(escapeXML "$OSSRH_PASS")</password>
 		</server>
 	</servers>

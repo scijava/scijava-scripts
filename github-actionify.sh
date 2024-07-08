@@ -129,6 +129,7 @@ process() {
           GPG_PASSPHRASE: \${{ secrets.GPG_PASSPHRASE }}
           MAVEN_USER: \${{ secrets.MAVEN_USER }}
           MAVEN_PASS: \${{ secrets.MAVEN_PASS }}
+          OSSRH_USER: \${{ secrets.OSSRH_USER }}
           OSSRH_PASS: \${{ secrets.OSSRH_PASS }}
           SIGNING_ASC: \${{ secrets.SIGNING_ASC }}"
 
