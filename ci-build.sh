@@ -172,7 +172,7 @@ EOL
 				esac
 				if [ "$BUILD_BASE_REF" -o "$BUILD_HEAD_REF" ]
 				then
-					echo "No deploy -- proposed change: $BUILD_BASE_REF -> $BUILD_HEAD_REF"
+					echo "No deploy -- proposed change: $BUILD_HEAD_REF -> $BUILD_BASE_REF"
 				else
 					deployOK=1
 				fi
