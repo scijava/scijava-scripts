@@ -666,7 +666,7 @@ do
   mismatch=
   for dep in $(echo "$deps" | tr ',' '\n')
   do
-    # g:a:p:v:s -> -Dg.a.version=v
+    # g:a:p:v:s -> <g.a.version>v</g.a.version>
     s=${dep##*:}
     case "$s" in
       test) continue ;; # skip test dependencies
@@ -677,7 +677,7 @@ do
     apv=${gapv#*:}
     a=${apv%%:*}
     v=${apv##*:}
-    bomV=$(grep -o " -D$g\.$a\.version=[^ ]*" "$dir/build.sh" | sed 's;.*=;;')
+    bomV=$(grep -o " <$g\.$a\.version>[^>]*" "$dir/version-pins.xml" | sed 's;[^>]*>\([^>]*\)<.*;\1;')
     if [ "$bomV" != "${bomV#*-SNAPSHOT*}" ]
     then
       warn "$1: Snapshot dependency pin detected: $g:$a:$bomV -- forcing a rebuild"
@@ -801,13 +801,9 @@ meltDown() {
   # to decide whether to include each component.
   generateHelperScripts
 
-  # NB: We do *not* include -B here, because we want build.sh to preserve
-  # colored output if the version of Maven is new enough. We will take care
-  # elsewhere when parsing it to be flexible about whether colors are present.
-  local args="-Denforcer.skip"
-
   # Process the dependencies.
   info "Processing project dependencies"
+  local versionProps=""
   local dep
   for dep in $deps
   do
@@ -817,9 +813,9 @@ meltDown() {
     local c="$(classifier "$dep")"
     test -z "$c" || continue # skip secondary artifacts
     local gav="$g:$a:$v"
-
     test -z "$(isChanged "$gav")" &&
-      args="$args \\\\\n    -D$g.$a.version=$v -D$a.version=$v"
+      versionProps="$versionProps
+        <$g.$a.version>$v</$g.$a.version> <$a.version>$v</$a.version>"
   done
 
   # Override versions of changed GAVs.
@@ -830,16 +826,39 @@ meltDown() {
   do
     local a="$(artifactId "$gav")"
     local v="$(version "$gav")"
-    args="$args \\\\\n    -D$a.version=$v"
+    versionProps="$versionProps
+        <$a.version>$v</$a.version>"
   done
   unset TLS
+
+  # Generate version-pins.xml.
+  info "Generating version-pins.xml configuration"
+  echo '<settings xmlns="http://maven.apache.org/SETTINGS/1.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' > version-pins.xml
+  echo '  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.1.0 https://maven.apache.org/xsd/settings-1.1.0.xsd">' >> version-pins.xml
+  echo '  <profiles>'                                               >> version-pins.xml
+  echo '    <profile>'                                              >> version-pins.xml
+  echo '      <id>version-pins</id>'                                >> version-pins.xml
+  echo '      <activation>'                                         >> version-pins.xml
+  echo '        <activeByDefault>true</activeByDefault>'            >> version-pins.xml
+  echo '      </activation>'                                        >> version-pins.xml
+  echo '      <properties>'                                         >> version-pins.xml
+  echo "$versionProps"                                              >> version-pins.xml
+  echo '      </properties>'                                        >> version-pins.xml
+  echo '    </profile>'                                             >> version-pins.xml
+  echo '  </profiles>'                                              >> version-pins.xml
+  echo '</settings>'                                                >> version-pins.xml
 
   # Generate build script.
   info "Generating build.sh script"
   echo '#!/bin/sh'                                                   > build.sh
   echo                                                              >> build.sh
+  echo 'dir=$(cd "$(dirname "$0")" && pwd)'                         >> build.sh
+  echo                                                              >> build.sh
   echo 'mvnPin() {'                                                 >> build.sh
-  echo "  mvn $args \\\\\n    \$@"                                  >> build.sh
+  # NB: We do *not* include -B here, because we want build.sh to preserve
+  # colored output if the version of Maven is new enough. We will take care
+  # elsewhere when parsing it to be flexible about whether colors are present.
+  echo '  mvn -s "$dir/version-pins.xml" -Denforcer.skip $@'        >> build.sh
   echo '}'                                                          >> build.sh
   echo                                                              >> build.sh
   echo 'unpackArtifact() {'                                         >> build.sh
