@@ -773,10 +773,18 @@ meltDown() {
     # Use local directory for the specified project.
     test -d "$1" || die "No such directory: $1" 11
     test -f "$1/pom.xml" || die "Not a Maven project: $1" 12
-    info "Local Maven project: $1"
-    mkdir -p "LOCAL"
-    local projectDir="LOCAL/PROJECT"
-    ln -s "$1" "$projectDir"
+    case "$(uname)" in
+      MINGW*)
+        warn "Skipping inclusion of local project due to lack of symlink support."
+        local projectDir="$1"
+        ;;
+      *)
+        info "Local Maven project: $1"
+        mkdir -p "LOCAL"
+        local projectDir="LOCAL/PROJECT"
+        ln -s "$1" "$projectDir"
+        ;;
+    esac
   else
     # Treat specified project as a GAV.
     info "Fetching project source"
