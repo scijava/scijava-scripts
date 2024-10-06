@@ -809,13 +809,15 @@ meltDown() {
   do
     local g="$(groupId "$dep")"
     local a="$(artifactId "$dep")"
+    local aa
+    echo "$a" | grep -q '^[0-9]' && aa="_$a" || aa="$a"
     local v="$(version "$dep")"
     local c="$(classifier "$dep")"
     test -z "$c" || continue # skip secondary artifacts
     local gav="$g:$a:$v"
     test -z "$(isChanged "$gav")" &&
       versionProps="$versionProps
-        <$g.$a.version>$v</$g.$a.version> <$a.version>$v</$a.version>"
+        <$g.$a.version>$v</$g.$a.version> <$aa.version>$v</$aa.version>"
   done
 
   # Override versions of changed GAVs.
