@@ -62,7 +62,7 @@ do
       a=${ga#*:}
       v=${arg##*:}
       f="$HOME/.m2/repository/$(echo "$g" | tr '.' '/')/$a/$v/$a-$v.jar"
-      test -f "$f" || mvn dependency:get -D"$arg"
+      test -f "$f" || mvn dependency:get -Dartifact="$arg"
       arg="$f"
       ;;
   esac
