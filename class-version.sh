@@ -55,8 +55,20 @@ first_class() {
 
 for arg in "$@"
 do
+  # Resolve Maven dependency coordinates into local files.
   case "$arg" in
-    *:*:*)
+    *:*:*:*) # g:a:v:c
+      gav=${arg%:*}
+      g=${gav%%:*}
+      av=${gav#*:}
+      a=${av%:*}
+      v=${av#*:}
+      c=${arg##*:}
+      f="$HOME/.m2/repository/$(echo "$g" | tr '.' '/')/$a/$v/$a-$v-$c.jar"
+      test -f "$f" || mvn dependency:get -Dartifact="$g:$a:$v:jar:$c"
+      arg="$f"
+      ;;
+    *:*:*) # g:a:v
       ga=${arg%:*}
       g=${ga%%:*}
       a=${ga#*:}
@@ -66,6 +78,7 @@ do
       arg="$f"
       ;;
   esac
+  # Handle the various local file cases.
   case "$arg" in
     *.class)
       version=$(cat "$arg" | class_version)
@@ -84,6 +97,6 @@ do
       continue
   esac
 
-  # report the results
+  # Report the results.
   echo "$arg: $version"
 done
