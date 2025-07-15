@@ -138,7 +138,7 @@ EOL
 		scmURL=${scmURL%/}
 		if [ "$NO_DEPLOY" ]; then
 			echo "No deploy -- the NO_DEPLOY flag is set"
-		elif [ ! "$SIGNING_ASC" -o ! "$GPG_KEY_NAME" -o ! "$GPG_PASSPHRASE" -o ! "$MAVEN_PASS" -o ! "$OSSRH_PASS" ]; then
+		elif [ ! "$SIGNING_ASC" -o ! "$GPG_KEY_NAME" -o ! "$GPG_PASSPHRASE" -o ! "$MAVEN_PASS" -o ! "$CENTRAL_PASS" ]; then
 			echo "No deploy -- secure environment variables not available"
 		elif [ "$BUILD_REPOSITORY" -a "$BUILD_REPOSITORY" != "$scmURL" ]; then
 			echo "No deploy -- repository fork: $BUILD_REPOSITORY != $scmURL"
