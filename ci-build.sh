@@ -75,14 +75,14 @@ if [ -f pom.xml ]; then
 	mkdir -p "$HOME/.m2"
 	settingsFile="$HOME/.m2/settings.xml"
 	customSettings=.ci/settings.xml
-	if [ -z "$MAVEN_PASS" -a -z "$OSSRH_PASS" ]; then
+	if [ "$OSSRH_USER" -o "$OSSRH_PASS" ]; then
+		echo "[WARNING] Obsolete OSSRH vars detected. Secrets may need updating to deploy to Maven Central."
+	fi
+	if [ -z "$MAVEN_PASS" -a -z "$CENTRAL_PASS" ]; then
 		echo "[WARNING] Skipping settings.xml generation (no deployment credentials)."
 	elif [ -f "$customSettings" ]; then
 		cp "$customSettings" "$settingsFile"
 	else
-		if [ -z "$OSSRH_USER" ]; then
-			OSSRH_USER=scijava-ci
-		fi
 		cat >"$settingsFile" <<EOL
 <settings>
 	<servers>
@@ -98,8 +98,8 @@ if [ -f pom.xml ]; then
 		</server>
 		<server>
 			<id>central</id>
-			<username>$OSSRH_USER</username>
-			<password>$(escapeXML "$OSSRH_PASS")</password>
+			<username>$CENTRAL_USER</username>
+			<password>$(escapeXML "$CENTRAL_PASS")</password>
 		</server>
 	</servers>
 	<profiles>
