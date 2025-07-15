@@ -97,7 +97,7 @@ if [ -f pom.xml ]; then
 			<password>$(escapeXML "$MAVEN_PASS")</password>
 		</server>
 		<server>
-			<id>sonatype-nexus-releases</id>
+			<id>central</id>
 			<username>$OSSRH_USER</username>
 			<password>$(escapeXML "$OSSRH_PASS")</password>
 		</server>
