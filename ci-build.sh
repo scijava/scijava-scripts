@@ -165,10 +165,10 @@ EOL
 		scmURL=${scmURL%/}
 		if [ "$NO_DEPLOY" ]; then
 			echo "No deploy -- the NO_DEPLOY flag is set"
-		elif [ ! "$SIGNING_ASC" -o ! "$GPG_KEY_NAME" -o ! "$GPG_PASSPHRASE" -o ! "$MAVEN_PASS" -o ! "$CENTRAL_PASS" ]; then
-			echo "No deploy -- secure environment variables not available"
 		elif [ "$BUILD_REPOSITORY" -a "$BUILD_REPOSITORY" != "$scmURL" ]; then
 			echo "No deploy -- repository fork: $BUILD_REPOSITORY != $scmURL"
+		elif [ "$BUILD_BASE_REF" -o "$BUILD_HEAD_REF" ]; then
+				echo "No deploy -- proposed change: $BUILD_HEAD_REF -> $BUILD_BASE_REF"
 		else
 			# Are we building a snapshot version, or a release version?
 			version=$(mavenEvaluate '${project.version}')
@@ -187,6 +187,13 @@ EOL
 							echo "Remove the file from version control and try again."
 							exit 1
 						fi
+
+						# Check for SciJava Maven repository credentials.
+						if [ "$MAVEN_USER" -a "$MAVEN_PASS" ]; then
+							deployOK=1
+						else
+							echo "No deploy -- MAVEN environment variables not available"
+						fi
 						;;
 					*)
 						# Release version -- ensure release.properties is present.
@@ -195,14 +202,43 @@ EOL
 							echo "You must use release-version.sh to release -- see https://imagej.net/develop/releasing"
 							exit 1
 						fi
+
+						# To which repository are we releasing?
+						releaseProfiles=$(mavenEvaluate '${releaseProfiles}')
+						result=$?
+						checkSuccess $result
+						if [ $result -ne 0 ]; then
+							echo "No deploy -- could not extract releaseProfiles string"
+							echo "Output of failed attempt follows:"
+							echo "$releaseProfiles"
+						fi
+						case "$releaseProfiles" in
+							*deploy-to-scijava*)
+								# Check for SciJava Maven repository credentials.
+								if [ "$MAVEN_USER" -a "$MAVEN_PASS" ]; then
+									deployOK=1
+								else
+									echo "[ERROR] Cannot deploy: MAVEN environment variables not available"
+									exit 1
+								fi
+								;;
+							*sonatype-oss-release*)
+								# Check for Central Portal deployment credentials.
+								# Deploy to Central requires GPG-signed artifacts.
+								if [ "$CENTRAL_USER" -a "$CENTRAL_PASS" -a "$SIGNING_ASC" -a "$GPG_KEY_NAME" -a "$GPG_PASSPHRASE" ]; then
+									deployOK=1
+								else
+									echo "[ERROR] Cannot deploy: CENTRAL environment variables not available"
+									exit 1
+								fi
+								;;
+							*)
+								echo "Unknown deploy target -- attempting to deploy anyway"
+								deployOK=1
+								;;
+						esac
 						;;
 				esac
-				if [ "$BUILD_BASE_REF" -o "$BUILD_HEAD_REF" ]
-				then
-					echo "No deploy -- proposed change: $BUILD_HEAD_REF -> $BUILD_BASE_REF"
-				else
-					deployOK=1
-				fi
 			fi
 		fi
 	fi
