@@ -78,14 +78,19 @@ if [ -f pom.xml ]; then
 	if [ "$OSSRH_USER" -o "$OSSRH_PASS" ]; then
 		echo "[WARNING] Obsolete OSSRH vars detected. Secrets may need updating to deploy to Maven Central."
 	fi
-	if [ -z "$MAVEN_PASS" -a -z "$CENTRAL_PASS" ]; then
-		echo "[WARNING] Skipping settings.xml generation (no deployment credentials)."
-	elif [ -f "$customSettings" ]; then
+	if [ -f "$customSettings" ]; then
 		cp "$customSettings" "$settingsFile"
+	elif [ -z "$BUILD_REPOSITORY" ]; then
+		echo "Skipping settings.xml generation (no BUILD_REPOSITORY; assuming we are running locally)"
 	else
+		# settings.xml header
 		cat >"$settingsFile" <<EOL
 <settings>
 	<servers>
+EOL
+		# settings.xml scijava servers
+		if [ "$MAVEN_USER" -a "$MAVEN_PASS" ]; then
+			cat >>"$settingsFile" <<EOL
 		<server>
 			<id>scijava.releases</id>
 			<username>$MAVEN_USER</username>
@@ -96,12 +101,28 @@ if [ -f pom.xml ]; then
 			<username>$MAVEN_USER</username>
 			<password>$(escapeXML "$MAVEN_PASS")</password>
 		</server>
+EOL
+		else
+			echo "[WARNING] Skipping settings.xml scijava servers (no MAVEN deployment credentials)."
+		fi
+		# settings.xml central server
+		if [ "$CENTRAL_USER" -a "$CENTRAL_PASS" ]; then
+			cat >>"$settingsFile" <<EOL
 		<server>
 			<id>central</id>
 			<username>$CENTRAL_USER</username>
 			<password>$(escapeXML "$CENTRAL_PASS")</password>
 		</server>
+EOL
+		else
+			echo "[WARNING] Skipping settings.xml central server (no CENTRAL deployment credentials)."
+		fi
+		cat >>"$settingsFile" <<EOL
 	</servers>
+EOL
+		# settings.xml GPG profile
+		if [ "$GPG_KEY_NAME" -a "$GPG_PASSPHRASE" ]; then
+			cat >>"$settingsFile" <<EOL
 	<profiles>
 		<profile>
 			<id>gpg</id>
@@ -116,6 +137,12 @@ if [ -f pom.xml ]; then
 			</properties>
 		</profile>
 	</profiles>
+EOL
+		else
+			echo "[WARNING] Skipping settings.xml gpg profile (no GPG credentials)."
+		fi
+		# settings.xml footer
+		cat >>"$settingsFile" <<EOL
 </settings>
 EOL
 	fi
