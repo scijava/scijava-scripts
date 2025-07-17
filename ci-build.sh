@@ -216,48 +216,52 @@ EOL
 
 	# --== GPG SETUP ==--
 
-	# Install GPG on macOS
-	if [ "$platform" = Darwin ]; then
-		HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg2
-	fi
+	if [ "$GPG_KEY_NAME" -a "$GPG_PASSPHRASE" ]; then
+		# Install GPG on macOS
+		if [ "$platform" = Darwin ]; then
+			HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg2
+		fi
 
-	# Avoid "signing failed: Inappropriate ioctl for device" error.
-	export GPG_TTY=$(tty)
+		# Avoid "signing failed: Inappropriate ioctl for device" error.
+		export GPG_TTY=$(tty)
 
-	# Import the GPG signing key.
-	keyFile=.ci/signingkey.asc
-	if [ "$deployOK" ]; then
-		echo "== Importing GPG keypair =="
-		mkdir -p .ci
-		echo "$SIGNING_ASC" > "$keyFile"
-		ls -la "$keyFile"
-		gpg --version
-		gpg --batch --fast-import "$keyFile"
-		checkSuccess $?
-	fi
-
-	# HACK: Use maven-gpg-plugin 3.0.1+. Avoids "signing failed: No such file or directory" error.
-	maven_gpg_plugin_version=$(mavenEvaluate '${maven-gpg-plugin.version}')
-	case "$maven_gpg_plugin_version" in
-		0.*|1.*|2.*|3.0.0)
-			echo "--> Forcing maven-gpg-plugin version from $maven_gpg_plugin_version to 3.0.1"
-			BUILD_ARGS="$BUILD_ARGS -Dmaven-gpg-plugin.version=3.0.1 -Darguments=-Dmaven-gpg-plugin.version=3.0.1"
-			;;
-		*)
-			echo "--> maven-gpg-plugin version OK: $maven_gpg_plugin_version"
-			;;
-	esac
-
-	# HACK: Install pinentry helper program if missing. Avoids "signing failed: No pinentry" error.
-	if ! which pinentry >/dev/null 2>&1; then
-		echo '--> Installing missing pinentry helper for GPG'
-		sudo apt-get install -y pinentry-tty
-		# HACK: Restart the gpg agent, to notice the newly installed pinentry.
-		if { pgrep gpg-agent >/dev/null && which gpgconf >/dev/null 2>&1; } then
-			echo '--> Restarting gpg-agent'
-			gpgconf --reload gpg-agent
+		# Import the GPG signing key.
+		keyFile=.ci/signingkey.asc
+		if [ "$deployOK" ]; then
+			echo "== Importing GPG keypair =="
+			mkdir -p .ci
+			echo "$SIGNING_ASC" > "$keyFile"
+			ls -la "$keyFile"
+			gpg --version
+			gpg --batch --fast-import "$keyFile"
 			checkSuccess $?
 		fi
+
+		# HACK: Use maven-gpg-plugin 3.0.1+. Avoids "signing failed: No such file or directory" error.
+		maven_gpg_plugin_version=$(mavenEvaluate '${maven-gpg-plugin.version}')
+		case "$maven_gpg_plugin_version" in
+			0.*|1.*|2.*|3.0.0)
+				echo "--> Forcing maven-gpg-plugin version from $maven_gpg_plugin_version to 3.0.1"
+				BUILD_ARGS="$BUILD_ARGS -Dmaven-gpg-plugin.version=3.0.1 -Darguments=-Dmaven-gpg-plugin.version=3.0.1"
+				;;
+			*)
+				echo "--> maven-gpg-plugin version OK: $maven_gpg_plugin_version"
+				;;
+		esac
+
+		# HACK: Install pinentry helper program if missing. Avoids "signing failed: No pinentry" error.
+		if ! which pinentry >/dev/null 2>&1; then
+			echo '--> Installing missing pinentry helper for GPG'
+			sudo apt-get install -y pinentry-tty
+			# HACK: Restart the gpg agent, to notice the newly installed pinentry.
+			if { pgrep gpg-agent >/dev/null && which gpgconf >/dev/null 2>&1; } then
+				echo '--> Restarting gpg-agent'
+				gpgconf --reload gpg-agent
+				checkSuccess $?
+			fi
+		fi
+	else
+		echo "[WARNING] Skipping gpg setup (no GPG credentials)."
 	fi
 
 	# --== BUILD EXECUTION ==--
