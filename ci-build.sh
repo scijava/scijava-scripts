@@ -317,7 +317,7 @@ EOL
 		BUILD_ARGS="$BUILD_ARGS install javadoc:javadoc"
 	fi
 	# Check the build result.
-	{ mvn $BUILD_ARGS; echo $? > exit-code; } | tee mvn-log
+	{ (set -x; mvn $BUILD_ARGS); echo $? > exit-code; } | tee mvn-log
 	checkSuccess "$(cat exit-code)" mvn-log
 
 	# --== POST-BUILD ACTIONS ==--
