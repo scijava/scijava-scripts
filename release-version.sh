@@ -181,13 +181,10 @@ test "$SKIP_VERSION_CHECK" || {
 }
 
 # Check that the project extends the latest version of pom-scijava.
-MAVEN_HELPER="$(cd "$(dirname "$0")" && pwd)/maven-helper.sh"
-test -f "$MAVEN_HELPER" ||
-	die "Missing helper script at '$MAVEN_HELPER'
-Do you have a full clone of https://github.com/scijava/scijava-scripts?"
 test "$SKIP_VERSION_CHECK" -o "$parentGAV" != "${parentGAV#$}" || {
 	debug "Checking pom-scijava parent version"
-	latestParentVersion=$(sh -$- "$MAVEN_HELPER" latest-version "$parentGAV")
+	psjMavenMetadata=https://repo1.maven.org/maven2/org/scijava/pom-scijava/maven-metadata.xml
+	latestParentVersion=$(curl -fsL "$psjMavenMetadata" | grep '<release>' | sed 's;.*>\([^<]*\)<.*;\1;')
 	currentParentVersion=${parentGAV##*:}
 	test "$currentParentVersion" = "$latestParentVersion" ||
 		die "Newer version of parent '$parentGAV' is available: $latestParentVersion.
