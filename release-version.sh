@@ -50,6 +50,29 @@ resolve_snapshot_deps() {
 	read
 }
 
+# Update all modules that depend on the released module to use the next snapshot version
+update_inter_module_deps() {
+	released_module=$1
+	next_snapshot_version=$2
+	debug "Updating inter-module dependencies on $released_module to $next_snapshot_version"
+
+	# Property name pattern: scijava-meta -> scijava-meta.version
+	property_name="${released_module}.version"
+
+	# Find all module POMs that have this property
+	for module_dir in $(get_modules)
+	do
+		module_pom="$module_dir/pom.xml"
+		if test -f "$module_pom" && grep -q "<${property_name}>" "$module_pom"
+		then
+			debug "Updating $property_name in $module_pom to $next_snapshot_version"
+			sed -i.bak "s|<${property_name}>.*</${property_name}>|<${property_name}>${next_snapshot_version}</${property_name}>|" "$module_pom"
+			rm -f "$module_pom.bak"
+			git add "$module_pom"
+		fi
+	done
+}
+
 # -- Constants and settings --
 
 SCIJAVA_BASE_REPOSITORY=-DaltDeploymentRepository=scijava.releases::default::dav:https://maven.scijava.org/content/repositories
@@ -136,19 +159,12 @@ Options include:
 "
 
 # -- Extract project details --
+# Note: For multi-module projects, this will be re-extracted after module selection
 debug "Extracting project details"
 
 echoArg='${project.version}:${license.licenseName}:${project.parent.groupId}:${project.parent.artifactId}:${project.parent.version}'
-
-if test "$IS_AGGREGATOR"
-then
-	projectDetails=$(mvn -B -N -f "$MODULE_NAME/pom.xml" -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
-	test $? -eq 0 || projectDetails=$(mvn -B -U -N -f "$MODULE_NAME/pom.xml" -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
-else
-	projectDetails=$(mvn -B -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
-	test $? -eq 0 || projectDetails=$(mvn -B -U -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
-fi
-
+projectDetails=$(mvn -B -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
+test $? -eq 0 || projectDetails=$(mvn -B -U -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
 test $? -eq 0 || die "Could not extract version from pom.xml. Error follows:\n$projectDetails"
 printf '%s' "$projectDetails\n" | grep -Fqv '[ERROR]' ||
 	die "Error extracting version from pom.xml. Error follows:\n$projectDetails"
@@ -263,6 +279,18 @@ then
 	# Validate module exists
 	test -d "$MODULE_NAME" || die "Module directory '$MODULE_NAME' not found"
 	echo "$modules" | grep -qx "$MODULE_NAME" || die "Module '$MODULE_NAME' not found in aggregator POM"
+
+	# Re-extract project details from the selected module
+	debug "Extracting module project details"
+	projectDetails=$(mvn -B -N -f "$MODULE_NAME/pom.xml" -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
+	test $? -eq 0 || projectDetails=$(mvn -B -U -N -f "$MODULE_NAME/pom.xml" -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
+	test $? -eq 0 || die "Could not extract version from $MODULE_NAME/pom.xml. Error follows:\n$projectDetails"
+	projectDetails=$(printf '%s' "$projectDetails" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g")
+	projectDetails=$(printf '%s' "$projectDetails" | tr -d '\n')
+	currentVersion=${projectDetails%%:*}
+	projectDetails=${projectDetails#*:}
+	licenseName=${projectDetails%%:*}
+	parentGAV=${projectDetails#*:}
 fi
 
 # If REMOTE is unset, use branch's upstream remote by default.
@@ -453,11 +481,19 @@ then
 	# Revert O to produce R
 	$DRY_RUN git revert --no-edit HEAD~2 &&
 
-	# Now: ...prev → O → A → B → R
-	# Squash the last 4 commits
+	# Update inter-module dependencies to use the next snapshot version
+	# (The revert brought back old snapshot deps, but other modules should use the next snapshot)
+	if test -z "$DRY_RUN"
+	then
+		next_version=$(grep '<version>' "$MODULE_NAME/pom.xml" | head -1 | sed 's/.*<version>\(.*\)<\/version>.*/\1/')
+		update_inter_module_deps "$MODULE_NAME" "$next_version"
+	fi &&
+
+	# Now: ...prev → O → A → B → R (+ inter-module dep updates)
+	# Squash the last 4 commits (plus any inter-module dep updates)
 	$DRY_RUN git reset --soft HEAD~4 &&
 
-	# Net changes staged: only module version bump (O+A+B+R = just the version change)
+	# Net changes staged: module version bump + inter-module deps updated to next snapshot
 	if ! git diff-index --cached --quiet --ignore-submodules HEAD --
 	then
 		if test -z "$DRY_RUN"
