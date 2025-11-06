@@ -534,6 +534,24 @@ test -n "$tag" &&
 # the release.properties file to use the public (https://github.com/...) URL.
 # This is OK, since release:perform does not need write access to the repo.
 $DRY_RUN sed -i.bak -e 's|^scm.url=scm\\:git\\:git@github.com\\:|scm.url=scm\\:git\\:https\\://github.com/|' release.properties &&
+
+# For multi-module: add -pl to arguments so release:perform only builds the released module
+if test "$IS_AGGREGATOR"
+then
+	debug "Adding -pl $MODULE_NAME to release.properties arguments"
+	# Extract existing arguments, append -pl, write back
+	existing_args=$(sed -n 's/^exec.additionalArguments=//p' release.properties)
+	if test -n "$existing_args"
+	then
+		# Append to existing args
+		$DRY_RUN sed -i.bak2 "s|^exec.additionalArguments=.*|exec.additionalArguments=$existing_args -pl $MODULE_NAME|" release.properties
+	else
+		# Add new line
+		echo "exec.additionalArguments=-pl $MODULE_NAME" >> release.properties
+	fi
+	test -f release.properties.bak2 && $DRY_RUN rm release.properties.bak2
+fi &&
+
 $DRY_RUN rm release.properties.bak &&
 $DRY_RUN git checkout "$tag" &&
 
