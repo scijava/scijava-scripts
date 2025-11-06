@@ -30,6 +30,26 @@ no_changes_pending() {
 	git diff-index --cached --quiet --ignore-submodules HEAD --
 }
 
+# Get list of modules from aggregator POM
+get_modules() {
+	grep -oP '<module>\K[^<]+' pom.xml 2>/dev/null || true
+}
+
+# Check if current directory is a multi-module aggregator
+is_aggregator() {
+	test -f pom.xml && grep -q '<modules>' pom.xml
+}
+
+# Resolve snapshot dependencies to latest releases (TODO for later)
+resolve_snapshot_deps() {
+	module_pom=$1
+	debug "Resolving snapshot dependencies in $module_pom"
+	echo "TODO: Implement automatic snapshot dependency resolution"
+	echo "For now, please manually update any *.version properties to releases"
+	echo "Press enter when ready to continue..."
+	read
+}
+
 # -- Constants and settings --
 
 SCIJAVA_BASE_REPOSITORY=-DaltDeploymentRepository=scijava.releases::default::dav:https://maven.scijava.org/content/repositories
@@ -119,8 +139,16 @@ Options include:
 debug "Extracting project details"
 
 echoArg='${project.version}:${license.licenseName}:${project.parent.groupId}:${project.parent.artifactId}:${project.parent.version}'
-projectDetails=$(mvn -B -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
-test $? -eq 0 || projectDetails=$(mvn -B -U -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
+
+if test "$IS_AGGREGATOR"
+then
+	projectDetails=$(mvn -B -N -f "$MODULE_NAME/pom.xml" -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
+	test $? -eq 0 || projectDetails=$(mvn -B -U -N -f "$MODULE_NAME/pom.xml" -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
+else
+	projectDetails=$(mvn -B -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
+	test $? -eq 0 || projectDetails=$(mvn -B -U -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
+fi
+
 test $? -eq 0 || die "Could not extract version from pom.xml. Error follows:\n$projectDetails"
 printf '%s' "$projectDetails\n" | grep -Fqv '[ERROR]' ||
 	die "Error extracting version from pom.xml. Error follows:\n$projectDetails"
@@ -212,6 +240,30 @@ test "$SKIP_BRANCH_CHECK" || {
 If you are certain you want to release from this branch,
 try again with --skip-branch-check flag."
 }
+
+# -- Detect multi-module structure --
+debug "Detecting project structure"
+
+IS_AGGREGATOR=
+MODULE_NAME=
+
+if is_aggregator
+then
+	IS_AGGREGATOR=t
+	debug "Multi-module aggregator detected"
+
+	# Prompt for which module to release
+	modules=$(get_modules)
+	echo "Available modules:"
+	echo "$modules" | sed 's/^/  /'
+	printf 'Which module to release?: '
+	read MODULE_NAME
+	test "$MODULE_NAME" || die 'Module name is required for aggregator releases'
+
+	# Validate module exists
+	test -d "$MODULE_NAME" || die "Module directory '$MODULE_NAME' not found"
+	echo "$modules" | grep -qx "$MODULE_NAME" || die "Module '$MODULE_NAME' not found in aggregator POM"
+fi
 
 # If REMOTE is unset, use branch's upstream remote by default.
 REMOTE="${REMOTE:-$remote}"
@@ -314,6 +366,37 @@ then
 		-m 'The Discourse software updated the tags path from /tags/ to /tag/.'
 fi
 
+# For multi-module aggregators, prepare the release environment.
+if test "$IS_AGGREGATOR"
+then
+	debug "Preparing multi-module release for $MODULE_NAME"
+
+	# Filter aggregator POM to only include this module
+	$DRY_RUN awk -v module="$MODULE_NAME" '
+		/<modules>/,/<\/modules>/ {
+			if ($0 ~ /<module>/) {
+				if ($0 ~ module) {
+					print
+				} else {
+					gsub(/<module>/, "<!-- <module>")
+					gsub(/<\/module>/, "<\/module> -->")
+					print
+				}
+				next
+			}
+		}
+		{ print }
+	' pom.xml > pom.xml.filtered
+	$DRY_RUN mv pom.xml.filtered pom.xml
+
+	# Resolve snapshot dependencies
+	resolve_snapshot_deps "$MODULE_NAME/pom.xml"
+
+	# Commit these preparation changes (Commit O)
+	$DRY_RUN git add pom.xml "$MODULE_NAME/pom.xml"
+	$DRY_RUN git commit -m "Prepare $MODULE_NAME for release: filter aggregator and resolve snapshot dependencies"
+fi
+
 # Ensure license headers are up-to-date.
 test "$SKIP_LICENSE_UPDATE" -o -z "$licenseName" -o "$licenseName" = "N/A" || {
 	debug "Ensuring that license headers are up-to-date"
@@ -330,10 +413,24 @@ exclude them by setting license.excludes in your POM; e.g.:
 Alternately, try again with the --skip-license-update flag.'
 }
 
+# -- Set up multi-module arguments if needed --
+MAVEN_PL_ARGS=
+if test "$IS_AGGREGATOR"
+then
+	debug "Configuring release:prepare for multi-module"
+	MAVEN_PL_ARGS="-pl $MODULE_NAME -DautoVersionSubmodules=false"
+
+	# Override tag name to include module name
+	if test -z "$TAG"
+	then
+		TAG="-Dtag=${MODULE_NAME}-${VERSION}"
+	fi
+fi
+
 # Prepare new release without pushing (requires the release plugin >= 2.1).
 debug "Preparing new release"
 $DRY_RUN mvn $BATCH_MODE release:prepare -DpushChanges=false -Dresume=false $TAG \
-        $PROFILE $DEV_VERSION -DreleaseVersion="$VERSION" \
+        $PROFILE $DEV_VERSION -DreleaseVersion="$VERSION" $MAVEN_PL_ARGS \
 	"-Darguments=-Dgpg.skip=true ${EXTRA_ARGS# }" ||
 	die 'The release preparation step failed -- look above for errors and fix them.
 Use "mvn javadoc:javadoc | grep error" to check for javadoc syntax errors.'
@@ -346,10 +443,40 @@ then
 		"$(git show -s --format=%s HEAD)" ||
 		die "maven-release-plugin's commits are unexpectedly missing!"
 fi
-$DRY_RUN git reset --soft HEAD^^ &&
-if ! git diff-index --cached --quiet --ignore-submodules HEAD --
+
+if test "$IS_AGGREGATOR"
 then
-	$DRY_RUN git commit -s -m "Bump to next development cycle"
+	# For multi-module: revert the prep commit (O), then squash O+A+B+R
+	debug "Reverting preparation commit and squashing"
+
+	# Current state: ...prev → O → A → B
+	# Revert O to produce R
+	$DRY_RUN git revert --no-edit HEAD~2 &&
+
+	# Now: ...prev → O → A → B → R
+	# Squash the last 4 commits
+	$DRY_RUN git reset --soft HEAD~4 &&
+
+	# Net changes staged: only module version bump (O+A+B+R = just the version change)
+	if ! git diff-index --cached --quiet --ignore-submodules HEAD --
+	then
+		if test -z "$DRY_RUN"
+		then
+			next_version=$(grep '<version>' "$MODULE_NAME/pom.xml" | head -1 | sed 's/.*<version>\(.*\)<\/version>.*/\1/')
+		else
+			next_version="<next-version>"
+		fi
+		$DRY_RUN git commit -s -m "Bump to next development cycle
+
+$MODULE_NAME: $VERSION → $next_version"
+	fi
+else
+	# Original single-module logic: squash A+B
+	$DRY_RUN git reset --soft HEAD^^ &&
+	if ! git diff-index --cached --quiet --ignore-submodules HEAD --
+	then
+		$DRY_RUN git commit -s -m "Bump to next development cycle"
+	fi
 fi &&
 
 # Extract the name of the new tag.
@@ -361,7 +488,7 @@ else
 	tag="<tag>"
 fi &&
 
-# Rewrite the tag to include release.properties.
+# Rewrite the tag to include release.properties (and filtered aggregator for multi-module).
 debug "Rewriting tag to include release.properties"
 test -n "$tag" &&
 # HACK: SciJava projects use SSH (git@github.com:...) for developerConnection.
@@ -373,7 +500,18 @@ test -n "$tag" &&
 $DRY_RUN sed -i.bak -e 's|^scm.url=scm\\:git\\:git@github.com\\:|scm.url=scm\\:git\\:https\\://github.com/|' release.properties &&
 $DRY_RUN rm release.properties.bak &&
 $DRY_RUN git checkout "$tag" &&
-$DRY_RUN git add -f release.properties &&
+
+if test "$IS_AGGREGATOR"
+then
+	# For multi-module: get the filtered aggregator from the parent commit (O)
+	debug "Incorporating filtered aggregator into tag"
+	$DRY_RUN git checkout HEAD~1 -- pom.xml &&
+	$DRY_RUN git add -f release.properties pom.xml
+else
+	# Original: just add release.properties
+	$DRY_RUN git add -f release.properties
+fi &&
+
 $DRY_RUN git commit --amend --no-edit &&
 $DRY_RUN git tag -d "$tag" &&
 $DRY_RUN git tag "$tag" HEAD &&
