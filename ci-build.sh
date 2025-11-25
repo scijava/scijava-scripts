@@ -58,6 +58,66 @@ mavenEvaluate() {
 	mvn -B -U -q -Denforcer.skip=true -Dexec.executable=echo -Dexec.args="$1" --non-recursive validate exec:exec 2>&1
 }
 
+# Output debugging info, for troubleshooting builds.
+dump() {
+	if env | grep -q ^$1=
+	then
+		# Environment variable is set.
+		line=$(env | grep ^$1=)
+		if [ "$line" ]
+		then
+			# And it's non-empty.
+			if [ "$2" ]
+			then
+				# Secret value: emit only that it is present.
+				echo "$1=<present>"
+			else
+				# Not a secret: emit in plaintext.
+				echo "$line"
+			fi
+		else
+			# But it is empty!
+			echo "$1=<empty>"
+		fi
+	else
+		# Environment variable is not set.
+		echo "$1=<unset>"
+	fi
+}
+
+analyzeGitHubWorkflow() {
+	test -d .github/workflows || return
+	echo
+	echo '/--------------------------------------------------\'
+	echo '| ci-build.sh analysis: env vars + GitHub workflow |'
+	echo '\--------------------------------------------------/'
+	dump dir
+	dump platform
+	dump BUILD_REPOSITORY
+	dump NO_DEPLOY
+	echo '----------------------------------------------------'
+	dump GPG_KEY_NAME secret
+	dump GPG_PASSPHRASE secret
+	dump MAVEN_USER secret
+	dump MAVEN_PASS secret
+	dump CENTRAL_USER secret
+	dump CENTRAL_PASS secret
+	dump SIGNING_ASC secret
+	echo '----------------------------------------------------'
+	for var in \
+		GPG_KEY_NAME \
+		GPG_PASSPHRASE \
+		MAVEN_USER \
+		MAVEN_PASS \
+		CENTRAL_USER \
+		CENTRAL_PASS \
+		SIGNING_ASC
+	do
+		grep -q "secrets.$var" .github/workflows/*.yml ||
+			echo "Add \`$var: \${{ secrets.$var }}\` to GitHub workflow env section!"
+	done
+}
+
 # Build Maven projects.
 if [ -f pom.xml ]; then
 	echo ::group::"= Maven build ="
@@ -193,6 +253,7 @@ EOL
 							deployOK=1
 						else
 							echo 'No deploy -- MAVEN environment variables not available'
+							analyzeGitHubWorkflow
 						fi
 						;;
 					*)
@@ -219,6 +280,7 @@ EOL
 									deployOK=1
 								else
 									echo '[ERROR] Cannot deploy: MAVEN environment variables not available'
+									analyzeGitHubWorkflow
 									exit 1
 								fi
 								;;
@@ -229,6 +291,7 @@ EOL
 									deployOK=1
 								else
 									echo '[ERROR] Cannot deploy: CENTRAL environment variables not available'
+									analyzeGitHubWorkflow
 									exit 1
 								fi
 								;;
