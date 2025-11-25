@@ -65,7 +65,7 @@ if [ -f pom.xml ]; then
 	# --== MAVEN SETUP ==--
 
 	echo
-	echo "== Configuring Maven =="
+	echo '== Configuring Maven =='
 
 	# NB: Suppress "Downloading/Downloaded" messages.
 	# See: https://stackoverflow.com/a/35653426/1207769
@@ -76,12 +76,12 @@ if [ -f pom.xml ]; then
 	settingsFile="$HOME/.m2/settings.xml"
 	customSettings=.ci/settings.xml
 	if [ "$OSSRH_USER" -o "$OSSRH_PASS" ]; then
-		echo "[WARNING] Obsolete OSSRH vars detected. Secrets may need updating to deploy to Maven Central."
+		echo '[WARNING] Obsolete OSSRH vars detected. Secrets may need updating to deploy to Maven Central.'
 	fi
 	if [ -f "$customSettings" ]; then
 		cp "$customSettings" "$settingsFile"
 	elif [ -z "$BUILD_REPOSITORY" ]; then
-		echo "Skipping settings.xml generation (no BUILD_REPOSITORY; assuming we are running locally)"
+		echo 'Skipping settings.xml generation (no BUILD_REPOSITORY; assuming we are running locally)'
 	else
 		# settings.xml header
 		cat >"$settingsFile" <<EOL
@@ -103,7 +103,7 @@ EOL
 		</server>
 EOL
 		else
-			echo "[WARNING] Skipping settings.xml scijava servers (no MAVEN deployment credentials)."
+			echo '[WARNING] Skipping settings.xml scijava servers (no MAVEN deployment credentials).'
 		fi
 		# settings.xml central server
 		if [ "$CENTRAL_USER" -a "$CENTRAL_PASS" ]; then
@@ -115,7 +115,7 @@ EOL
 		</server>
 EOL
 		else
-			echo "[WARNING] Skipping settings.xml central server (no CENTRAL deployment credentials)."
+			echo '[WARNING] Skipping settings.xml central server (no CENTRAL deployment credentials).'
 		fi
 		cat >>"$settingsFile" <<EOL
 	</servers>
@@ -139,7 +139,7 @@ EOL
 	</profiles>
 EOL
 		else
-			echo "[WARNING] Skipping settings.xml gpg profile (no GPG credentials)."
+			echo '[WARNING] Skipping settings.xml gpg profile (no GPG credentials).'
 		fi
 		# settings.xml footer
 		cat >>"$settingsFile" <<EOL
@@ -150,21 +150,21 @@ EOL
 	# --== DEPLOYMENT CHECKS ==--
 
 	# Determine whether deploying is both possible and warranted.
-	echo "Performing deployment checks"
+	echo 'Performing deployment checks'
 	deployOK=
 
 	scmURL=$(mavenEvaluate '${project.scm.url}')
 	result=$?
 	checkSuccess $result
 	if [ $result -ne 0 ]; then
-		echo "No deploy -- could not extract ciManagement URL"
-		echo "Output of failed attempt follows:"
+		echo 'No deploy -- could not extract ciManagement URL'
+		echo 'Output of failed attempt follows:'
 		echo "$scmURL"
 	else
 		scmURL=${scmURL%.git}
 		scmURL=${scmURL%/}
 		if [ "$NO_DEPLOY" ]; then
-			echo "No deploy -- the NO_DEPLOY flag is set"
+			echo 'No deploy -- the NO_DEPLOY flag is set'
 		elif [ "$BUILD_REPOSITORY" -a "$BUILD_REPOSITORY" != "$scmURL" ]; then
 			echo "No deploy -- repository fork: $BUILD_REPOSITORY != $scmURL"
 		elif [ "$BUILD_BASE_REF" -o "$BUILD_HEAD_REF" ]; then
@@ -175,16 +175,16 @@ EOL
 			result=$?
 			checkSuccess $result
 			if [ $result -ne 0 ]; then
-				echo "No deploy -- could not extract version string"
-				echo "Output of failed attempt follows:"
+				echo 'No deploy -- could not extract version string'
+				echo 'Output of failed attempt follows:'
 				echo "$version"
 			else
 				case "$version" in
 					*-SNAPSHOT)
 						# Snapshot version -- ensure release.properties not present.
 						if [ -f release.properties ]; then
-							echo "[ERROR] Spurious release.properties file is present"
-							echo "Remove the file from version control and try again."
+							echo '[ERROR] Spurious release.properties file is present'
+							echo 'Remove the file from version control and try again.'
 							exit 1
 						fi
 
@@ -192,14 +192,14 @@ EOL
 						if [ "$MAVEN_USER" -a "$MAVEN_PASS" ]; then
 							deployOK=1
 						else
-							echo "No deploy -- MAVEN environment variables not available"
+							echo 'No deploy -- MAVEN environment variables not available'
 						fi
 						;;
 					*)
 						# Release version -- ensure release.properties is present.
 						if [ ! -f release.properties ]; then
-							echo "[ERROR] Release version, but release.properties not found"
-							echo "You must use release-version.sh to release -- see https://imagej.net/develop/releasing"
+							echo '[ERROR] Release version, but release.properties not found'
+							echo 'You must use release-version.sh to release -- see https://imagej.net/develop/releasing'
 							exit 1
 						fi
 
@@ -208,8 +208,8 @@ EOL
 						result=$?
 						checkSuccess $result
 						if [ $result -ne 0 ]; then
-							echo "No deploy -- could not extract releaseProfiles string"
-							echo "Output of failed attempt follows:"
+							echo 'No deploy -- could not extract releaseProfiles string'
+							echo 'Output of failed attempt follows:'
 							echo "$releaseProfiles"
 						fi
 						case "$releaseProfiles" in
@@ -218,7 +218,7 @@ EOL
 								if [ "$MAVEN_USER" -a "$MAVEN_PASS" ]; then
 									deployOK=1
 								else
-									echo "[ERROR] Cannot deploy: MAVEN environment variables not available"
+									echo '[ERROR] Cannot deploy: MAVEN environment variables not available'
 									exit 1
 								fi
 								;;
@@ -228,12 +228,12 @@ EOL
 								if [ "$CENTRAL_USER" -a "$CENTRAL_PASS" -a "$SIGNING_ASC" -a "$GPG_KEY_NAME" -a "$GPG_PASSPHRASE" ]; then
 									deployOK=1
 								else
-									echo "[ERROR] Cannot deploy: CENTRAL environment variables not available"
+									echo '[ERROR] Cannot deploy: CENTRAL environment variables not available'
 									exit 1
 								fi
 								;;
 							*)
-								echo "Unknown deploy target -- attempting to deploy anyway"
+								echo 'Unknown deploy target -- attempting to deploy anyway'
 								deployOK=1
 								;;
 						esac
@@ -243,7 +243,7 @@ EOL
 		fi
 	fi
 	if [ "$deployOK" ]; then
-		echo "All checks passed for artifact deployment"
+		echo 'All checks passed for artifact deployment'
 	fi
 
 	# --== Maven build arguments ==--
@@ -264,7 +264,7 @@ EOL
 		# Import the GPG signing key.
 		keyFile=.ci/signingkey.asc
 		if [ "$deployOK" ]; then
-			echo "== Importing GPG keypair =="
+			echo '== Importing GPG keypair =='
 			mkdir -p .ci
 			echo "$SIGNING_ASC" > "$keyFile"
 			ls -la "$keyFile"
@@ -297,7 +297,7 @@ EOL
 			fi
 		fi
 	else
-		echo "[WARNING] Skipping gpg setup (no GPG credentials)."
+		echo '[WARNING] Skipping gpg setup (no GPG credentials).'
 	fi
 
 	# --== BUILD EXECUTION ==--
@@ -305,15 +305,15 @@ EOL
 	# Run the build.
 	if [ "$deployOK" -a -f release.properties ]; then
 		echo
-		echo "== Cutting and deploying release version =="
+		echo '== Cutting and deploying release version =='
 		BUILD_ARGS="$BUILD_ARGS release:perform"
 	elif [ "$deployOK" ]; then
 		echo
-		echo "== Building and deploying main branch SNAPSHOT =="
+		echo '== Building and deploying main branch SNAPSHOT =='
 		BUILD_ARGS="-Pdeploy-to-scijava $BUILD_ARGS deploy"
 	else
 		echo
-		echo "== Building the artifact locally only =="
+		echo '== Building the artifact locally only =='
 		BUILD_ARGS="$BUILD_ARGS install javadoc:javadoc"
 	fi
 	# Check the build result.
