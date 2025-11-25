@@ -109,9 +109,9 @@ process() {
 
 	# -- GitHub Action steps --
 
-	actionCheckout="uses: actions/checkout@v2"
+	actionCheckout="uses: actions/checkout@v4"
 	actionSetupJava="name: Set up Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '8'
           distribution: 'zulu'
@@ -121,9 +121,11 @@ process() {
       - name: Install conda packages
         run: conda env update -f environment.yml -n base"
 	actionSetupCI="name: Set up CI environment
-        run: $ciSetupScript"
+        run: $ciSetupScript
+        shell: bash"
 	actionExecuteBuild="name: Execute the build
-        run: $ciBuildScript"
+        run: $ciBuildScript
+        shell: bash"
   actionSecrets="env:
           GPG_KEY_NAME: \${{ secrets.GPG_KEY_NAME }}
           GPG_PASSPHRASE: \${{ secrets.GPG_PASSPHRASE }}
