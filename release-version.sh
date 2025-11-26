@@ -352,6 +352,25 @@ then
 	$DRY_RUN git commit -s -m "Bump to next development cycle"
 fi &&
 
+# Check that release-only files were not erroneously committed.
+if test -z "$DRY_RUN"
+then
+	debug "Verifying release-only files were not committed"
+	for release_file in release.properties pom.xml.releaseBackup
+	do
+		if git diff --name-only HEAD~1 HEAD | grep -qF "$release_file"
+		then
+			die "FATAL: $release_file was committed to the branch!
+This likely means your IDE automatically staged these files.
+Please configure your IDE to NOT auto-stage files during the release process.
+You can undo this failed release with:
+  git reset --hard HEAD~1
+  git tag -d \$(sed -n 's/^scm.tag=//p' < release.properties)
+Then try the release again after disabling IDE auto-staging."
+		fi
+	done
+fi &&
+
 # Extract the name of the new tag.
 debug "Extracting new tag name"
 if test -z "$DRY_RUN"
