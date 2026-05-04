@@ -133,7 +133,12 @@ currentVersion=${projectDetails%%:*}
 projectDetails=${projectDetails#*:}
 licenseName=${projectDetails%%:*}
 projectDetails=${projectDetails#*:}
-parentGAV=${projectDetails%%:*}
+parentGroup=${projectDetails%%:*}
+projectDetails=${projectDetails#*:}
+parentArtifact=${projectDetails%%:*}
+projectDetails=${projectDetails#*:}
+parentVersion=${projectDetails%%:*}
+parentGAV="${parentGroup}:${parentArtifact}:${parentVersion}"
 skipUpdateProjectLicense=${projectDetails#*:}
 
 # -- Sanity checks --
