@@ -118,7 +118,7 @@ Options include:
 # -- Extract project details --
 debug "Extracting project details"
 
-echoArg='${project.version}:${license.licenseName}:${project.parent.groupId}:${project.parent.artifactId}:${project.parent.version}'
+echoArg='${project.version}:${license.licenseName}:${project.parent.groupId}:${project.parent.artifactId}:${project.parent.version}:${license.skipUpdateProjectLicense}'
 projectDetails=$(mvn -B -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
 test $? -eq 0 || projectDetails=$(mvn -B -U -N -Dexec.executable=echo -Dexec.args="$echoArg" exec:exec -q)
 test $? -eq 0 || die "Could not extract version from pom.xml. Error follows:\n$projectDetails"
@@ -132,7 +132,9 @@ projectDetails=$(printf '%s' "$projectDetails" | tr -d '\n')
 currentVersion=${projectDetails%%:*}
 projectDetails=${projectDetails#*:}
 licenseName=${projectDetails%%:*}
-parentGAV=${projectDetails#*:}
+projectDetails=${projectDetails#*:}
+parentGAV=${projectDetails%%:*}
+skipUpdateProjectLicense=${projectDetails#*:}
 
 # -- Sanity checks --
 debug "Performing sanity checks"
@@ -315,7 +317,7 @@ then
 fi
 
 # Ensure license headers are up-to-date.
-test "$SKIP_LICENSE_UPDATE" -o -z "$licenseName" -o "$licenseName" = "N/A" || {
+test "$SKIP_LICENSE_UPDATE" -o -z "$licenseName" -o "$licenseName" = "N/A" -o "$skipUpdateProjectLicense" = "true" || {
 	debug "Ensuring that license headers are up-to-date"
 	mvn license:update-project-license license:update-file-header &&
 	git add LICENSE.txt || die 'Failed to update copyright blurbs.
