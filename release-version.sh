@@ -188,7 +188,7 @@ test "$SKIP_VERSION_CHECK" || {
 }
 
 # Check that the project extends the latest version of pom-scijava.
-test "$SKIP_VERSION_CHECK" -o "$parentGAV" != "${parentGAV#$}" || {
+test "$SKIP_VERSION_CHECK" -o "$parentGroup" != "org.scijava" -o "$parentArtifact" != "pom-scijava" || {
 	debug "Checking pom-scijava parent version"
 	psjMavenMetadata=https://repo1.maven.org/maven2/org/scijava/pom-scijava/maven-metadata.xml
 	latestParentVersion=$(curl -fsL "$psjMavenMetadata" | grep '<release>' | sed 's;.*>\([^<]*\)<.*;\1;')
