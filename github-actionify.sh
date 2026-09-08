@@ -109,9 +109,9 @@ process() {
 
 	# -- GitHub Action steps --
 
-	actionCheckout="uses: actions/checkout@v4"
+	actionCheckout="uses: actions/checkout@v6"
 	actionSetupJava="name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '8'
           distribution: 'zulu'
