@@ -30,6 +30,59 @@ no_changes_pending() {
 	git diff-index --cached --quiet --ignore-submodules HEAD --
 }
 
+# -- Multi-module helper functions --
+
+# Prints the module directories listed in the given aggregator POM.
+pom_modules() {
+	sed -n 's;.*<module>\([^<]*\)</module>.*;\1;p' "$1"
+}
+
+# Prints the artifactId of the given POM, ignoring that of its parent.
+pom_artifactId() {
+	awk '
+		/<parent>/ { inParent = 1 }
+		/<\/parent>/ { inParent = 0; next }
+		!inParent && /<artifactId>/ {
+			sub(/.*<artifactId>/, ""); sub(/<\/artifactId>.*/, ""); print; exit
+		}
+	' "$1"
+}
+
+# Prints the names of properties used as the version of the given artifactId
+# in the given POM. E.g., <version>${scijava-meta.version}</version>.
+# Note: This assumes the artifactId element precedes the version element.
+pom_versionProperties() {
+	awk -v artifactId="$2" '
+		/<artifactId>/ {
+			a = $0; sub(/.*<artifactId>/, "", a); sub(/<\/artifactId>.*/, "", a)
+		}
+		a == artifactId && /<version>\$\{[^}]*\}<\/version>/ {
+			p = $0; sub(/.*<version>\$\{/, "", p); sub(/\}<\/version>.*/, "", p); print p
+		}
+	' "$1" | sort -u
+}
+
+# Prints the value of the given property in the given POM.
+pom_property() {
+	sed -n "s;.*<$2>\([^<]*\)</$2>.*;\1;p" "$1" | head -n1
+}
+
+# Sets the value of the given property in the given POM.
+set_pom_property() {
+	sed -i.bak "s;<$2>[^<]*</$2>;<$2>$3</$2>;" "$1" &&
+	rm -f "$1.bak"
+}
+
+# Prints the latest released version of the given artifactId, followed by
+# the tag from which it was released, by scanning the release.properties
+# files of all tags. This works both for components released individually
+# and for those released together as part of an aggregator.
+latest_release() {
+	git grep -F -e "\\:$1=" $(git tag -l) -- ':/*release.properties' 2>/dev/null |
+		sed -n 's;^\([^:]*\):[^:]*:project\.rel\.[^=]*=\(.*\);\2 \1;p' |
+		sort -V | tail -n1
+}
+
 # -- Constants and settings --
 
 SCIJAVA_BASE_REPOSITORY=-DaltDeploymentRepository=scijava.releases::default::dav:https://maven.scijava.org/content/repositories
@@ -100,9 +153,15 @@ die "Usage: $0 [options] [<version>]
 
 Where <version> is the version to release. If omitted, it will prompt you.
 
+To release a module of a multi-module repository, run this script from
+the module's directory. Its SNAPSHOT dependencies on sibling modules are
+pinned to their latest releases for the release, and afterward, sibling
+modules depending on it are updated to its new development version.
+
 Options include:
   --dry-run               - Simulate the release without actually doing it.
-  --skip-version-check    - Skips the SemVer and parent pom version checks.
+  --skip-version-check    - Skips the SemVer, parent pom and sibling module
+                            version checks.
   --skip-branch-check     - Skips the default branch check.
   --skip-license-update   - Skips update of the copyright blurbs.
   --skip-push             - Do not push to the remote git repository.
@@ -219,6 +278,62 @@ test "$SKIP_BRANCH_CHECK" || {
 If you are certain you want to release from this branch,
 try again with --skip-branch-check flag."
 }
+
+# Detect whether we are releasing a module of a multi-module repository.
+# If so, the module is released on its own, from its own directory.
+debug "Checking for multi-module repository"
+moduleDir=
+if test "$(git rev-parse --show-prefix)" -a -f ../pom.xml
+then
+	pom_modules ../pom.xml | grep -qxF "$(basename "$PWD")" &&
+		moduleDir=$(basename "$PWD")
+fi
+if test "$moduleDir"
+then
+	debug "Releasing module '$moduleDir' of multi-module repository"
+	artifactId=$(pom_artifactId pom.xml)
+	test "$artifactId" || die "Could not extract artifactId from pom.xml"
+	siblingDirs=$(pom_modules ../pom.xml | grep -vxF "$moduleDir")
+
+	# Plan which SNAPSHOT versions of sibling modules to pin to releases.
+	# Each line of siblingPins is: <property> <snapshot-version> <release-version>
+	debug "Checking versions of sibling module dependencies"
+	siblingPins=
+	for siblingDir in $siblingDirs
+	do
+		test -f "../$siblingDir/pom.xml" || continue
+		siblingArtifactId=$(pom_artifactId "../$siblingDir/pom.xml")
+		for property in $(pom_versionProperties pom.xml "$siblingArtifactId")
+		do
+			snapshotVersion=$(pom_property pom.xml "$property")
+			case "$snapshotVersion" in
+				*-SNAPSHOT) ;;
+				*) continue ;;
+			esac
+			release=$(latest_release "$siblingArtifactId")
+			test "$release" || die "No release of sibling module '$siblingArtifactId' found.
+Please release it first, then try again."
+			releaseVersion=${release%% *}
+			releaseTag=${release#* }
+			debug "Pinning $property: $snapshotVersion -> $releaseVersion"
+			# Note: Changes to versions, SCM tags and copyright years do not count.
+			test "$SKIP_VERSION_CHECK" ||
+			git diff --quiet \
+				-I'<version>[^<]*</version>' \
+				-I'\.version>[^<]*</' \
+				-I'<tag>[^<]*</tag>' \
+				-I'Copyright (C)' \
+				"$releaseTag" HEAD -- "../$siblingDir" \
+				":(exclude)../$siblingDir/release.properties" ||
+				die "Sibling module '$siblingArtifactId' has changed since its $releaseVersion release.
+Please release it first, so that $artifactId can depend on those changes.
+Use \"git diff $releaseTag HEAD -- ../$siblingDir\" to see what changed.
+Or if you are sure, try again with --skip-version-check flag."
+			siblingPins="$siblingPins$property $snapshotVersion $releaseVersion
+"
+		done
+	done
+fi
 
 # If REMOTE is unset, use branch's upstream remote by default.
 REMOTE="${REMOTE:-$remote}"
@@ -337,15 +452,31 @@ exclude them by setting license.excludes in your POM; e.g.:
 Alternately, try again with the --skip-license-update flag.'
 }
 
+# Pin SNAPSHOT dependencies on sibling modules to their release versions.
+# The release plugin refuses to release with SNAPSHOT dependencies. This pin
+# commit is later squashed into the release commit, and is not on the branch.
+preReleaseHead=$(git rev-parse HEAD)
+if test "$siblingPins"
+then
+	debug "Pinning sibling module dependencies to release versions"
+	printf '%s' "$siblingPins" | while read property snapshotVersion releaseVersion
+	do
+		$DRY_RUN set_pom_property pom.xml "$property" "$releaseVersion"
+	done &&
+	$DRY_RUN git commit -m "Use release versions of sibling modules" pom.xml ||
+		die 'Failed to pin sibling module dependencies to release versions.'
+fi
+
 # Prepare new release without pushing (requires the release plugin >= 2.1).
 debug "Preparing new release"
 $DRY_RUN mvn $BATCH_MODE release:prepare -DpushChanges=false -Dresume=false $TAG \
         $PROFILE $DEV_VERSION -DreleaseVersion="$VERSION" \
 	"-Darguments=-Dgpg.skip=true ${EXTRA_ARGS# }" ||
-	die 'The release preparation step failed -- look above for errors and fix them.
-Use "mvn javadoc:javadoc | grep error" to check for javadoc syntax errors.'
+	die "The release preparation step failed -- look above for errors and fix them.
+Use \"mvn javadoc:javadoc | grep error\" to check for javadoc syntax errors.
+Use \"mvn release:clean && git reset --hard $preReleaseHead\" to start over."
 
-# Squash the maven-release-plugin's two commits into one.
+# Squash the maven-release-plugin's two commits (and any pin commit) into one.
 if test -z "$DRY_RUN"
 then
 	debug "Squashing release commits"
@@ -353,10 +484,49 @@ then
 		"$(git show -s --format=%s HEAD)" ||
 		die "maven-release-plugin's commits are unexpectedly missing!"
 fi
-$DRY_RUN git reset --soft HEAD^^ &&
+$DRY_RUN git reset --soft "$preReleaseHead" &&
+
+# For a module of a multi-module repository: restore its SNAPSHOT dependencies
+# on sibling modules, and update sibling modules depending on it to use its new
+# development version.
+if test "$moduleDir"
+then
+	debug "Updating sibling module dependency versions"
+	printf '%s' "$siblingPins" | while read property snapshotVersion releaseVersion
+	do
+		$DRY_RUN set_pom_property pom.xml "$property" "$snapshotVersion"
+	done &&
+	if test -z "$DRY_RUN"
+	then
+		devVersion=$(sed -n "s;^project\.dev\.[^=]*:$artifactId=;;p" release.properties)
+		test "$devVersion" || die "Could not extract development version from release.properties"
+	else
+		devVersion="<dev-version>"
+	fi &&
+	for siblingDir in $siblingDirs
+	do
+		siblingPom="../$siblingDir/pom.xml"
+		test -f "$siblingPom" || continue
+		for property in $(pom_versionProperties "$siblingPom" "$artifactId")
+		do
+			case "$(pom_property "$siblingPom" "$property")" in
+				*-SNAPSHOT)
+					debug "Updating $property in $siblingPom to $devVersion"
+					$DRY_RUN set_pom_property "$siblingPom" "$property" "$devVersion"
+					;;
+			esac
+		done
+	done &&
+	$DRY_RUN git add -u -- ..
+fi &&
 if ! git diff-index --cached --quiet --ignore-submodules HEAD --
 then
-	$DRY_RUN git commit -s -m "Bump to next development cycle"
+	if test "$moduleDir"
+	then
+		$DRY_RUN git commit -s -m "Bump $artifactId to next development cycle"
+	else
+		$DRY_RUN git commit -s -m "Bump to next development cycle"
+	fi
 fi &&
 
 # Check that release-only files were not erroneously committed.
@@ -387,7 +557,8 @@ else
 	tag="<tag>"
 fi &&
 
-# Rewrite the tag to include release.properties.
+# Rewrite the tag to include release.properties, squashing any pin commit
+# into the release commit, so that the tag shows all release changes at once.
 debug "Rewriting tag to include release.properties"
 test -n "$tag" &&
 # HACK: SciJava projects use SSH (git@github.com:...) for developerConnection.
@@ -399,8 +570,9 @@ test -n "$tag" &&
 $DRY_RUN sed -i.bak -e 's|^scm.url=scm\\:git\\:git@github.com\\:|scm.url=scm\\:git\\:https\\://github.com/|' release.properties &&
 $DRY_RUN rm release.properties.bak &&
 $DRY_RUN git checkout "$tag" &&
+$DRY_RUN git reset --soft "$preReleaseHead" &&
 $DRY_RUN git add -f release.properties &&
-$DRY_RUN git commit --amend --no-edit &&
+$DRY_RUN git commit -C "$tag" &&
 $DRY_RUN git tag -d "$tag" &&
 $DRY_RUN git tag "$tag" HEAD &&
 $DRY_RUN git checkout @{-1} &&
