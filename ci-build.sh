@@ -8,6 +8,7 @@
 #   BUILD_REPOSITORY - the repository URL running the current build
 
 dir="$(dirname "$0")"
+rootDir="$(pwd)"
 
 platform=$(uname -s)
 
@@ -86,7 +87,7 @@ dump() {
 }
 
 analyzeGitHubWorkflow() {
-	test -d .github/workflows || return
+	test -d "$rootDir/.github/workflows" || return
 	echo
 	echo '/--------------------------------------------------\'
 	echo '| ci-build.sh analysis: env vars + GitHub workflow |'
@@ -113,7 +114,7 @@ analyzeGitHubWorkflow() {
 		CENTRAL_PASS \
 		SIGNING_ASC
 	do
-		grep -q "secrets.$var" .github/workflows/*.yml ||
+		grep -q "secrets.$var" "$rootDir"/.github/workflows/*.yml ||
 			echo "Add \`$var: \${{ secrets.$var }}\` to GitHub workflow env section!"
 	done
 }
@@ -205,6 +206,25 @@ EOL
 		cat >>"$settingsFile" <<EOL
 </settings>
 EOL
+	fi
+
+	# --== MULTI-MODULE RELEASE DETECTION ==--
+
+	# When one module of a multi-module repository is released, its
+	# release.properties file lives in the module's directory, from
+	# which the release must then be checked and performed.
+	if [ ! -f release.properties ]; then
+		moduleReleaseFiles=$(git ls-files '*/release.properties' 2>/dev/null)
+		moduleReleaseCount=$(printf '%s' "$moduleReleaseFiles" | grep -c .)
+		if [ "$moduleReleaseCount" -gt 1 ]; then
+			echo '[ERROR] Multiple release.properties files are present:'
+			echo "$moduleReleaseFiles"
+			exit 1
+		elif [ "$moduleReleaseCount" -eq 1 ]; then
+			moduleDir=$(dirname "$moduleReleaseFiles")
+			echo "Detected release of module: $moduleDir"
+			cd "$moduleDir" || exit 1
+		fi
 	fi
 
 	# --== DEPLOYMENT CHECKS ==--
