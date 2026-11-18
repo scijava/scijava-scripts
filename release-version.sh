@@ -15,7 +15,7 @@ export LC_ALL=C
 # -- Functions --
 
 debug() {
-	test "$DEBUG" || return
+	test "$DEBUG" || return 0
 	echo "[DEBUG] $@"
 }
 
