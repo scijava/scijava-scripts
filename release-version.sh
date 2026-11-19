@@ -50,6 +50,9 @@ pom_artifactId() {
 
 # Prints the names of properties used as the version of the given artifactId
 # in the given POM. E.g., <version>${scijava-meta.version}</version>.
+# Also prints the <artifactId>.version property when the POM defines it, even
+# without a direct dependency, since it may override the version of a
+# transitive dependency managed by pom-scijava.
 # Note: This assumes the artifactId element precedes the version element.
 pom_versionProperties() {
 	awk -v artifactId="$2" '
@@ -58,6 +61,9 @@ pom_versionProperties() {
 		}
 		a == artifactId && /<version>\$\{[^}]*\}<\/version>/ {
 			p = $0; sub(/.*<version>\$\{/, "", p); sub(/\}<\/version>.*/, "", p); print p
+		}
+		index($0, "<" artifactId ".version>") {
+			print artifactId ".version"
 		}
 	' "$1" | sort -u
 }
