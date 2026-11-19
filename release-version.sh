@@ -529,9 +529,9 @@ if ! git diff-index --cached --quiet --ignore-submodules HEAD --
 then
 	if test "$moduleDir"
 	then
-		$DRY_RUN git commit -s -m "Bump $artifactId to next development cycle"
+		$DRY_RUN git commit -m "Bump $artifactId to next development cycle"
 	else
-		$DRY_RUN git commit -s -m "Bump to next development cycle"
+		$DRY_RUN git commit -m "Bump to next development cycle"
 	fi
 fi &&
 
