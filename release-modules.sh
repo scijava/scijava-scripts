@@ -202,10 +202,12 @@ do
 		# version to be resolvable, since release-version.sh reads their
 		# project details before pinning their sibling dependencies to
 		# releases. And the enforcer rejects SNAPSHOT dependencies, which
-		# do not matter for this local install.
+		# do not matter for this local install. If the install fails, a
+		# later module needing it fails in release-version.sh before its
+		# release begins, so we only warn here.
 		log "Installing next SNAPSHOT of $artifactId locally"
 		mvn -B -q -N install -DskipTests -Denforcer.skip ||
-			die "Local install of the next SNAPSHOT of $artifactId failed"
+			log "WARNING: Local install of the next SNAPSHOT of $artifactId failed"
 	fi
 	first=
 
